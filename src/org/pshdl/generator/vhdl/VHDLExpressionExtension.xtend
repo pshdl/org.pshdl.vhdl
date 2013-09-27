@@ -90,7 +90,6 @@ import org.pshdl.model.HDLShiftOp
 import org.pshdl.model.HDLTernary
 import org.pshdl.model.HDLVariableRef
 import org.pshdl.model.extensions.TypeExtension
-import org.pshdl.model.types.builtIn.HDLFunctions
 import org.pshdl.model.types.builtIn.HDLPrimitives
 
 import static org.pshdl.model.HDLArithOp.HDLArithOpType.*
@@ -129,14 +128,14 @@ class VHDLExpressionExtension {
 		return result
 	}
 
-	def private Name<?> getRef(Name<?> name, HDLVariableRef ref) {
+	def private Name<?> getRef(Name name, HDLVariableRef ref) {
 		var result = name
 		if (ref.array.size != 0) {
 			val List<Expression> indices = new LinkedList
 			for (HDLExpression arr : ref.array) {
 				indices.add(arr.toVHDL)
 			}
-			result = new ArrayElement<Name<?>>(name, indices)
+			result = new ArrayElement(name, indices)
 		}
 		if (ref.bits.size > 0) {
 
@@ -145,9 +144,9 @@ class VHDLExpressionExtension {
 				throw new IllegalArgumentException("Multi bit access not supported")
 			val HDLRange r = ref.bits.get(0)
 			if (r.from === null) {
-				result = new ArrayElement<Name<?>>(result, r.to.toVHDL)
+				result = new ArrayElement<Name>(result, r.to.toVHDL)
 			} else {
-				result = new Slice<Name<?>>(result, r.toVHDL(Range.Direction::DOWNTO))
+				result = new Slice(result, r.toVHDL(Range.Direction::DOWNTO))
 			}
 		}
 		return result
@@ -163,9 +162,9 @@ class VHDLExpressionExtension {
 	}
 
 	def dispatch Name<?> toVHDL(HDLInterfaceRef obj) {
-		var Name<?> result = new Signal(obj.VHDLName, UnresolvedType::NO_NAME)
+		var Name result = new Signal(obj.VHDLName, UnresolvedType::NO_NAME)
 		if (obj.ifArray.size != 0) {
-			result = new ArrayElement<Name<?>>(result,
+			result = new ArrayElement(result,
 				obj.ifArray.fold(new LinkedList<Expression>)[l, e|l.add(e.toVHDL); l])
 		}
 		return getRef(result, obj)

@@ -371,7 +371,7 @@ class VHDLStatementExtension {
 				val boolean noExplicitResetVar = hvar.getAnnotation(VHDLNoExplicitReset) !== null
 				var SubtypeIndication varType = type
 				if (hvar.dimensions.size != 0) {
-					val ranges = new LinkedList<DiscreteRange<?>>
+					val ranges = new LinkedList<DiscreteRange>
 					for (HDLExpression arrayWidth : hvar.dimensions) {
 						val HDLExpression newWidth = new HDLArithOp().setLeft(arrayWidth).setType(
 							HDLArithOp.HDLArithOpType::MINUS).setRight(HDLLiteral::get(1))
@@ -380,7 +380,7 @@ class VHDLStatementExtension {
 						ranges.add(range)
 					}
 					val boolean external = obj.isExternal
-					val DiscreteRange<?>[] arrRangs = ranges
+					val DiscreteRange[] arrRangs = ranges
 					val ConstrainedArray arrType = new ConstrainedArray(getArrayRefName(hvar, external), type, arrRangs)
 					res.addTypeDeclaration(arrType, external)
 					varType = arrType

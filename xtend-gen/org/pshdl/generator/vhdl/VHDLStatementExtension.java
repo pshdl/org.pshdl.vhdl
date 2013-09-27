@@ -626,8 +626,8 @@ public class VHDLStatementExtension {
           int _size = _dimensions.size();
           boolean _notEquals = (_size != 0);
           if (_notEquals) {
-            LinkedList<DiscreteRange<? extends Object>> _linkedList = new LinkedList<DiscreteRange<? extends Object>>();
-            final LinkedList<DiscreteRange<? extends Object>> ranges = _linkedList;
+            LinkedList<DiscreteRange> _linkedList = new LinkedList<DiscreteRange>();
+            final LinkedList<DiscreteRange> ranges = _linkedList;
             ArrayList<HDLExpression> _dimensions_1 = hvar.getDimensions();
             for (final HDLExpression arrayWidth : _dimensions_1) {
               {
@@ -647,7 +647,7 @@ public class VHDLStatementExtension {
               }
             }
             final boolean external = obj.isExternal();
-            final DiscreteRange<?>[] arrRangs = ((DiscreteRange<?>[])Conversions.unwrapArray(ranges, DiscreteRange.class));
+            final DiscreteRange[] arrRangs = ((DiscreteRange[])Conversions.unwrapArray(ranges, DiscreteRange.class));
             String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, external);
             ConstrainedArray _constrainedArray = new ConstrainedArray(_arrayRefName, type, arrRangs);
             final ConstrainedArray arrType = _constrainedArray;

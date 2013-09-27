@@ -158,8 +158,8 @@ public class VHDLExpressionExtension {
     return result;
   }
   
-  private Name<? extends Object> getRef(final Name<? extends Object> name, final HDLVariableRef ref) {
-    Name<? extends Object> result = name;
+  private Name<? extends Object> getRef(final Name name, final HDLVariableRef ref) {
+    Name result = name;
     ArrayList<HDLExpression> _array = ref.getArray();
     int _size = _array.size();
     boolean _notEquals = (_size != 0);
@@ -171,7 +171,7 @@ public class VHDLExpressionExtension {
         Expression<? extends Object> _vHDL = this.toVHDL(arr);
         indices.add(_vHDL);
       }
-      ArrayElement<Name<? extends Object>> _arrayElement = new ArrayElement<Name<? extends Object>>(name, indices);
+      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(name, indices);
       result = _arrayElement;
     }
     ArrayList<HDLRange> _bits = ref.getBits();
@@ -192,11 +192,11 @@ public class VHDLExpressionExtension {
       if (_tripleEquals) {
         HDLExpression _to = r.getTo();
         Expression<? extends Object> _vHDL_1 = this.toVHDL(_to);
-        ArrayElement<Name<? extends Object>> _arrayElement_1 = new ArrayElement<Name<? extends Object>>(result, _vHDL_1);
+        ArrayElement<Name> _arrayElement_1 = new ArrayElement<Name>(result, _vHDL_1);
         result = _arrayElement_1;
       } else {
         Range _vHDL_2 = this.toVHDL(r, Direction.DOWNTO);
-        Slice<Name<? extends Object>> _slice = new Slice<Name<? extends Object>>(result, _vHDL_2);
+        Slice<Name> _slice = new Slice<Name>(result, _vHDL_2);
         result = _slice;
       }
     }
@@ -233,7 +233,7 @@ public class VHDLExpressionExtension {
   protected Name<? extends Object> _toVHDL(final HDLInterfaceRef obj) {
     String _vHDLName = this.getVHDLName(obj);
     Signal _signal = new Signal(_vHDLName, UnresolvedType.NO_NAME);
-    Name<?> result = _signal;
+    Name result = _signal;
     ArrayList<HDLExpression> _ifArray = obj.getIfArray();
     int _size = _ifArray.size();
     boolean _notEquals = (_size != 0);
@@ -252,7 +252,7 @@ public class VHDLExpressionExtension {
           }
         };
       LinkedList<Expression> _fold = IterableExtensions.<HDLExpression, LinkedList<Expression>>fold(_ifArray_1, _linkedList, _function);
-      ArrayElement<Name<? extends Object>> _arrayElement = new ArrayElement<Name<? extends Object>>(result, _fold);
+      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(result, _fold);
       result = _arrayElement;
     }
     return this.getRef(result, obj);
