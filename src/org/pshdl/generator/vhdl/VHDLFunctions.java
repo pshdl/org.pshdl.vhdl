@@ -12,12 +12,19 @@ import org.pshdl.model.utils.*;
 
 import com.google.common.base.*;
 
+import de.upb.hni.vmagic.*;
 import de.upb.hni.vmagic.Range.Direction;
+import de.upb.hni.vmagic.declaration.*;
 import de.upb.hni.vmagic.expression.*;
 import de.upb.hni.vmagic.literal.*;
 import de.upb.hni.vmagic.statement.*;
+import de.upb.hni.vmagic.type.*;
 
 public class VHDLFunctions implements IVHDLCodeFunctionProvider {
+
+	public VHDLFunctions() {
+	}
+
 	private static Collection<IVHDLCodeFunctionProvider> codeProvider = HDLCore.getAllImplementations(IVHDLCodeFunctionProvider.class);
 
 	@Override
@@ -26,6 +33,15 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 		final Optional<BuiltInFunctions> e = Enums.getIfPresent(BuiltInFunctions.class, refName.getLastSegment());
 		if (e.isPresent()) {
 			switch (e.get()) {
+			case max:
+			case min:
+			case abs:
+				final FunctionDeclaration fd = new FunctionDeclaration(function.getNameRefName().getLastSegment(), UnresolvedType.NO_NAME);
+				final FunctionCall res = new FunctionCall(fd);
+				for (final HDLExpression exp : function.getParams()) {
+					res.getParameters().add(new AssociationElement(VHDLExpressionExtension.vhdlOf(exp)));
+				}
+				return res;
 			case highZ:
 				if (function.getParams().size() == 0)
 					return new CharacterLiteral('Z');
@@ -35,6 +51,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				aggregate.createAssociation(new CharacterLiteral('Z'), VHDLExpressionExtension.INST.toVHDL(range, Direction.TO));
 				return aggregate;
 			}
+
 		}
 		return null;
 	}
