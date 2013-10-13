@@ -809,7 +809,7 @@ public class VHDLStatementExtension {
       }
     }
     final Expression<?> caseExp = this.vee.toVHDL(hCaseExp);
-    LinkedHashMap<HDLSwitchCaseStatement,VHDLContext> _linkedHashMap = new LinkedHashMap<HDLSwitchCaseStatement,VHDLContext>();
+    LinkedHashMap<HDLSwitchCaseStatement,VHDLContext> _linkedHashMap = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>();
     final Map<HDLSwitchCaseStatement,VHDLContext> ctxs = _linkedHashMap;
     HashSet<HDLRegisterConfig> _hashSet = new HashSet<HDLRegisterConfig>();
     final Set<HDLRegisterConfig> configs = _hashSet;
