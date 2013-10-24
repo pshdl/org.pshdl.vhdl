@@ -58,8 +58,8 @@ import de.upb.hni.vmagic.output.*;
  */
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
-	public PStoVHDLCompiler(ExecutorService service) {
-		super();
+	public PStoVHDLCompiler() {
+		this("CMDLINE", null);
 	}
 
 	public PStoVHDLCompiler(String uri, ExecutorService service) {
@@ -74,7 +74,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	}
 
 	public static void main(String[] args) throws Exception {
-		final PStoVHDLCompiler compiler = new PStoVHDLCompiler(createExecutor());
+		final PStoVHDLCompiler compiler = new PStoVHDLCompiler("CMDLINE", createExecutor());
 		compiler.invoke(compiler.getUsage().parse(args));
 		System.exit(0);
 	}
@@ -89,21 +89,27 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	@Override
 	public String invoke(CommandLine cli) throws IOException {
 		final List<String> argList = cli.getArgList();
-		if (argList.size() == 0)
-			return "Missing file arguments, try help " + getHookName();
-		final File outDir = new File(argList.get(0));
+		if (argList.size() == 0) {
+			getUsage().printHelp(System.out);
+			return "Missing file arguments";
+		}
+		final File outDir = new File(cli.getOptionValue('o', "src-gen"));
 		if (!outDir.exists()) {
 			outDir.mkdirs();
 		}
-		final List<File> files = Lists.newArrayListWithCapacity(argList.size());
+		final List<File> pshdlFiles = Lists.newArrayListWithCapacity(argList.size());
 		for (final String string : argList) {
 			final File file = new File(string);
 			if (!file.exists())
 				return "File: " + file + " does not exist";
-			files.add(file);
+			if (string.endsWith(".vhdl") || string.endsWith(".vhd")) {
+				addVHDL(file);
+			} else {
+				pshdlFiles.add(file);
+			}
 		}
 		try {
-			if (addFiles(files)) {
+			if (addFiles(pshdlFiles)) {
 				printErrors();
 				return "Found syntax errors";
 			}
