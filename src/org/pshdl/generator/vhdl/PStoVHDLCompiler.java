@@ -59,7 +59,7 @@ import de.upb.hni.vmagic.output.*;
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
 	public PStoVHDLCompiler() {
-		this("CMDLINE", null);
+		this(null, null);
 	}
 
 	public PStoVHDLCompiler(String uri, ExecutorService service) {
@@ -103,7 +103,15 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 			if (!file.exists())
 				return "File: " + file + " does not exist";
 			if (string.endsWith(".vhdl") || string.endsWith(".vhd")) {
-				addVHDL(file);
+				final List<HDLInterface> vhdl = addVHDL(file);
+				if (cli.hasOption('i')) {
+					final File ifFile = new File(outDir, file.getName() + ".pshdl");
+					final PrintStream ps = new PrintStream(ifFile);
+					for (final HDLInterface hdlInterface : vhdl) {
+						ps.println(hdlInterface);
+					}
+					ps.close();
+				}
 			} else {
 				pshdlFiles.add(file);
 			}
@@ -166,12 +174,16 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 * 
 	 * @param file
 	 *            the VHDL file
+	 * @return
 	 * @throws IOException
 	 */
-	public void addVHDL(File file) throws IOException {
+	public List<HDLInterface> addVHDL(File file) throws IOException {
 		final FileInputStream fis = new FileInputStream(file);
-		addVHDL(fis, file.getAbsolutePath());
-		fis.close();
+		try {
+			return addVHDL(fis, file.getAbsolutePath());
+		} finally {
+			fis.close();
+		}
 	}
 
 	/**
@@ -182,10 +194,12 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 *            the contents of the VHDL file
 	 * @param asSrc
 	 *            a src id under which to register the {@link HDLInterface}
+	 * @return
 	 */
-	public void addVHDL(InputStream contents, String asSrc) {
+	public List<HDLInterface> addVHDL(InputStream contents, String asSrc) {
 		validated = false;
-		VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
+		final List<HDLInterface> importFile = VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
+		return importFile;
 	}
 
 	@Override
@@ -197,6 +211,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	public MultiOption getUsage() {
 		final Options options = new Options();
 		options.addOption(new Option("o", "outputDir", true, "Specify the directory to which the files will be written, default is: src-gen"));
+		options.addOption(new Option("i", "interface", false, "Generate pshdl interface declarations for vhdl file arguments"));
 		return new MultiOption(getHookName() + " usage: [OPTIONS] <files>", null, options);
 	}
 
