@@ -28,7 +28,6 @@ package org.pshdl.generator.vhdl;
 
 import java.io.*;
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.*;
 
 import org.apache.commons.cli.*;
@@ -58,6 +57,22 @@ import de.upb.hni.vmagic.output.*;
  */
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
+	private final class SimpleListener implements ICompilationListener {
+		@Override
+		public boolean startModule(String src, HDLPackage parse) {
+			System.out.println("Compiling:" + new File(src).getName());
+			return true;
+		}
+
+		@Override
+		public boolean useSource(String src, Collection<Problem> collection, boolean hasError) {
+			if (hasError) {
+				System.out.println("Skipping " + src + " because it has errors");
+			}
+			return !hasError;
+		}
+	}
+
 	public PStoVHDLCompiler() {
 		this(null, null);
 	}
@@ -71,12 +86,6 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 		final HDLPackage transform = Insulin.transform(parse, src);
 		final String vhdlCode = VhdlOutput.toVhdlString(VHDLPackageExtension.INST.toVHDL(transform));
 		return createResult(src, vhdlCode, getHookName(), false);
-	}
-
-	public static void main(String[] args) throws Exception {
-		final PStoVHDLCompiler compiler = new PStoVHDLCompiler("CMDLINE", createExecutor());
-		compiler.invoke(compiler.getUsage().parse(args));
-		System.exit(0);
 	}
 
 	/**
@@ -121,43 +130,21 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 				printErrors();
 				return "Found syntax errors";
 			}
+			validatePackages();
+			printErrors();
 		} catch (final Exception e1) {
 			e1.printStackTrace();
 			return "An exception occured during file parsing, this should not happen";
 		}
 		System.out.println("Compiling files");
+		final SimpleListener simpleListener = new SimpleListener();
+		List<CompileResult> results;
 		try {
-			validatePackages();
-			printErrors();
+			results = compile(simpleListener);
 		} catch (final Exception e) {
 			e.printStackTrace();
-			return "An exception occured during validation, this should not happen";
+			return "An exception occured during file parsing, this should not happen";
 		}
-		final List<CompileResult> res = Lists.newArrayListWithCapacity(pkgs.size());
-		for (final Entry<String, HDLPackage> e : pkgs.entrySet()) {
-			final String src1 = e.getKey();
-			final HDLPackage parse1 = e.getValue();
-			if (new ICompilationListener() {
-
-				@Override
-				public boolean startModule(String src, HDLPackage parse) {
-					System.out.println("Compiling:" + new File(src).getName());
-					return true;
-				}
-
-				@Override
-				public boolean useSource(String src, Collection<Problem> collection, boolean hasError) {
-					if (hasError) {
-						System.out.println("Skipping " + src + " because it has errors");
-					}
-					return hasError;
-				}
-
-			}.startModule(src1, parse1)) {
-				res.add(doCompile(src1, parse1));
-			}
-		}
-		final List<CompileResult> results = res;
 		for (final CompileResult result : results) {
 			if (!result.hasError()) {
 				writeFiles(outDir, result, false);
