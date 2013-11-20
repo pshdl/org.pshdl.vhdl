@@ -112,9 +112,9 @@ public class VHDLContext {
 			LinkedList<T> list = local.get(e.getKey());
 			if (list == null) {
 				list = new LinkedList<T>();
+				local.put(e.getKey(), list);
 			}
 			list.addAll(e.getValue());
-			local.put(e.getKey(), list);
 		}
 	}
 

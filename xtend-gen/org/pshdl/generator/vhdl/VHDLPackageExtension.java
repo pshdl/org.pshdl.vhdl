@@ -82,6 +82,7 @@ import org.pshdl.model.HDLDeclaration;
 import org.pshdl.model.HDLEnum;
 import org.pshdl.model.HDLEnumDeclaration;
 import org.pshdl.model.HDLEnumRef;
+import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLPackage;
 import org.pshdl.model.HDLReference;
 import org.pshdl.model.HDLRegisterConfig;
@@ -425,15 +426,11 @@ public class VHDLPackageExtension {
   
   private SequentialStatement createIfStatement(final HDLUnit hUnit, final ProcessStatement ps, final HDLRegisterConfig config, final LinkedList<SequentialStatement> value, final VHDLContext unit) {
     final HDLRegisterConfig key = config.normalize();
-    HDLVariableRef _hDLVariableRef = new HDLVariableRef();
-    HDLQualifiedName _clkRefName = key.getClkRefName();
-    HDLVariableRef _setVar = _hDLVariableRef.setVar(_clkRefName);
-    Expression<? extends Object> _vHDL = this.vee.toVHDL(_setVar);
+    HDLExpression _clk = key.getClk();
+    Expression<? extends Object> _vHDL = this.vee.toVHDL(_clk);
     Signal clk = ((Signal) _vHDL);
-    HDLVariableRef _hDLVariableRef_1 = new HDLVariableRef();
-    HDLQualifiedName _rstRefName = key.getRstRefName();
-    HDLVariableRef _setVar_1 = _hDLVariableRef_1.setVar(_rstRefName);
-    Expression<? extends Object> _vHDL_1 = this.vee.toVHDL(_setVar_1);
+    HDLExpression _rst = key.getRst();
+    Expression<? extends Object> _vHDL_1 = this.vee.toVHDL(_rst);
     Signal rst = ((Signal) _vHDL_1);
     List<Signal> _sensitivityList = ps.getSensitivityList();
     _sensitivityList.add(clk);

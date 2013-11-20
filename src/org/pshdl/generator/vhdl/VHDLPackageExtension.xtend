@@ -245,8 +245,8 @@ class VHDLPackageExtension {
 	def private SequentialStatement createIfStatement(HDLUnit hUnit, ProcessStatement ps, HDLRegisterConfig config,
 		LinkedList<SequentialStatement> value, VHDLContext unit) {
 		val key = config.normalize
-		var Signal clk = new HDLVariableRef().setVar(key.clkRefName).toVHDL as Signal
-		var Signal rst = new HDLVariableRef().setVar(key.rstRefName).toVHDL as Signal
+		var Signal clk = key.clk.toVHDL as Signal
+		var Signal rst = key.rst.toVHDL as Signal
 		ps.sensitivityList.add(clk)
 		var EnumerationLiteral activeRst
 		if (key.resetType === HDLRegisterConfig.HDLRegResetActiveType::HIGH)
