@@ -655,12 +655,20 @@ public class VHDLStatementExtension {
             varType = arrType;
           }
           boolean _and = false;
+          boolean _and_1 = false;
           boolean _tripleNotEquals_4 = (resetValue != null);
           if (!_tripleNotEquals_4) {
-            _and = false;
+            _and_1 = false;
           } else {
             boolean _not = (!noExplicitResetVar);
-            _and = (_tripleNotEquals_4 && _not);
+            _and_1 = (_tripleNotEquals_4 && _not);
+          }
+          if (!_and_1) {
+            _and = false;
+          } else {
+            HDLRegisterConfig _register_2 = obj.getRegister();
+            boolean _tripleNotEquals_5 = (_register_2 != null);
+            _and = (_and_1 && _tripleNotEquals_5);
           }
           if (_and) {
             boolean synchedArray = false;
@@ -681,9 +689,9 @@ public class VHDLStatementExtension {
             HDLStatement _createArrayForLoop = Insulin.createArrayForLoop(_emptyList, _dimensions_3, 0, resetValue, _setVar_1, synchedArray);
             final HDLStatement initLoop = _createArrayForLoop.copyDeepFrozen(obj);
             final VHDLContext vhdl = this.toVHDL(initLoop, pid);
-            HDLRegisterConfig _register_2 = obj.getRegister();
+            HDLRegisterConfig _register_3 = obj.getRegister();
             SequentialStatement _statement = vhdl.getStatement();
-            res.addResetValue(_register_2, _statement);
+            res.addResetValue(_register_3, _statement);
           }
           String _name_1 = hvar.getName();
           Signal _signal = new Signal(_name_1, varType);
@@ -692,8 +700,8 @@ public class VHDLStatementExtension {
           Constant _constant = new Constant(_name_2, varType);
           final Constant constant = _constant;
           HDLExpression _defaultValue = hvar.getDefaultValue();
-          boolean _tripleNotEquals_5 = (_defaultValue != null);
-          if (_tripleNotEquals_5) {
+          boolean _tripleNotEquals_6 = (_defaultValue != null);
+          if (_tripleNotEquals_6) {
             HDLExpression _defaultValue_1 = hvar.getDefaultValue();
             Expression<? extends Object> _vHDL = this.vee.toVHDL(_defaultValue_1);
             constant.setDefaultValue(_vHDL);
@@ -703,8 +711,8 @@ public class VHDLStatementExtension {
               Expression<? extends Object> _vHDL_1 = this.vee.toVHDL(resetValue);
               s.setDefaultValue(_vHDL_1);
             } else {
-              boolean _tripleNotEquals_6 = (resetValue != null);
-              if (_tripleNotEquals_6) {
+              boolean _tripleNotEquals_7 = (resetValue != null);
+              if (_tripleNotEquals_7) {
                 Expression<?> assign = this.vee.toVHDL(resetValue);
                 ArrayList<HDLExpression> _dimensions_4 = hvar.getDimensions();
                 for (final HDLExpression exp : _dimensions_4) {

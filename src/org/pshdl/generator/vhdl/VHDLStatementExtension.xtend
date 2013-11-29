@@ -385,7 +385,7 @@ class VHDLStatementExtension {
 					res.addTypeDeclaration(arrType, external)
 					varType = arrType
 				}
-				if (resetValue !== null && !noExplicitResetVar) {
+				if (resetValue !== null && !noExplicitResetVar && obj.register !== null) {
 					var boolean synchedArray = false
 					if (resetValue instanceof HDLVariableRef) {
 						val HDLVariableRef ref = resetValue as HDLVariableRef
