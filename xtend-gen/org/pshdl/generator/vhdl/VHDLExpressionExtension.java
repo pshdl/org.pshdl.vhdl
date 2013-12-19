@@ -128,14 +128,18 @@ public class VHDLExpressionExtension {
   protected Expression<? extends Object> _toVHDL(final HDLExpression exp) {
     HDLClass _classType = exp.getClassType();
     String _plus = ("Not implemented for type:" + _classType);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    String _plus_1 = (_plus + " expression is:");
+    String _plus_2 = (_plus_1 + exp);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus_2);
     throw _illegalArgumentException;
   }
   
   protected Name<? extends Object> _toVHDL(final HDLReference ref) {
     HDLClass _classType = ref.getClassType();
     String _plus = ("Not implemented for type:" + _classType);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    String _plus_1 = (_plus + " ref is:");
+    String _plus_2 = (_plus_1 + ref);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus_2);
     throw _illegalArgumentException;
   }
   
