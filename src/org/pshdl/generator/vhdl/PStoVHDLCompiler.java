@@ -84,6 +84,8 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	@Override
 	protected CompileResult doCompile(final String src, final HDLPackage parse) {
 		final HDLPackage transform = Insulin.transform(parse, src);
+		if (transform.getAllObjectsOf(HDLClass.HDLUnresolvedFragment.clazz, true).length != 0)
+			throw new IllegalArgumentException("Introduced unresolved fragments!");
 		final String vhdlCode = VhdlOutput.toVhdlString(VHDLPackageExtension.INST.toVHDL(transform));
 		return createResult(src, vhdlCode, getHookName(), false);
 	}

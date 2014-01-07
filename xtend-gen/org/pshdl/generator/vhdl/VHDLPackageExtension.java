@@ -505,11 +505,19 @@ public class VHDLPackageExtension {
             _elements.add(pd);
           }
           final VHDLContext vhdl = this.vse.toVHDL(hvd, VHDLContext.DEFAULT_CTX);
-          ConstantDeclaration first = vhdl.constants.getFirst();
+          ConstantDeclaration _xifexpression = null;
+          boolean _isEmpty = vhdl.constants.isEmpty();
+          if (_isEmpty) {
+            _xifexpression = null;
+          } else {
+            ConstantDeclaration _first = vhdl.constants.getFirst();
+            _xifexpression = _first;
+          }
+          ConstantDeclaration first = _xifexpression;
           boolean _tripleEquals_1 = (first == null);
           if (_tripleEquals_1) {
-            ConstantDeclaration _first = vhdl.constantsPkg.getFirst();
-            first = _first;
+            ConstantDeclaration _first_1 = vhdl.constantsPkg.getFirst();
+            first = _first_1;
             boolean _tripleEquals_2 = (first == null);
             if (_tripleEquals_2) {
               IllegalArgumentException _illegalArgumentException = new IllegalArgumentException("Expected constant declaration but found none!");
@@ -531,8 +539,8 @@ public class VHDLPackageExtension {
           List<LibraryUnit> _elements_1 = res.getElements();
           _elements_1.add(enumPd);
           final VHDLContext vhdl_1 = this.vse.toVHDL(hvd_1, VHDLContext.DEFAULT_CTX);
-          DeclarativeItemMarker _first_1 = vhdl_1.internalTypes.getFirst();
-          final Type first_1 = ((Type) _first_1);
+          DeclarativeItemMarker _first_2 = vhdl_1.internalTypes.getFirst();
+          final Type first_1 = ((Type) _first_2);
           boolean _tripleEquals_3 = (first_1 == null);
           if (_tripleEquals_3) {
             IllegalArgumentException _illegalArgumentException_1 = new IllegalArgumentException("Expected enum type declaration but found none!");
@@ -555,16 +563,24 @@ public class VHDLPackageExtension {
             {
               final HDLVariableRef[] refs = hvar.<HDLVariableRef>getAllObjectsOf(HDLVariableRef.class, true);
               for (final HDLVariableRef ref : refs) {
-                Optional<HDLVariable> _resolveVar = ref.resolveVar();
-                HDLVariable _get = _resolveVar.get();
-                _get.setMeta(VHDLStatementExtension.EXPORT);
+                {
+                  final Optional<HDLVariable> resolvedRef = ref.resolveVar();
+                  boolean _isPresent = resolvedRef.isPresent();
+                  if (_isPresent) {
+                    HDLVariable _get = resolvedRef.get();
+                    _get.setMeta(VHDLStatementExtension.EXPORT);
+                  }
+                }
               }
               final String origName = hvar.getName();
               final String name = VHDLUtils.getVHDLName(origName);
-              HDLQualifiedName _asRef = hvar.asRef();
-              HDLQualifiedName _skipLast = _asRef.skipLast(1);
-              HDLQualifiedName _append = _skipLast.append(name);
-              Refactoring.<HDLUnit>renameVariable(hvar, _append, unit, ms);
+              boolean _notEquals = (!Objects.equal(name, origName));
+              if (_notEquals) {
+                HDLQualifiedName _asRef = hvar.asRef();
+                HDLQualifiedName _skipLast = _asRef.skipLast(1);
+                HDLQualifiedName _append = _skipLast.append(name);
+                Refactoring.<HDLUnit>renameVariable(hvar, _append, unit, ms);
+              }
             }
           }
         }

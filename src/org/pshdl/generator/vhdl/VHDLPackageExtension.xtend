@@ -286,7 +286,7 @@ class VHDLPackageExtension {
 					res.elements.add(pd)
 				}
 				val VHDLContext vhdl = hvd.toVHDL(VHDLContext::DEFAULT_CTX)
-				var ConstantDeclaration first = vhdl.constants.first
+				var ConstantDeclaration first = if (vhdl.constants.empty) null else vhdl.constants.first
 				if (first === null) {
 					first = vhdl.constantsPkg.first
 					if (first === null)
@@ -314,11 +314,15 @@ class VHDLPackageExtension {
 					for (HDLVariableRef ref : refs) {
 
 						//Check which variable declaration contains references and mark those references as the ones that should be declared in a package
-						ref.resolveVar.get.setMeta(VHDLStatementExtension::EXPORT)
+						val resolvedRef = ref.resolveVar
+						//References for types imported from other modules might not be visible in the HDL Model
+						if (resolvedRef.present)
+							resolvedRef.get.setMeta(VHDLStatementExtension::EXPORT)
 					}
 					val String origName = hvar.name
 					val String name = VHDLUtils::getVHDLName(origName)
-					Refactoring::renameVariable(hvar, hvar.asRef().skipLast(1).append(name), unit, ms)
+					if (name!=origName)
+						Refactoring::renameVariable(hvar, hvar.asRef().skipLast(1).append(name), unit, ms)
 				}
 			}
 			val HDLUnit newUnit = ms.apply(unit)
