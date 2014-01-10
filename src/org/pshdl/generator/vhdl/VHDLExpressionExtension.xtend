@@ -153,11 +153,18 @@ class VHDLExpressionExtension {
 	}
 
 	def dispatch Expression<?> toVHDL(HDLArrayInit obj) {
+		toVHDLArray(obj, Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0))))
+	}
+	
+	def dispatch Expression<?> toVHDLArray(HDLExpression obj, Expression<?> otherValue) {
+		return obj.toVHDL
+	}
+	def dispatch Expression<?> toVHDLArray(HDLArrayInit obj, Expression<?> otherValue) {
 		if (obj.exp.size == 1)
 			return obj.exp.get(0).toVHDL
 		val aggr = new Aggregate()
-		obj.exp.forEach([e, i|aggr.createAssociation(e.toVHDL, new DecimalLiteral(i))])
-		aggr.createAssociation(Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0))), Choices::OTHERS)
+		obj.exp.forEach([e, i|aggr.createAssociation(e.toVHDLArray(otherValue), new DecimalLiteral(i))])
+		aggr.createAssociation(otherValue, Choices::OTHERS)
 		return aggr
 	}
 

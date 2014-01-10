@@ -115,6 +115,7 @@ import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
+import de.upb.hni.vmagic.literal.CharacterLiteral
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -346,6 +347,10 @@ class VHDLStatementExtension {
 		var HDLExpression resetValue = null
 		val HDLAnnotation typeAnno = HDLQuery::select(typeof(HDLAnnotation)).from(obj).where(HDLAnnotation::fName).
 			isEqualTo(VHDLType.toString).first
+		if (obj.register !== null) {
+			resetValue = obj.register.resetValue
+		}
+		var Expression<?> otherValue=Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0)))
 		if (typeAnno !== null) {
 			val HDLQualifiedName value = new HDLQualifiedName(typeAnno.value)
 			res.addImport(value)
@@ -353,95 +358,107 @@ class VHDLStatementExtension {
 		} else {
 			if (primitive !== null) {
 				type = VHDLCastsLibrary::getType(primitive)
-				if (obj.register !== null) {
-					resetValue = obj.register.resetValue
-				}
 			} else {
 				val HDLType hType = obj.resolveType.get
 				if (hType instanceof HDLEnum) {
 					val HDLEnum hEnum = hType as HDLEnum
 					type = new EnumerationType(hEnum.name)
-					resetValue = new HDLEnumRef().setHEnum(hEnum.asRef).setVar(hEnum.enums.get(0).asRef)
-					resetValue.setContainer(obj)
+					var idx=0;
+					val resVal=ConstantEvaluate.valueOf(resetValue, null)
+					if (resVal.present)
+						idx=resVal.get.intValue
+					val enumReset = new HDLEnumRef().setHEnum(hEnum.asRef).setVar(hEnum.enums.get(idx).asRef)
+					otherValue=enumReset.toVHDL
+					if (!(resetValue instanceof HDLArrayInit))
+						resetValue=enumReset
 				}
 			}
 		}
 		if (type !== null) {
 			for (HDLVariable hvar : obj.variables) {
-				val boolean noExplicitResetVar = hvar.getAnnotation(VHDLNoExplicitReset) !== null
-				var SubtypeIndication varType = type
-				if (hvar.dimensions.size != 0) {
-					val ranges = new LinkedList<DiscreteRange>
-					for (HDLExpression arrayWidth : hvar.dimensions) {
-						val HDLExpression newWidth = new HDLArithOp().setLeft(arrayWidth).setType(
-							HDLArithOp.HDLArithOpType::MINUS).setRight(HDLLiteral::get(1))
-						val Range range = new HDLRange().setFrom(HDLLiteral::get(0)).setTo(newWidth).copyDeepFrozen(obj).
-							toVHDL(Range.Direction::TO)
-						ranges.add(range)
-					}
-					val boolean external = obj.isExternal
-					val DiscreteRange[] arrRangs = ranges
-					val ConstrainedArray arrType = new ConstrainedArray(getArrayRefName(hvar, external), type, arrRangs)
-					res.addTypeDeclaration(arrType, external)
-					varType = arrType
-				}
-				if (resetValue !== null && !noExplicitResetVar && obj.register !== null) {
-					var boolean synchedArray = false
-					if (resetValue instanceof HDLVariableRef) {
-						val HDLVariableRef ref = resetValue as HDLVariableRef
-						synchedArray = ref.resolveVar.get.dimensions.size != 0
-					}
-					val HDLStatement initLoop = Insulin::createArrayForLoop(Collections::emptyList, hvar.dimensions, 0,
-						resetValue, new HDLVariableRef().setVar(hvar.asRef), synchedArray).copyDeepFrozen(obj)
-					val VHDLContext vhdl = initLoop.toVHDL(pid)
-					res.addResetValue(obj.register, vhdl.statement)
-				}
-				val Signal s = new Signal(hvar.name, varType)
-				val Constant constant = new Constant(hvar.name, varType)
-				if (hvar.defaultValue !== null)
-					constant.setDefaultValue(hvar.defaultValue.toVHDL)
-				if (noExplicitResetVar) {
-					if (resetValue instanceof HDLArrayInit) {
-						s.setDefaultValue(resetValue.toVHDL)
-					} else {
-						if (resetValue !== null) {
-							var Expression<?> assign = resetValue.toVHDL
-							for (HDLExpression exp : hvar.dimensions)
-								assign = Aggregate::OTHERS(assign)
-							s.setDefaultValue(assign)
-						}
-					}
-				}
-				switch (obj.direction) {
-					case IN: {
-						s.setMode(VhdlObject.Mode::IN)
-						res.addPortDeclaration(s)
-					}
-					case OUT: {
-						s.setMode(VhdlObject.Mode::OUT)
-						res.addPortDeclaration(s)
-					}
-					case INOUT: {
-						s.setMode(VhdlObject.Mode::INOUT)
-						res.addPortDeclaration(s)
-					}
-					case INTERNAL: {
-						val SignalDeclaration sd = new SignalDeclaration(s)
-						res.addInternalSignalDeclaration(sd)
-					}
-					case obj.direction == HIDDEN || obj.direction == CONSTANT: {
-						val ConstantDeclaration cd = new ConstantDeclaration(constant)
-						if (hvar.hasMeta(EXPORT))
-							res.addConstantDeclarationPkg(cd)
-						else
-							res.addConstantDeclaration(cd)
-					}
-					case PARAMETER:
-						res.addGenericDeclaration(constant)
-				}
+				handleVariable(hvar, type, obj, res, resetValue, otherValue, pid)
 			}
 		}
 		return res.attachComment(obj)
+	}
+	
+	def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res, HDLExpression resetValue, Expression<?> otherValue, int pid) {
+		val boolean noExplicitResetVar = hvar.getAnnotation(VHDLNoExplicitReset) !== null
+		var SubtypeIndication varType = type
+		if (hvar.dimensions.size != 0) {
+			val ranges = new LinkedList<DiscreteRange>
+			for (HDLExpression arrayWidth : hvar.dimensions) {
+				val HDLExpression newWidth = new HDLArithOp().setLeft(arrayWidth).setType(
+					HDLArithOp.HDLArithOpType::MINUS).setRight(HDLLiteral::get(1))
+				val Range range = new HDLRange().setFrom(HDLLiteral::get(0)).setTo(newWidth).copyDeepFrozen(obj).
+					toVHDL(Range.Direction::TO)
+				ranges.add(range)
+			}
+			val boolean external = obj.isExternal
+			val ConstrainedArray arrType = new ConstrainedArray(getArrayRefName(hvar, external), type, ranges)
+			res.addTypeDeclaration(arrType, external)
+			varType = arrType
+		}
+		val Signal s = new Signal(hvar.name, varType)
+		if (resetValue !== null && !noExplicitResetVar && obj.register !== null) {
+			var boolean synchedArray = false
+			if (resetValue instanceof HDLVariableRef) {
+				val HDLVariableRef ref = resetValue as HDLVariableRef
+				synchedArray = ref.resolveVar.get.dimensions.size != 0
+			}
+			val target = new HDLVariableRef().setVar(hvar.asRef)
+			if (resetValue instanceof HDLArrayInit){
+				val sa=new SignalAssignment(s, resetValue.toVHDLArray(otherValue))
+				res.addResetValue(obj.register, sa)				
+			} else {
+				val HDLStatement initLoop = Insulin::createArrayForLoop(Collections::emptyList, hvar.dimensions, 0,
+					resetValue, target, synchedArray).copyDeepFrozen(obj)
+				val VHDLContext vhdl = initLoop.toVHDL(pid)
+				res.addResetValue(obj.register, vhdl.statement)
+			}
+		}
+		val Constant constant = new Constant(hvar.name, varType)
+		if (hvar.defaultValue !== null)
+			constant.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
+		if (noExplicitResetVar) {
+			if (resetValue instanceof HDLArrayInit) {
+				s.setDefaultValue(resetValue.toVHDLArray(otherValue))
+			} else {
+				if (resetValue !== null) {
+					var Expression<?> assign = resetValue.toVHDL
+					for (HDLExpression exp : hvar.dimensions)
+						assign = Aggregate::OTHERS(assign)
+					s.setDefaultValue(assign)
+				}
+			}
+		}
+		switch (obj.direction) {
+			case IN: {
+				s.setMode(VhdlObject.Mode::IN)
+				res.addPortDeclaration(s)
+			}
+			case OUT: {
+				s.setMode(VhdlObject.Mode::OUT)
+				res.addPortDeclaration(s)
+			}
+			case INOUT: {
+				s.setMode(VhdlObject.Mode::INOUT)
+				res.addPortDeclaration(s)
+			}
+			case INTERNAL: {
+				val SignalDeclaration sd = new SignalDeclaration(s)
+				res.addInternalSignalDeclaration(sd)
+			}
+			case obj.direction == HIDDEN || obj.direction == CONSTANT: {
+				val ConstantDeclaration cd = new ConstantDeclaration(constant)
+				if (hvar.hasMeta(EXPORT))
+					res.addConstantDeclarationPkg(cd)
+				else
+					res.addConstantDeclaration(cd)
+			}
+			case PARAMETER:
+				res.addGenericDeclaration(constant)
+		}
 	}
 
 	def dispatch VHDLContext toVHDL(HDLSwitchStatement obj, int pid) {

@@ -208,6 +208,18 @@ public class VHDLExpressionExtension {
   }
   
   protected Expression<? extends Object> _toVHDL(final HDLArrayInit obj) {
+    char _charAt = "0".charAt(0);
+    CharacterLiteral _characterLiteral = new CharacterLiteral(_charAt);
+    Aggregate _OTHERS = Aggregate.OTHERS(_characterLiteral);
+    Expression<? extends Object> _vHDLArray = this.toVHDLArray(obj, _OTHERS);
+    return _vHDLArray;
+  }
+  
+  protected Expression<? extends Object> _toVHDLArray(final HDLExpression obj, final Expression<? extends Object> otherValue) {
+    return this.toVHDL(obj);
+  }
+  
+  protected Expression<? extends Object> _toVHDLArray(final HDLArrayInit obj, final Expression<? extends Object> otherValue) {
     ArrayList<HDLExpression> _exp = obj.getExp();
     int _size = _exp.size();
     boolean _equals = (_size == 1);
@@ -221,16 +233,13 @@ public class VHDLExpressionExtension {
     ArrayList<HDLExpression> _exp_2 = obj.getExp();
     final Procedure2<HDLExpression,Integer> _function = new Procedure2<HDLExpression,Integer>() {
       public void apply(final HDLExpression e, final Integer i) {
-        Expression<? extends Object> _vHDL = VHDLExpressionExtension.this.toVHDL(e);
+        Expression<? extends Object> _vHDLArray = VHDLExpressionExtension.this.toVHDLArray(e, otherValue);
         DecimalLiteral _decimalLiteral = new DecimalLiteral((i).intValue());
-        aggr.createAssociation(_vHDL, _decimalLiteral);
+        aggr.createAssociation(_vHDLArray, _decimalLiteral);
       }
     };
     IterableExtensions.<HDLExpression>forEach(_exp_2, _function);
-    char _charAt = "0".charAt(0);
-    CharacterLiteral _characterLiteral = new CharacterLiteral(_charAt);
-    Aggregate _OTHERS = Aggregate.OTHERS(_characterLiteral);
-    aggr.createAssociation(_OTHERS, Choices.OTHERS);
+    aggr.createAssociation(otherValue, Choices.OTHERS);
     return aggr;
   }
   
@@ -781,6 +790,17 @@ public class VHDLExpressionExtension {
     } else {
       throw new IllegalArgumentException("Unhandled parameter types: " +
         Arrays.<Object>asList(obj).toString());
+    }
+  }
+  
+  public Expression<? extends Object> toVHDLArray(final HDLExpression obj, final Expression<? extends Object> otherValue) {
+    if (obj instanceof HDLArrayInit) {
+      return _toVHDLArray((HDLArrayInit)obj, otherValue);
+    } else if (obj != null) {
+      return _toVHDLArray(obj, otherValue);
+    } else {
+      throw new IllegalArgumentException("Unhandled parameter types: " +
+        Arrays.<Object>asList(obj, otherValue).toString());
     }
   }
 }
