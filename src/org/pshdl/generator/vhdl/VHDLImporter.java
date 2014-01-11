@@ -77,7 +77,7 @@ public class VHDLImporter {
 					final Entity entity = (Entity) unit;
 					final String id = entity.getIdentifier();
 					HDLInterface vInterface = new HDLInterface().setName(pkg.append(id).toString());
-					final List<VhdlObjectProvider> ports = entity.getPort();
+					final List<VhdlObjectProvider<Signal>> ports = entity.getPort();
 					for (final VhdlObjectProvider port : ports) {
 						final List<Signal> signals = port.getVhdlObjects();
 						for (final Signal signal : signals) {
@@ -87,7 +87,7 @@ public class VHDLImporter {
 							vInterface = vInterface.addPorts(var);
 						}
 					}
-					final List<VhdlObjectProvider> param = entity.getGeneric();
+					final List<VhdlObjectProvider<Constant>> param = entity.getGeneric();
 					for (final VhdlObjectProvider port : param) {
 						final List<Constant> signals = port.getVhdlObjects();
 						for (final Constant signal : signals) {

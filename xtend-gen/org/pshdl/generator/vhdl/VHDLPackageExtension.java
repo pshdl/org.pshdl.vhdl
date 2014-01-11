@@ -32,9 +32,13 @@ import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.VhdlFile;
 import de.upb.hni.vmagic.builtin.NumericStd;
 import de.upb.hni.vmagic.builtin.StdLogic1164;
+import de.upb.hni.vmagic.concurrent.ConcurrentStatement;
 import de.upb.hni.vmagic.concurrent.ProcessStatement;
+import de.upb.hni.vmagic.declaration.BlockDeclarativeItem;
 import de.upb.hni.vmagic.declaration.ConstantDeclaration;
 import de.upb.hni.vmagic.declaration.DeclarativeItemMarker;
+import de.upb.hni.vmagic.declaration.EntityDeclarativeItem;
+import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
 import de.upb.hni.vmagic.expression.Equals;
 import de.upb.hni.vmagic.expression.Expression;
 import de.upb.hni.vmagic.expression.FunctionCall;
@@ -45,7 +49,9 @@ import de.upb.hni.vmagic.libraryunit.LibraryUnit;
 import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
 import de.upb.hni.vmagic.libraryunit.UseClause;
 import de.upb.hni.vmagic.literal.EnumerationLiteral;
+import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
+import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.IfStatement;
 import de.upb.hni.vmagic.statement.SequentialStatement;
 import de.upb.hni.vmagic.type.Type;
@@ -218,9 +224,9 @@ public class VHDLPackageExtension {
       final String libName = this.getPackageName(entityName);
       PackageDeclaration _packageDeclaration = new PackageDeclaration(libName);
       final PackageDeclaration pd = _packageDeclaration;
-      List _declarations = pd.getDeclarations();
+      List<PackageDeclarativeItem> _declarations = pd.getDeclarations();
       _declarations.addAll(((List) unit.externalTypes));
-      List _declarations_1 = pd.getDeclarations();
+      List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
       _declarations_1.addAll(unit.constantsPkg);
       res.add(pd);
       StringConcatenation _builder = new StringConcatenation();
@@ -231,32 +237,32 @@ public class VHDLPackageExtension {
       res.add(_useClause);
       VHDLPackageExtension.addDefaultLibs(res, unit);
     }
-    List _port = e.getPort();
+    List<VhdlObjectProvider<Signal>> _port = e.getPort();
     _port.addAll(unit.ports);
-    List _generic = e.getGeneric();
+    List<VhdlObjectProvider<Constant>> _generic = e.getGeneric();
     _generic.addAll(unit.generics);
-    List _declarations_2 = e.getDeclarations();
+    List<EntityDeclarativeItem> _declarations_2 = e.getDeclarations();
     _declarations_2.addAll(((List) unit.internalTypesConstants));
     res.add(e);
     Architecture _architecture = new Architecture("pshdlGenerated", e);
     final Architecture a = _architecture;
-    List _declarations_3 = a.getDeclarations();
+    List<BlockDeclarativeItem> _declarations_3 = a.getDeclarations();
     _declarations_3.addAll(((List) unit.internals));
-    List _statements_1 = a.getStatements();
+    List<ConcurrentStatement> _statements_1 = a.getStatements();
     _statements_1.addAll(unit.concurrentStatements);
     Set<Map.Entry<Integer,LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
     for (final Map.Entry<Integer,LinkedList<SequentialStatement>> uc : _entrySet) {
       {
         ProcessStatement _processStatement = new ProcessStatement();
         final ProcessStatement ps = _processStatement;
-        List _sensitivityList = ps.getSensitivityList();
+        List<Signal> _sensitivityList = ps.getSensitivityList();
         Integer _key = uc.getKey();
         Collection<? extends Signal> _createSensitivyList = this.createSensitivyList(unit, (_key).intValue());
         _sensitivityList.addAll(_createSensitivyList);
-        List _statements_2 = ps.getStatements();
+        List<SequentialStatement> _statements_2 = ps.getStatements();
         LinkedList<SequentialStatement> _value = uc.getValue();
         _statements_2.addAll(_value);
-        List _statements_3 = a.getStatements();
+        List<ConcurrentStatement> _statements_3 = a.getStatements();
         _statements_3.add(ps);
       }
     }
@@ -265,12 +271,12 @@ public class VHDLPackageExtension {
       {
         ProcessStatement _processStatement = new ProcessStatement();
         final ProcessStatement ps = _processStatement;
-        List _statements_2 = ps.getStatements();
+        List<SequentialStatement> _statements_2 = ps.getStatements();
         HDLRegisterConfig _key = pc.getKey();
         LinkedList<SequentialStatement> _value = pc.getValue();
         SequentialStatement _createIfStatement = this.createIfStatement(obj, ps, _key, _value, unit);
         _statements_2.add(_createIfStatement);
-        List _statements_3 = a.getStatements();
+        List<ConcurrentStatement> _statements_3 = a.getStatements();
         _statements_3.add(ps);
       }
     }
@@ -422,7 +428,7 @@ public class VHDLPackageExtension {
     HDLExpression _rst = key.getRst();
     Expression _vHDL_1 = this.vee.toVHDL(_rst);
     Signal rst = ((Signal) _vHDL_1);
-    List _sensitivityList = ps.getSensitivityList();
+    List<Signal> _sensitivityList = ps.getSensitivityList();
     _sensitivityList.add(clk);
     EnumerationLiteral activeRst = null;
     HDLRegisterConfig.HDLRegResetActiveType _resetType = key.getResetType();
@@ -438,7 +444,7 @@ public class VHDLPackageExtension {
     final LinkedList<SequentialStatement> resets = unit.resetStatements.get(key);
     boolean _tripleNotEquals = (resets != null);
     if (_tripleNotEquals) {
-      List _statements = rstIfStmnt.getStatements();
+      List<SequentialStatement> _statements = rstIfStmnt.getStatements();
       _statements.addAll(resets);
     }
     FunctionCall edge = null;
@@ -451,24 +457,24 @@ public class VHDLPackageExtension {
       FunctionCall _functionCall_1 = new FunctionCall(StdLogic1164.FALLING_EDGE);
       edge = _functionCall_1;
     }
-    List _parameters = edge.getParameters();
+    List<AssociationElement> _parameters = edge.getParameters();
     AssociationElement _associationElement = new AssociationElement(clk);
     _parameters.add(_associationElement);
     HDLRegisterConfig.HDLRegSyncType _syncType = key.getSyncType();
     boolean _tripleEquals_2 = (_syncType == HDLRegisterConfig.HDLRegSyncType.ASYNC);
     if (_tripleEquals_2) {
-      List _sensitivityList_1 = ps.getSensitivityList();
+      List<Signal> _sensitivityList_1 = ps.getSensitivityList();
       _sensitivityList_1.add(rst);
       final IfStatement.ElsifPart elsifPart = rstIfStmnt.createElsifPart(edge);
-      List _statements_1 = elsifPart.getStatements();
+      List<SequentialStatement> _statements_1 = elsifPart.getStatements();
       _statements_1.addAll(value);
       return rstIfStmnt;
     }
     IfStatement _ifStatement_1 = new IfStatement(edge);
     final IfStatement clkIf = _ifStatement_1;
-    List _statements_2 = clkIf.getStatements();
+    List<SequentialStatement> _statements_2 = clkIf.getStatements();
     _statements_2.add(rstIfStmnt);
-    List _elseStatements = rstIfStmnt.getElseStatements();
+    List<SequentialStatement> _elseStatements = rstIfStmnt.getElseStatements();
     _elseStatements.addAll(value);
     return clkIf;
   }
@@ -491,7 +497,7 @@ public class VHDLPackageExtension {
             String _packageName = this.getPackageName(_hDLQualifiedName);
             PackageDeclaration _packageDeclaration = new PackageDeclaration(_packageName);
             pd = _packageDeclaration;
-            List _elements = res.getElements();
+            List<LibraryUnit> _elements = res.getElements();
             _elements.add(pd);
           }
           final VHDLContext vhdl = this.vse.toVHDL(hvd, VHDLContext.DEFAULT_CTX);
@@ -514,7 +520,7 @@ public class VHDLPackageExtension {
               throw _illegalArgumentException;
             }
           }
-          List _declarations_1 = pd.getDeclarations();
+          List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
           _declarations_1.add(first);
         }
         HDLClass _classType_1 = decl.getClassType();
@@ -526,7 +532,7 @@ public class VHDLPackageExtension {
           String _packageName_1 = this.getPackageName(_fullNameOf);
           PackageDeclaration _packageDeclaration_1 = new PackageDeclaration(_packageName_1);
           final PackageDeclaration enumPd = _packageDeclaration_1;
-          List _elements_1 = res.getElements();
+          List<LibraryUnit> _elements_1 = res.getElements();
           _elements_1.add(enumPd);
           final VHDLContext vhdl_1 = this.vse.toVHDL(hvd_1, VHDLContext.DEFAULT_CTX);
           DeclarativeItemMarker _first_2 = vhdl_1.internalTypes.getFirst();
@@ -536,7 +542,7 @@ public class VHDLPackageExtension {
             IllegalArgumentException _illegalArgumentException_1 = new IllegalArgumentException("Expected enum type declaration but found none!");
             throw _illegalArgumentException_1;
           }
-          List _declarations_2 = enumPd.getDeclarations();
+          List<PackageDeclarativeItem> _declarations_2 = enumPd.getDeclarations();
           _declarations_2.add(first_1);
         }
       }
@@ -575,7 +581,7 @@ public class VHDLPackageExtension {
           }
         }
         final HDLUnit newUnit = ms.<HDLUnit>apply(unit);
-        List _elements = res.getElements();
+        List<LibraryUnit> _elements = res.getElements();
         List<LibraryUnit> _vHDL = this.toVHDL(newUnit);
         _elements.addAll(_vHDL);
       }

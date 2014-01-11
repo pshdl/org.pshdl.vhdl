@@ -49,6 +49,7 @@ import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.SignalAssignmentTarget;
 import de.upb.hni.vmagic.object.VhdlObject;
+import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.CaseStatement;
 import de.upb.hni.vmagic.statement.ForStatement;
 import de.upb.hni.vmagic.statement.IfStatement;
@@ -314,18 +315,18 @@ public class VHDLStatementExtension {
           cContext.merge(_vHDL, true);
         }
         for (final Signal signal : cContext.ports) {
-          List _port = c.getPort();
+          List<VhdlObjectProvider<Signal>> _port = c.getPort();
           _port.add(signal);
         }
         for (final ConstantDeclaration cd : cContext.constants) {
-          List _objects = cd.getObjects();
+          List<Constant> _objects = cd.getObjects();
           for (final Object vobj : _objects) {
-            List _generic = c.getGeneric();
+            List<VhdlObjectProvider<Constant>> _generic = c.getGeneric();
             _generic.add(((Constant) vobj));
           }
         }
         for (final Constant constant : cContext.generics) {
-          List _generic_1 = c.getGeneric();
+          List<VhdlObjectProvider<Constant>> _generic_1 = c.getGeneric();
           _generic_1.add(constant);
         }
         res.addComponent(c);
@@ -339,9 +340,9 @@ public class VHDLStatementExtension {
       final Component entity = _component_1;
       ComponentInstantiation _componentInstantiation = new ComponentInstantiation(ifName, entity);
       final ComponentInstantiation inst = _componentInstantiation;
-      List _portMap = inst.getPortMap();
+      List<AssociationElement> _portMap = inst.getPortMap();
       portMap = _portMap;
-      List _genericMap = inst.getGenericMap();
+      List<AssociationElement> _genericMap = inst.getGenericMap();
       genericMap = _genericMap;
       instantiation = inst;
     } else {
@@ -351,9 +352,9 @@ public class VHDLStatementExtension {
       final Entity entity_1 = _entity;
       EntityInstantiation _entityInstantiation = new EntityInstantiation(ifName, entity_1);
       final EntityInstantiation inst_1 = _entityInstantiation;
-      List _portMap_1 = inst_1.getPortMap();
+      List<AssociationElement> _portMap_1 = inst_1.getPortMap();
       portMap = _portMap_1;
-      List _genericMap_1 = inst_1.getGenericMap();
+      List<AssociationElement> _genericMap_1 = inst_1.getGenericMap();
       genericMap = _genericMap_1;
       instantiation = inst_1;
     }
@@ -492,7 +493,7 @@ public class VHDLStatementExtension {
           final ForGenerateStatement newFor = _forGenerateStatement;
           boolean _tripleNotEquals_2 = (forLoop != null);
           if (_tripleNotEquals_2) {
-            List _statements = forLoop.getStatements();
+            List<ConcurrentStatement> _statements = forLoop.getStatements();
             _statements.add(newFor);
           } else {
             res.addConcurrentStatement(newFor);
@@ -506,7 +507,7 @@ public class VHDLStatementExtension {
         IllegalArgumentException _illegalArgumentException = new IllegalArgumentException("Should not get here");
         throw _illegalArgumentException;
       }
-      List _statements = forLoop.getStatements();
+      List<ConcurrentStatement> _statements = forLoop.getStatements();
       _statements.add(instantiation);
     }
     return this.attachComment(res, obj);
@@ -850,7 +851,7 @@ public class VHDLStatementExtension {
             final LinkedList<SequentialStatement> clockCase = _value.clockedStatements.get(hdlRegisterConfig);
             boolean _tripleNotEquals = (clockCase != null);
             if (_tripleNotEquals) {
-              List _statements = alt.getStatements();
+              List<SequentialStatement> _statements = alt.getStatements();
               _statements.addAll(clockCase);
             }
           }
@@ -869,7 +870,7 @@ public class VHDLStatementExtension {
           LinkedList<SequentialStatement> _get_2 = _value.unclockedStatements.get(Integer.valueOf(pid));
           boolean _tripleNotEquals = (_get_2 != null);
           if (_tripleNotEquals) {
-            List _statements = alt.getStatements();
+            List<SequentialStatement> _statements = alt.getStatements();
             VHDLContext _value_1 = e.getValue();
             LinkedList<SequentialStatement> _get_3 = _value_1.unclockedStatements.get(Integer.valueOf(pid));
             _statements.addAll(_get_3);
@@ -1038,7 +1039,7 @@ public class VHDLStatementExtension {
         Range _vHDL_1 = this.vee.toVHDL(_get, Range.Direction.TO);
         ForStatement _forStatement = new ForStatement(_vHDLName, _vHDL_1);
         final ForStatement fStmnt = _forStatement;
-        List _statements = fStmnt.getStatements();
+        List<SequentialStatement> _statements = fStmnt.getStatements();
         LinkedList<SequentialStatement> _value = e.getValue();
         _statements.addAll(_value);
         HDLRegisterConfig _key = e.getKey();
@@ -1056,7 +1057,7 @@ public class VHDLStatementExtension {
       Range _vHDL_1 = this.vee.toVHDL(_get_1, Range.Direction.TO);
       ForStatement _forStatement = new ForStatement(_vHDLName, _vHDL_1);
       final ForStatement fStmnt = _forStatement;
-      List _statements = fStmnt.getStatements();
+      List<SequentialStatement> _statements = fStmnt.getStatements();
       LinkedList<SequentialStatement> _get_2 = context.unclockedStatements.get(Integer.valueOf(pid));
       _statements.addAll(_get_2);
       res.addUnclockedStatement(pid, fStmnt, obj);
@@ -1098,14 +1099,14 @@ public class VHDLStatementExtension {
         LinkedList<SequentialStatement> _get = thenCtx.clockedStatements.get(config);
         boolean _tripleNotEquals = (_get != null);
         if (_tripleNotEquals) {
-          List _statements = ifs.getStatements();
+          List<SequentialStatement> _statements = ifs.getStatements();
           LinkedList<SequentialStatement> _get_1 = thenCtx.clockedStatements.get(config);
           _statements.addAll(_get_1);
         }
         LinkedList<SequentialStatement> _get_2 = elseCtx.clockedStatements.get(config);
         boolean _tripleNotEquals_1 = (_get_2 != null);
         if (_tripleNotEquals_1) {
-          List _elseStatements = ifs.getElseStatements();
+          List<SequentialStatement> _elseStatements = ifs.getElseStatements();
           LinkedList<SequentialStatement> _get_3 = elseCtx.clockedStatements.get(config);
           _elseStatements.addAll(_get_3);
         }
@@ -1128,14 +1129,14 @@ public class VHDLStatementExtension {
       LinkedList<SequentialStatement> _get = thenCtx.unclockedStatements.get(Integer.valueOf(pid));
       boolean _tripleNotEquals = (_get != null);
       if (_tripleNotEquals) {
-        List _statements = ifs.getStatements();
+        List<SequentialStatement> _statements = ifs.getStatements();
         LinkedList<SequentialStatement> _get_1 = thenCtx.unclockedStatements.get(Integer.valueOf(pid));
         _statements.addAll(_get_1);
       }
       LinkedList<SequentialStatement> _get_2 = elseCtx.unclockedStatements.get(Integer.valueOf(pid));
       boolean _tripleNotEquals_1 = (_get_2 != null);
       if (_tripleNotEquals_1) {
-        List _elseStatements = ifs.getElseStatements();
+        List<SequentialStatement> _elseStatements = ifs.getElseStatements();
         LinkedList<SequentialStatement> _get_3 = elseCtx.unclockedStatements.get(Integer.valueOf(pid));
         _elseStatements.addAll(_get_3);
       }

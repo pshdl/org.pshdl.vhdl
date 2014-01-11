@@ -171,7 +171,7 @@ public class VHDLExpressionExtension {
         Expression _vHDL = this.toVHDL(arr);
         indices.add(_vHDL);
       }
-      ArrayElement _arrayElement = new ArrayElement(name, indices);
+      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(name, indices);
       result = _arrayElement;
     }
     ArrayList<HDLRange> _bits = ref.getBits();
@@ -192,11 +192,11 @@ public class VHDLExpressionExtension {
       if (_tripleEquals) {
         HDLExpression _to = r.getTo();
         Expression _vHDL_1 = this.toVHDL(_to);
-        ArrayElement _arrayElement_1 = new ArrayElement(result, _vHDL_1);
+        ArrayElement<Name> _arrayElement_1 = new ArrayElement<Name>(result, _vHDL_1);
         result = _arrayElement_1;
       } else {
         Range _vHDL_2 = this.toVHDL(r, Range.Direction.DOWNTO);
-        Slice _slice = new Slice(result, _vHDL_2);
+        Slice<Name> _slice = new Slice<Name>(result, _vHDL_2);
         result = _slice;
       }
     }
@@ -261,7 +261,7 @@ public class VHDLExpressionExtension {
         }
       };
       LinkedList<Expression> _fold = IterableExtensions.<HDLExpression, LinkedList<Expression>>fold(_ifArray_1, _linkedList, _function);
-      ArrayElement _arrayElement = new ArrayElement(result, _fold);
+      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(result, _fold);
       result = _arrayElement;
     }
     return this.getRef(result, obj);
