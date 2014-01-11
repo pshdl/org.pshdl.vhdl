@@ -32,6 +32,8 @@ import java.util.regex.*;
 
 import org.pshdl.model.*;
 
+import com.google.common.collect.*;
+
 import de.upb.hni.vmagic.expression.*;
 import de.upb.hni.vmagic.literal.*;
 
@@ -86,7 +88,7 @@ public class VHDLUtils {
 
 	public final static Set<String> keywordSet;
 	static {
-		keywordSet = new HashSet<String>();
+		keywordSet = Sets.newHashSet();
 		for (final String keyword : keywords) {
 			keywordSet.add(keyword);
 		}

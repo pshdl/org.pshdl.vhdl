@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.*;
 import org.pshdl.model.*;
 import org.pshdl.model.utils.*;
 
+import com.google.common.collect.*;
+
 import de.upb.hni.vmagic.*;
 import de.upb.hni.vmagic.concurrent.*;
 import de.upb.hni.vmagic.declaration.*;
@@ -42,27 +44,27 @@ import de.upb.hni.vmagic.statement.*;
 
 public class VHDLContext {
 
-	public Map<HDLRegisterConfig, LinkedList<SequentialStatement>> resetStatements = new LinkedHashMap<HDLRegisterConfig, LinkedList<SequentialStatement>>();
-	public Map<HDLRegisterConfig, LinkedList<SequentialStatement>> clockedStatements = new LinkedHashMap<HDLRegisterConfig, LinkedList<SequentialStatement>>();
-	public LinkedList<ConcurrentStatement> concurrentStatements = new LinkedList<ConcurrentStatement>();
-	public Map<Integer, LinkedList<SequentialStatement>> unclockedStatements = new LinkedHashMap<Integer, LinkedList<SequentialStatement>>();
-	public Map<Integer, LinkedList<HDLStatement>> sensitiveStatements = new LinkedHashMap<Integer, LinkedList<HDLStatement>>();
-	public Map<Integer, Boolean> noSensitivity = new LinkedHashMap<Integer, Boolean>();
-	public LinkedList<Signal> ports = new LinkedList<Signal>();
-	public LinkedList<ConstantDeclaration> constants = new LinkedList<ConstantDeclaration>();
-	public LinkedList<ConstantDeclaration> constantsPkg = new LinkedList<ConstantDeclaration>();
-	public LinkedList<Constant> generics = new LinkedList<Constant>();
-	public LinkedList<DeclarativeItem> internals = new LinkedList<DeclarativeItem>();
-	public LinkedList<DeclarativeItemMarker> internalTypes = new LinkedList<DeclarativeItemMarker>();
-	public LinkedList<DeclarativeItemMarker> externalTypes = new LinkedList<DeclarativeItemMarker>();
-	public LinkedList<DeclarativeItemMarker> internalTypesConstants = new LinkedList<DeclarativeItemMarker>();
-	public Set<HDLQualifiedName> imports = new TreeSet<HDLQualifiedName>();
+	public Map<HDLRegisterConfig, LinkedList<SequentialStatement>> resetStatements = Maps.newLinkedHashMap();
+	public Map<HDLRegisterConfig, LinkedList<SequentialStatement>> clockedStatements = Maps.newLinkedHashMap();
+	public LinkedList<ConcurrentStatement> concurrentStatements = Lists.newLinkedList();
+	public Map<Integer, LinkedList<SequentialStatement>> unclockedStatements = Maps.newLinkedHashMap();
+	public Map<Integer, LinkedList<HDLStatement>> sensitiveStatements = Maps.newLinkedHashMap();
+	public Map<Integer, Boolean> noSensitivity = Maps.newLinkedHashMap();
+	public LinkedList<Signal> ports = Lists.newLinkedList();
+	public LinkedList<ConstantDeclaration> constants = Lists.newLinkedList();
+	public LinkedList<ConstantDeclaration> constantsPkg = Lists.newLinkedList();
+	public LinkedList<Constant> generics = Lists.newLinkedList();
+	public LinkedList<DeclarativeItem> internals = Lists.newLinkedList();
+	public LinkedList<DeclarativeItemMarker> internalTypes = Lists.newLinkedList();
+	public LinkedList<DeclarativeItemMarker> externalTypes = Lists.newLinkedList();
+	public LinkedList<DeclarativeItemMarker> internalTypesConstants = Lists.newLinkedList();
+	public Set<HDLQualifiedName> imports = Sets.newTreeSet();
 
 	public void addClockedStatement(HDLRegisterConfig config, SequentialStatement sa) {
 		config = config.normalize();
 		LinkedList<SequentialStatement> list = clockedStatements.get(config);
 		if (list == null) {
-			list = new LinkedList<SequentialStatement>();
+			list = Lists.newLinkedList();
 		}
 		list.add(sa);
 		clockedStatements.put(config, list);
@@ -71,13 +73,13 @@ public class VHDLContext {
 	public void addUnclockedStatement(int pid, SequentialStatement sa, HDLStatement stmnt) {
 		LinkedList<SequentialStatement> list = unclockedStatements.get(pid);
 		if (list == null) {
-			list = new LinkedList<SequentialStatement>();
+			list = Lists.newLinkedList();
 		}
 		list.add(sa);
 		unclockedStatements.put(pid, list);
 		LinkedList<HDLStatement> hlist = sensitiveStatements.get(pid);
 		if (hlist == null) {
-			hlist = new LinkedList<HDLStatement>();
+			hlist = Lists.newLinkedList();
 		}
 		hlist.add(stmnt);
 		sensitiveStatements.put(pid, hlist);
@@ -111,7 +113,7 @@ public class VHDLContext {
 		for (final Entry<K, LinkedList<T>> e : map.entrySet()) {
 			LinkedList<T> list = local.get(e.getKey());
 			if (list == null) {
-				list = new LinkedList<T>();
+				list = Lists.newLinkedList();
 				local.put(e.getKey(), list);
 			}
 			list.addAll(e.getValue());
@@ -165,7 +167,7 @@ public class VHDLContext {
 		config = config.normalize();
 		LinkedList<SequentialStatement> list = resetStatements.get(config);
 		if (list == null) {
-			list = new LinkedList<SequentialStatement>();
+			list = Lists.newLinkedList();
 		}
 		list.add(sa);
 		resetStatements.put(config, list);

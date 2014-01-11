@@ -40,9 +40,11 @@ import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnno
 import org.pshdl.model.utils.*;
 
 import com.google.common.base.*;
+import com.google.common.collect.*;
 
 import de.upb.hni.vmagic.*;
 import de.upb.hni.vmagic.Range.Direction;
+import de.upb.hni.vmagic.Range;
 import de.upb.hni.vmagic.builtin.*;
 import de.upb.hni.vmagic.declaration.*;
 import de.upb.hni.vmagic.expression.*;
@@ -66,7 +68,7 @@ public class VHDLImporter {
 
 	public static List<HDLInterface> importFile(HDLQualifiedName pkg, InputStream is, HDLLibrary lib, String src) {
 		final Scopes scopes = getScopes(lib);
-		final List<HDLInterface> res = new LinkedList<HDLInterface>();
+		final List<HDLInterface> res = Lists.newLinkedList();
 		try {
 			final VhdlFile file = VhdlParser.parseStream(is, new VhdlParserSettings(), scopes.rootScope, scopes.workScope);
 			final List<LibraryUnit> list = file.getElements();
@@ -111,7 +113,7 @@ public class VHDLImporter {
 		return res;
 	}
 
-	private final static MetaAccess<Scopes> SCOPES = new GenericMeta<VHDLImporter.Scopes>("SCOPES", true);
+	private final static MetaAccess<Scopes> SCOPES = new GenericMeta<>("SCOPES", true);
 
 	private static Scopes getScopes(HDLLibrary lib) {
 		Scopes scopes = lib.getMeta(SCOPES);
