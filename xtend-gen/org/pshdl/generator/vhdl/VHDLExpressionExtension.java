@@ -31,7 +31,6 @@ import com.google.common.base.Optional;
 import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.Choices;
 import de.upb.hni.vmagic.Range;
-import de.upb.hni.vmagic.Range.Direction;
 import de.upb.hni.vmagic.builtin.Standard;
 import de.upb.hni.vmagic.expression.Add;
 import de.upb.hni.vmagic.expression.Aggregate;
@@ -70,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.Functions.Function0;
 import org.eclipse.xtext.xbase.lib.Functions.Function2;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
@@ -77,33 +77,25 @@ import org.eclipse.xtext.xbase.lib.Procedures.Procedure2;
 import org.pshdl.generator.vhdl.VHDLFunctions;
 import org.pshdl.generator.vhdl.VHDLUtils;
 import org.pshdl.generator.vhdl.libraries.VHDLCastsLibrary;
-import org.pshdl.generator.vhdl.libraries.VHDLCastsLibrary.TargetType;
 import org.pshdl.generator.vhdl.libraries.VHDLShiftLibrary;
 import org.pshdl.generator.vhdl.libraries.VHDLTypesLibrary;
 import org.pshdl.model.HDLArithOp;
-import org.pshdl.model.HDLArithOp.HDLArithOpType;
 import org.pshdl.model.HDLArrayInit;
 import org.pshdl.model.HDLBitOp;
-import org.pshdl.model.HDLBitOp.HDLBitOpType;
 import org.pshdl.model.HDLClass;
 import org.pshdl.model.HDLConcat;
 import org.pshdl.model.HDLEnumRef;
 import org.pshdl.model.HDLEqualityOp;
-import org.pshdl.model.HDLEqualityOp.HDLEqualityOpType;
 import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLFunction;
 import org.pshdl.model.HDLFunctionCall;
 import org.pshdl.model.HDLInterfaceRef;
 import org.pshdl.model.HDLLiteral;
-import org.pshdl.model.HDLLiteral.HDLLiteralPresentation;
 import org.pshdl.model.HDLManip;
-import org.pshdl.model.HDLManip.HDLManipType;
 import org.pshdl.model.HDLPrimitive;
-import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
 import org.pshdl.model.HDLRange;
 import org.pshdl.model.HDLReference;
 import org.pshdl.model.HDLShiftOp;
-import org.pshdl.model.HDLShiftOp.HDLShiftOpType;
 import org.pshdl.model.HDLTernary;
 import org.pshdl.model.HDLType;
 import org.pshdl.model.HDLVariableRef;
@@ -121,25 +113,29 @@ public class VHDLExpressionExtension {
     }
   }.apply();
   
-  public static Expression<? extends Object> vhdlOf(final HDLExpression exp) {
+  public static Expression vhdlOf(final HDLExpression exp) {
     return VHDLExpressionExtension.INST.toVHDL(exp);
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLExpression exp) {
+  protected Expression _toVHDL(final HDLExpression exp) {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("Not implemented for type: ");
     HDLClass _classType = exp.getClassType();
-    String _plus = ("Not implemented for type:" + _classType);
-    String _plus_1 = (_plus + " expression is:");
-    String _plus_2 = (_plus_1 + exp);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus_2);
+    _builder.append(_classType, "");
+    _builder.append(" expression is: ");
+    _builder.append(exp, "");
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_builder.toString());
     throw _illegalArgumentException;
   }
   
-  protected Name<? extends Object> _toVHDL(final HDLReference ref) {
+  protected Name _toVHDL(final HDLReference ref) {
+    StringConcatenation _builder = new StringConcatenation();
+    _builder.append("Not implemented for type: ");
     HDLClass _classType = ref.getClassType();
-    String _plus = ("Not implemented for type:" + _classType);
-    String _plus_1 = (_plus + " ref is:");
-    String _plus_2 = (_plus_1 + ref);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus_2);
+    _builder.append(_classType, "");
+    _builder.append(" reference is: ");
+    _builder.append(ref, "");
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_builder.toString());
     throw _illegalArgumentException;
   }
   
@@ -153,16 +149,16 @@ public class VHDLExpressionExtension {
     return VHDLUtils.mapName(obj);
   }
   
-  protected Name<? extends Object> _toVHDL(final HDLVariableRef obj) {
+  protected Name _toVHDL(final HDLVariableRef obj) {
     String _vHDLName = this.getVHDLName(obj);
     Signal _signal = new Signal(_vHDLName, UnresolvedType.NO_NAME);
-    Name<?> result = _signal;
-    Name<? extends Object> _ref = this.getRef(result, obj);
+    Name result = _signal;
+    Name _ref = this.getRef(result, obj);
     result = _ref;
     return result;
   }
   
-  private Name<? extends Object> getRef(final Name name, final HDLVariableRef ref) {
+  private Name getRef(final Name name, final HDLVariableRef ref) {
     Name result = name;
     ArrayList<HDLExpression> _array = ref.getArray();
     int _size = _array.size();
@@ -172,10 +168,10 @@ public class VHDLExpressionExtension {
       final List<Expression> indices = _linkedList;
       ArrayList<HDLExpression> _array_1 = ref.getArray();
       for (final HDLExpression arr : _array_1) {
-        Expression<? extends Object> _vHDL = this.toVHDL(arr);
+        Expression _vHDL = this.toVHDL(arr);
         indices.add(_vHDL);
       }
-      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(name, indices);
+      ArrayElement _arrayElement = new ArrayElement(name, indices);
       result = _arrayElement;
     }
     ArrayList<HDLRange> _bits = ref.getBits();
@@ -195,31 +191,31 @@ public class VHDLExpressionExtension {
       boolean _tripleEquals = (_from == null);
       if (_tripleEquals) {
         HDLExpression _to = r.getTo();
-        Expression<? extends Object> _vHDL_1 = this.toVHDL(_to);
-        ArrayElement<Name> _arrayElement_1 = new ArrayElement<Name>(result, _vHDL_1);
+        Expression _vHDL_1 = this.toVHDL(_to);
+        ArrayElement _arrayElement_1 = new ArrayElement(result, _vHDL_1);
         result = _arrayElement_1;
       } else {
-        Range _vHDL_2 = this.toVHDL(r, Direction.DOWNTO);
-        Slice<Name> _slice = new Slice<Name>(result, _vHDL_2);
+        Range _vHDL_2 = this.toVHDL(r, Range.Direction.DOWNTO);
+        Slice _slice = new Slice(result, _vHDL_2);
         result = _slice;
       }
     }
     return result;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLArrayInit obj) {
+  protected Expression _toVHDL(final HDLArrayInit obj) {
     char _charAt = "0".charAt(0);
     CharacterLiteral _characterLiteral = new CharacterLiteral(_charAt);
     Aggregate _OTHERS = Aggregate.OTHERS(_characterLiteral);
-    Expression<? extends Object> _vHDLArray = this.toVHDLArray(obj, _OTHERS);
+    Expression _vHDLArray = this.toVHDLArray(obj, _OTHERS);
     return _vHDLArray;
   }
   
-  protected Expression<? extends Object> _toVHDLArray(final HDLExpression obj, final Expression<? extends Object> otherValue) {
+  protected Expression _toVHDLArray(final HDLExpression obj, final Expression otherValue) {
     return this.toVHDL(obj);
   }
   
-  protected Expression<? extends Object> _toVHDLArray(final HDLArrayInit obj, final Expression<? extends Object> otherValue) {
+  protected Expression _toVHDLArray(final HDLArrayInit obj, final Expression otherValue) {
     ArrayList<HDLExpression> _exp = obj.getExp();
     int _size = _exp.size();
     boolean _equals = (_size == 1);
@@ -233,7 +229,7 @@ public class VHDLExpressionExtension {
     ArrayList<HDLExpression> _exp_2 = obj.getExp();
     final Procedure2<HDLExpression,Integer> _function = new Procedure2<HDLExpression,Integer>() {
       public void apply(final HDLExpression e, final Integer i) {
-        Expression<? extends Object> _vHDLArray = VHDLExpressionExtension.this.toVHDLArray(e, otherValue);
+        Expression _vHDLArray = VHDLExpressionExtension.this.toVHDLArray(e, otherValue);
         DecimalLiteral _decimalLiteral = new DecimalLiteral((i).intValue());
         aggr.createAssociation(_vHDLArray, _decimalLiteral);
       }
@@ -243,7 +239,7 @@ public class VHDLExpressionExtension {
     return aggr;
   }
   
-  protected Name<? extends Object> _toVHDL(final HDLInterfaceRef obj) {
+  protected Name _toVHDL(final HDLInterfaceRef obj) {
     String _vHDLName = this.getVHDLName(obj);
     Signal _signal = new Signal(_vHDLName, UnresolvedType.NO_NAME);
     Name result = _signal;
@@ -257,7 +253,7 @@ public class VHDLExpressionExtension {
         public LinkedList<Expression> apply(final LinkedList<Expression> l, final HDLExpression e) {
           LinkedList<Expression> _xblockexpression = null;
           {
-            Expression<? extends Object> _vHDL = VHDLExpressionExtension.this.toVHDL(e);
+            Expression _vHDL = VHDLExpressionExtension.this.toVHDL(e);
             l.add(_vHDL);
             _xblockexpression = (l);
           }
@@ -265,13 +261,13 @@ public class VHDLExpressionExtension {
         }
       };
       LinkedList<Expression> _fold = IterableExtensions.<HDLExpression, LinkedList<Expression>>fold(_ifArray_1, _linkedList, _function);
-      ArrayElement<Name> _arrayElement = new ArrayElement<Name>(result, _fold);
+      ArrayElement _arrayElement = new ArrayElement(result, _fold);
       result = _arrayElement;
     }
     return this.getRef(result, obj);
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLFunctionCall obj) {
+  protected Expression _toVHDL(final HDLFunctionCall obj) {
     return VHDLFunctions.toOutputExpression(obj);
   }
   
@@ -282,56 +278,56 @@ public class VHDLExpressionExtension {
     return _signal;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLConcat obj) {
+  protected Expression _toVHDL(final HDLConcat obj) {
     final List<HDLExpression> cats = obj.getCats();
     HDLExpression _get = cats.get(0);
-    Expression<?> res = this.toVHDL(_get);
+    Expression res = this.toVHDL(_get);
     cats.remove(0);
     for (final HDLExpression cat : cats) {
-      Expression<? extends Object> _vHDL = this.toVHDL(cat);
+      Expression _vHDL = this.toVHDL(cat);
       Concatenate _concatenate = new Concatenate(res, _vHDL);
       res = _concatenate;
     }
     return res;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLManip obj) {
-    HDLManipType _type = obj.getType();
-    final HDLManipType type = _type;
+  protected Expression _toVHDL(final HDLManip obj) {
+    HDLManip.HDLManipType _type = obj.getType();
+    final HDLManip.HDLManipType type = _type;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(type,HDLManipType.ARITH_NEG)) {
+      if (Objects.equal(type,HDLManip.HDLManipType.ARITH_NEG)) {
         _matched=true;
         HDLExpression _target = obj.getTarget();
-        Expression<? extends Object> _vHDL = this.toVHDL(_target);
+        Expression _vHDL = this.toVHDL(_target);
         Minus _minus = new Minus(_vHDL);
         return _minus;
       }
     }
     if (!_matched) {
       boolean _or = false;
-      boolean _tripleEquals = (type == HDLManipType.LOGIC_NEG);
+      boolean _tripleEquals = (type == HDLManip.HDLManipType.LOGIC_NEG);
       if (_tripleEquals) {
         _or = true;
       } else {
-        boolean _tripleEquals_1 = (type == HDLManipType.BIT_NEG);
+        boolean _tripleEquals_1 = (type == HDLManip.HDLManipType.BIT_NEG);
         _or = (_tripleEquals || _tripleEquals_1);
       }
       if (_or) {
         _matched=true;
         HDLExpression _target_1 = obj.getTarget();
-        Expression<? extends Object> _vHDL_1 = this.toVHDL(_target_1);
+        Expression _vHDL_1 = this.toVHDL(_target_1);
         Not _not = new Not(_vHDL_1);
         return _not;
       }
     }
     if (!_matched) {
-      if (Objects.equal(type,HDLManipType.CAST)) {
+      if (Objects.equal(type,HDLManip.HDLManipType.CAST)) {
         _matched=true;
         HDLType _castTo = obj.getCastTo();
         final HDLPrimitive targetType = ((HDLPrimitive) _castTo);
-        HDLPrimitiveType _type_1 = targetType.getType();
-        boolean _tripleEquals_2 = (_type_1 == HDLPrimitiveType.STRING);
+        HDLPrimitive.HDLPrimitiveType _type_1 = targetType.getType();
+        boolean _tripleEquals_2 = (_type_1 == HDLPrimitive.HDLPrimitiveType.STRING);
         if (_tripleEquals_2) {
           HDLExpression _target_2 = obj.getTarget();
           return this.toVHDL(_target_2);
@@ -350,27 +346,26 @@ public class VHDLExpressionExtension {
         HDLType _get = _typeOf.get();
         final HDLPrimitive t = ((HDLPrimitive) _get);
         HDLExpression _target_6 = obj.getTarget();
-        Expression<?> exp = this.toVHDL(_target_6);
-        HDLPrimitiveType actualType = t.getType();
+        Expression exp = this.toVHDL(_target_6);
+        HDLPrimitive.HDLPrimitiveType actualType = t.getType();
         boolean _tripleNotEquals = (tWidth != null);
         if (_tripleNotEquals) {
-          final TargetType resized = VHDLCastsLibrary.getResize(exp, t, tWidth);
+          final VHDLCastsLibrary.TargetType resized = VHDLCastsLibrary.getResize(exp, t, tWidth);
           exp = resized.resized;
           actualType = resized.newType;
         }
-        HDLPrimitiveType _type_2 = targetType.getType();
+        HDLPrimitive.HDLPrimitiveType _type_2 = targetType.getType();
         return VHDLCastsLibrary.cast(exp, actualType, _type_2);
       }
     }
-    String _plus = ("Not supported:" + obj);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Not supported:" + obj));
     throw _illegalArgumentException;
   }
   
-  public Range toVHDL(final HDLRange obj, final Direction dir) {
+  public Range toVHDL(final HDLRange obj, final Range.Direction dir) {
     HDLExpression _to = obj.getTo();
     HDLExpression _simplifyWidth = HDLPrimitives.simplifyWidth(obj, _to);
-    final Expression<?> to = this.toVHDL(_simplifyWidth);
+    final Expression to = this.toVHDL(_simplifyWidth);
     HDLExpression _from = obj.getFrom();
     boolean _tripleEquals = (_from == null);
     if (_tripleEquals) {
@@ -379,12 +374,12 @@ public class VHDLExpressionExtension {
     }
     HDLExpression _from_1 = obj.getFrom();
     HDLExpression _simplifyWidth_1 = HDLPrimitives.simplifyWidth(obj, _from_1);
-    Expression<? extends Object> _vHDL = this.toVHDL(_simplifyWidth_1);
+    Expression _vHDL = this.toVHDL(_simplifyWidth_1);
     Range _range_1 = new Range(_vHDL, dir, to);
     return _range_1;
   }
   
-  protected Literal<? extends Object> _toVHDL(final HDLLiteral obj) {
+  protected Literal _toVHDL(final HDLLiteral obj) {
     int length = (-1);
     BigInteger _valueAsBigInt = obj.getValueAsBigInt();
     boolean _tripleNotEquals = (_valueAsBigInt != null);
@@ -396,36 +391,35 @@ public class VHDLExpressionExtension {
     return this.toVHDL(obj, length, false);
   }
   
-  public Literal<? extends Object> toVHDL(final HDLLiteral obj, final int length, final boolean asString) {
+  public Literal toVHDL(final HDLLiteral obj, final int length, final boolean asString) {
     int l = length;
     String sVal = obj.getVal();
-    boolean _equals = (l == 0);
-    if (_equals) {
+    if ((l == 0)) {
       l = 1;
     }
     final BigInteger dec = obj.getValueAsBigInt();
-    HDLLiteralPresentation _presentation = obj.getPresentation();
-    final HDLLiteralPresentation _switchValue = _presentation;
+    HDLLiteral.HDLLiteralPresentation _presentation = obj.getPresentation();
+    final HDLLiteral.HDLLiteralPresentation _switchValue = _presentation;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLLiteralPresentation.STR)) {
+      if (Objects.equal(_switchValue,HDLLiteral.HDLLiteralPresentation.STR)) {
         _matched=true;
         StringLiteral _stringLiteral = new StringLiteral(sVal);
         return _stringLiteral;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLLiteralPresentation.BOOL)) {
+      if (Objects.equal(_switchValue,HDLLiteral.HDLLiteralPresentation.BOOL)) {
         _matched=true;
-        boolean _equals_1 = "true".equals(sVal);
-        if (_equals_1) {
+        boolean _equals = "true".equals(sVal);
+        if (_equals) {
           return Standard.BOOLEAN_TRUE;
         }
         return Standard.BOOLEAN_FALSE;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLLiteralPresentation.HEX)) {
+      if (Objects.equal(_switchValue,HDLLiteral.HDLLiteralPresentation.HEX)) {
         _matched=true;
         boolean _or = false;
         if (asString) {
@@ -438,15 +432,17 @@ public class VHDLExpressionExtension {
         if (_or) {
           return VHDLUtils.toHexLiteral(l, dec);
         }
+        StringConcatenation _builder = new StringConcatenation();
+        _builder.append("16#");
         String _substring = sVal.substring(2);
-        String _plus = ("16#" + _substring);
-        String _plus_1 = (_plus + "#");
-        BasedLiteral _basedLiteral = new BasedLiteral(_plus_1);
+        _builder.append(_substring, "");
+        _builder.append("#");
+        BasedLiteral _basedLiteral = new BasedLiteral(_builder.toString());
         return _basedLiteral;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLLiteralPresentation.BIN)) {
+      if (Objects.equal(_switchValue,HDLLiteral.HDLLiteralPresentation.BIN)) {
         _matched=true;
         boolean _or_1 = false;
         if (asString) {
@@ -459,10 +455,12 @@ public class VHDLExpressionExtension {
         if (_or_1) {
           return VHDLUtils.toBinaryLiteral(l, dec);
         }
+        StringConcatenation _builder_1 = new StringConcatenation();
+        _builder_1.append("2#");
         String _substring_1 = sVal.substring(2);
-        String _plus_2 = ("2#" + _substring_1);
-        String _plus_3 = (_plus_2 + "#");
-        BasedLiteral _basedLiteral_1 = new BasedLiteral(_plus_3);
+        _builder_1.append(_substring_1, "");
+        _builder_1.append("#");
+        BasedLiteral _basedLiteral_1 = new BasedLiteral(_builder_1.toString());
         return _basedLiteral_1;
       }
     }
@@ -481,120 +479,119 @@ public class VHDLExpressionExtension {
     return _decimalLiteral;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLShiftOp obj) {
+  protected Expression _toVHDL(final HDLShiftOp obj) {
     HDLExpression _left = obj.getLeft();
     Optional<? extends HDLType> _typeOf = TypeExtension.typeOf(_left);
     HDLType _get = _typeOf.get();
     final HDLPrimitive type = ((HDLPrimitive) _get);
     HDLExpression _left_1 = obj.getLeft();
-    Expression<? extends Object> _vHDL = this.toVHDL(_left_1);
+    Expression _vHDL = this.toVHDL(_left_1);
     HDLExpression _right = obj.getRight();
-    Expression<? extends Object> _vHDL_1 = this.toVHDL(_right);
-    HDLPrimitiveType _type = type.getType();
-    HDLShiftOpType _type_1 = obj.getType();
+    Expression _vHDL_1 = this.toVHDL(_right);
+    HDLPrimitive.HDLPrimitiveType _type = type.getType();
+    HDLShiftOp.HDLShiftOpType _type_1 = obj.getType();
     return VHDLShiftLibrary.shift(_vHDL, _vHDL_1, _type, _type_1);
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLEqualityOp obj) {
-    HDLEqualityOpType _type = obj.getType();
-    final HDLEqualityOpType _switchValue = _type;
+  protected Expression _toVHDL(final HDLEqualityOp obj) {
+    HDLEqualityOp.HDLEqualityOpType _type = obj.getType();
+    final HDLEqualityOp.HDLEqualityOpType _switchValue = _type;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.EQ)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.EQ)) {
         _matched=true;
         HDLExpression _left = obj.getLeft();
-        Expression<? extends Object> _vHDL = this.toVHDL(_left);
+        Expression _vHDL = this.toVHDL(_left);
         HDLExpression _right = obj.getRight();
-        Expression<? extends Object> _vHDL_1 = this.toVHDL(_right);
+        Expression _vHDL_1 = this.toVHDL(_right);
         Equals _equals = new Equals(_vHDL, _vHDL_1);
         Parentheses _parentheses = new Parentheses(_equals);
         return _parentheses;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.GREATER_EQ)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.GREATER_EQ)) {
         _matched=true;
         HDLExpression _left_1 = obj.getLeft();
-        Expression<? extends Object> _vHDL_2 = this.toVHDL(_left_1);
+        Expression _vHDL_2 = this.toVHDL(_left_1);
         HDLExpression _right_1 = obj.getRight();
-        Expression<? extends Object> _vHDL_3 = this.toVHDL(_right_1);
+        Expression _vHDL_3 = this.toVHDL(_right_1);
         GreaterEquals _greaterEquals = new GreaterEquals(_vHDL_2, _vHDL_3);
         Parentheses _parentheses_1 = new Parentheses(_greaterEquals);
         return _parentheses_1;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.GREATER)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.GREATER)) {
         _matched=true;
         HDLExpression _left_2 = obj.getLeft();
-        Expression<? extends Object> _vHDL_4 = this.toVHDL(_left_2);
+        Expression _vHDL_4 = this.toVHDL(_left_2);
         HDLExpression _right_2 = obj.getRight();
-        Expression<? extends Object> _vHDL_5 = this.toVHDL(_right_2);
+        Expression _vHDL_5 = this.toVHDL(_right_2);
         GreaterThan _greaterThan = new GreaterThan(_vHDL_4, _vHDL_5);
         Parentheses _parentheses_2 = new Parentheses(_greaterThan);
         return _parentheses_2;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.LESS_EQ)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.LESS_EQ)) {
         _matched=true;
         HDLExpression _left_3 = obj.getLeft();
-        Expression<? extends Object> _vHDL_6 = this.toVHDL(_left_3);
+        Expression _vHDL_6 = this.toVHDL(_left_3);
         HDLExpression _right_3 = obj.getRight();
-        Expression<? extends Object> _vHDL_7 = this.toVHDL(_right_3);
+        Expression _vHDL_7 = this.toVHDL(_right_3);
         LessEquals _lessEquals = new LessEquals(_vHDL_6, _vHDL_7);
         Parentheses _parentheses_3 = new Parentheses(_lessEquals);
         return _parentheses_3;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.LESS)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.LESS)) {
         _matched=true;
         HDLExpression _left_4 = obj.getLeft();
-        Expression<? extends Object> _vHDL_8 = this.toVHDL(_left_4);
+        Expression _vHDL_8 = this.toVHDL(_left_4);
         HDLExpression _right_4 = obj.getRight();
-        Expression<? extends Object> _vHDL_9 = this.toVHDL(_right_4);
+        Expression _vHDL_9 = this.toVHDL(_right_4);
         LessThan _lessThan = new LessThan(_vHDL_8, _vHDL_9);
         Parentheses _parentheses_4 = new Parentheses(_lessThan);
         return _parentheses_4;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLEqualityOpType.NOT_EQ)) {
+      if (Objects.equal(_switchValue,HDLEqualityOp.HDLEqualityOpType.NOT_EQ)) {
         _matched=true;
         HDLExpression _left_5 = obj.getLeft();
-        Expression<? extends Object> _vHDL_10 = this.toVHDL(_left_5);
+        Expression _vHDL_10 = this.toVHDL(_left_5);
         HDLExpression _right_5 = obj.getRight();
-        Expression<? extends Object> _vHDL_11 = this.toVHDL(_right_5);
+        Expression _vHDL_11 = this.toVHDL(_right_5);
         NotEquals _notEquals = new NotEquals(_vHDL_10, _vHDL_11);
         Parentheses _parentheses_5 = new Parentheses(_notEquals);
         return _parentheses_5;
       }
     }
-    String _plus = ("Not supported:" + obj);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Not supported:" + obj));
     throw _illegalArgumentException;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLBitOp obj) {
-    HDLBitOpType _type = obj.getType();
-    final HDLBitOpType type = _type;
+  protected Expression _toVHDL(final HDLBitOp obj) {
+    HDLBitOp.HDLBitOpType _type = obj.getType();
+    final HDLBitOp.HDLBitOpType type = _type;
     boolean _matched = false;
     if (!_matched) {
       boolean _or = false;
-      boolean _tripleEquals = (type == HDLBitOpType.AND);
+      boolean _tripleEquals = (type == HDLBitOp.HDLBitOpType.AND);
       if (_tripleEquals) {
         _or = true;
       } else {
-        boolean _tripleEquals_1 = (type == HDLBitOpType.LOGI_AND);
+        boolean _tripleEquals_1 = (type == HDLBitOp.HDLBitOpType.LOGI_AND);
         _or = (_tripleEquals || _tripleEquals_1);
       }
       if (_or) {
         _matched=true;
         HDLExpression _left = obj.getLeft();
-        Expression<? extends Object> _vHDL = this.toVHDL(_left);
+        Expression _vHDL = this.toVHDL(_left);
         HDLExpression _right = obj.getRight();
-        Expression<? extends Object> _vHDL_1 = this.toVHDL(_right);
+        Expression _vHDL_1 = this.toVHDL(_right);
         And _and = new And(_vHDL, _vHDL_1);
         Parentheses _parentheses = new Parentheses(_and);
         return _parentheses;
@@ -602,148 +599,145 @@ public class VHDLExpressionExtension {
     }
     if (!_matched) {
       boolean _or_1 = false;
-      boolean _tripleEquals_2 = (type == HDLBitOpType.OR);
+      boolean _tripleEquals_2 = (type == HDLBitOp.HDLBitOpType.OR);
       if (_tripleEquals_2) {
         _or_1 = true;
       } else {
-        boolean _tripleEquals_3 = (type == HDLBitOpType.LOGI_OR);
+        boolean _tripleEquals_3 = (type == HDLBitOp.HDLBitOpType.LOGI_OR);
         _or_1 = (_tripleEquals_2 || _tripleEquals_3);
       }
       if (_or_1) {
         _matched=true;
         HDLExpression _left_1 = obj.getLeft();
-        Expression<? extends Object> _vHDL_2 = this.toVHDL(_left_1);
+        Expression _vHDL_2 = this.toVHDL(_left_1);
         HDLExpression _right_1 = obj.getRight();
-        Expression<? extends Object> _vHDL_3 = this.toVHDL(_right_1);
+        Expression _vHDL_3 = this.toVHDL(_right_1);
         Or _or_2 = new Or(_vHDL_2, _vHDL_3);
         Parentheses _parentheses_1 = new Parentheses(_or_2);
         return _parentheses_1;
       }
     }
     if (!_matched) {
-      if (Objects.equal(type,HDLBitOpType.XOR)) {
+      if (Objects.equal(type,HDLBitOp.HDLBitOpType.XOR)) {
         _matched=true;
         HDLExpression _left_2 = obj.getLeft();
-        Expression<? extends Object> _vHDL_4 = this.toVHDL(_left_2);
+        Expression _vHDL_4 = this.toVHDL(_left_2);
         HDLExpression _right_2 = obj.getRight();
-        Expression<? extends Object> _vHDL_5 = this.toVHDL(_right_2);
+        Expression _vHDL_5 = this.toVHDL(_right_2);
         Xor _xor = new Xor(_vHDL_4, _vHDL_5);
         Parentheses _parentheses_2 = new Parentheses(_xor);
         return _parentheses_2;
       }
     }
-    String _plus = ("Not supported:" + obj);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Not supported:" + obj));
     throw _illegalArgumentException;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLArithOp obj) {
-    HDLArithOpType _type = obj.getType();
-    final HDLArithOpType _switchValue = _type;
+  protected Expression _toVHDL(final HDLArithOp obj) {
+    HDLArithOp.HDLArithOpType _type = obj.getType();
+    final HDLArithOp.HDLArithOpType _switchValue = _type;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.PLUS)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.PLUS)) {
         _matched=true;
         HDLExpression _left = obj.getLeft();
-        Expression<? extends Object> _vHDL = this.toVHDL(_left);
+        Expression _vHDL = this.toVHDL(_left);
         HDLExpression _right = obj.getRight();
-        Expression<? extends Object> _vHDL_1 = this.toVHDL(_right);
+        Expression _vHDL_1 = this.toVHDL(_right);
         Add _add = new Add(_vHDL, _vHDL_1);
         Parentheses _parentheses = new Parentheses(_add);
         return _parentheses;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.MINUS)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.MINUS)) {
         _matched=true;
         HDLExpression _left_1 = obj.getLeft();
-        Expression<? extends Object> _vHDL_2 = this.toVHDL(_left_1);
+        Expression _vHDL_2 = this.toVHDL(_left_1);
         HDLExpression _right_1 = obj.getRight();
-        Expression<? extends Object> _vHDL_3 = this.toVHDL(_right_1);
+        Expression _vHDL_3 = this.toVHDL(_right_1);
         Subtract _subtract = new Subtract(_vHDL_2, _vHDL_3);
         Parentheses _parentheses_1 = new Parentheses(_subtract);
         return _parentheses_1;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.DIV)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.DIV)) {
         _matched=true;
         HDLExpression _left_2 = obj.getLeft();
-        Expression<? extends Object> _vHDL_4 = this.toVHDL(_left_2);
+        Expression _vHDL_4 = this.toVHDL(_left_2);
         HDLExpression _right_2 = obj.getRight();
-        Expression<? extends Object> _vHDL_5 = this.toVHDL(_right_2);
+        Expression _vHDL_5 = this.toVHDL(_right_2);
         Divide _divide = new Divide(_vHDL_4, _vHDL_5);
         Parentheses _parentheses_2 = new Parentheses(_divide);
         return _parentheses_2;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.MUL)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.MUL)) {
         _matched=true;
         HDLExpression _left_3 = obj.getLeft();
-        Expression<? extends Object> _vHDL_6 = this.toVHDL(_left_3);
+        Expression _vHDL_6 = this.toVHDL(_left_3);
         HDLExpression _right_3 = obj.getRight();
-        Expression<? extends Object> _vHDL_7 = this.toVHDL(_right_3);
+        Expression _vHDL_7 = this.toVHDL(_right_3);
         Multiply _multiply = new Multiply(_vHDL_6, _vHDL_7);
         Parentheses _parentheses_3 = new Parentheses(_multiply);
         return _parentheses_3;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.MOD)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.MOD)) {
         _matched=true;
         HDLExpression _left_4 = obj.getLeft();
-        Expression<? extends Object> _vHDL_8 = this.toVHDL(_left_4);
+        Expression _vHDL_8 = this.toVHDL(_left_4);
         HDLExpression _right_4 = obj.getRight();
-        Expression<? extends Object> _vHDL_9 = this.toVHDL(_right_4);
+        Expression _vHDL_9 = this.toVHDL(_right_4);
         Rem _rem = new Rem(_vHDL_8, _vHDL_9);
         Parentheses _parentheses_4 = new Parentheses(_rem);
         return _parentheses_4;
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLArithOpType.POW)) {
+      if (Objects.equal(_switchValue,HDLArithOp.HDLArithOpType.POW)) {
         _matched=true;
         HDLExpression _left_5 = obj.getLeft();
-        Expression<? extends Object> _vHDL_10 = this.toVHDL(_left_5);
+        Expression _vHDL_10 = this.toVHDL(_left_5);
         HDLExpression _right_5 = obj.getRight();
-        Expression<? extends Object> _vHDL_11 = this.toVHDL(_right_5);
+        Expression _vHDL_11 = this.toVHDL(_right_5);
         Pow _pow = new Pow(_vHDL_10, _vHDL_11);
         Parentheses _parentheses_5 = new Parentheses(_pow);
         return _parentheses_5;
       }
     }
-    String _plus = ("Not supported:" + obj);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Not supported:" + obj));
     throw _illegalArgumentException;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLTernary obj) {
+  protected Expression _toVHDL(final HDLTernary obj) {
     FunctionCall _functionCall = new FunctionCall(VHDLTypesLibrary.TERNARY_SLV);
     final FunctionCall fc = _functionCall;
     final List<AssociationElement> parameters = fc.getParameters();
     HDLExpression _ifExpr = obj.getIfExpr();
-    Expression<? extends Object> _vHDL = this.toVHDL(_ifExpr);
+    Expression _vHDL = this.toVHDL(_ifExpr);
     AssociationElement _associationElement = new AssociationElement(_vHDL);
     parameters.add(_associationElement);
     HDLExpression _thenExpr = obj.getThenExpr();
-    Expression<? extends Object> _vHDL_1 = this.toVHDL(_thenExpr);
+    Expression _vHDL_1 = this.toVHDL(_thenExpr);
     AssociationElement _associationElement_1 = new AssociationElement(_vHDL_1);
     parameters.add(_associationElement_1);
     HDLExpression _elseExpr = obj.getElseExpr();
-    Expression<? extends Object> _vHDL_2 = this.toVHDL(_elseExpr);
+    Expression _vHDL_2 = this.toVHDL(_elseExpr);
     AssociationElement _associationElement_2 = new AssociationElement(_vHDL_2);
     parameters.add(_associationElement_2);
     return fc;
   }
   
-  protected Expression<? extends Object> _toVHDL(final HDLFunction obj) {
-    String _plus = ("Not supported:" + obj);
-    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+  protected Expression _toVHDL(final HDLFunction obj) {
+    IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Not supported:" + obj));
     throw _illegalArgumentException;
   }
   
-  public Expression<? extends Object> toVHDL(final IHDLObject obj) {
+  public Expression toVHDL(final IHDLObject obj) {
     if (obj instanceof HDLInterfaceRef) {
       return _toVHDL((HDLInterfaceRef)obj);
     } else if (obj instanceof HDLEnumRef) {
@@ -793,7 +787,7 @@ public class VHDLExpressionExtension {
     }
   }
   
-  public Expression<? extends Object> toVHDLArray(final HDLExpression obj, final Expression<? extends Object> otherValue) {
+  public Expression toVHDLArray(final HDLExpression obj, final Expression otherValue) {
     if (obj instanceof HDLArrayInit) {
       return _toVHDLArray((HDLArrayInit)obj, otherValue);
     } else if (obj != null) {

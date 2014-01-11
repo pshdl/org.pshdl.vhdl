@@ -133,7 +133,7 @@ class VHDLPackageExtension {
 			pd.declarations.addAll(unit.externalTypes as List)
 			pd.declarations.addAll(unit.constantsPkg)
 			res.add(pd)
-			res.add(new UseClause("work." + libName + ".all"))
+			res.add(new UseClause('''work.«libName».all'''))
 			addDefaultLibs(res, unit)
 		}
 		e.port.addAll(unit.ports)
@@ -158,9 +158,7 @@ class VHDLPackageExtension {
 		return res
 	}
 
-	def public String getPackageName(HDLQualifiedName entityName) {
-		return entityName.dashString + "Pkg"
-	}
+	def public String getPackageName(HDLQualifiedName entityName) '''«entityName.dashString»Pkg'''
 
 	def dashString(HDLQualifiedName name) {
 		return name.toString('_'.charAt(0))
@@ -169,7 +167,7 @@ class VHDLPackageExtension {
 	def public HDLQualifiedName getPackageNameRef(HDLQualifiedName entityName) {
 		if (entityName.getSegment(0).equals("VHDL"))
 			return entityName.skipFirst(1)
-		return HDLQualifiedName::create("work", entityName.dashString + "Pkg")
+		return HDLQualifiedName::create("work", '''«entityName.dashString»Pkg''')
 	}
 
 	def public HDLQualifiedName getNameRef(HDLQualifiedName entityName) {

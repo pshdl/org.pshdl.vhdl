@@ -32,7 +32,6 @@ import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.Choices;
 import de.upb.hni.vmagic.DiscreteRange;
 import de.upb.hni.vmagic.Range;
-import de.upb.hni.vmagic.Range.Direction;
 import de.upb.hni.vmagic.concurrent.ComponentInstantiation;
 import de.upb.hni.vmagic.concurrent.ConcurrentStatement;
 import de.upb.hni.vmagic.concurrent.EntityInstantiation;
@@ -49,10 +48,8 @@ import de.upb.hni.vmagic.literal.CharacterLiteral;
 import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.SignalAssignmentTarget;
-import de.upb.hni.vmagic.object.VhdlObject.Mode;
-import de.upb.hni.vmagic.object.VhdlObjectProvider;
+import de.upb.hni.vmagic.object.VhdlObject;
 import de.upb.hni.vmagic.statement.CaseStatement;
-import de.upb.hni.vmagic.statement.CaseStatement.Alternative;
 import de.upb.hni.vmagic.statement.ForStatement;
 import de.upb.hni.vmagic.statement.IfStatement;
 import de.upb.hni.vmagic.statement.SequentialStatement;
@@ -73,7 +70,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import org.eclipse.xtext.xbase.lib.CollectionExtensions;
 import org.eclipse.xtext.xbase.lib.Conversions;
@@ -88,7 +84,6 @@ import org.pshdl.generator.vhdl.VHDLUtils;
 import org.pshdl.generator.vhdl.libraries.VHDLCastsLibrary;
 import org.pshdl.model.HDLAnnotation;
 import org.pshdl.model.HDLArithOp;
-import org.pshdl.model.HDLArithOp.HDLArithOpType;
 import org.pshdl.model.HDLArrayInit;
 import org.pshdl.model.HDLAssignment;
 import org.pshdl.model.HDLBlock;
@@ -107,7 +102,6 @@ import org.pshdl.model.HDLInterfaceDeclaration;
 import org.pshdl.model.HDLInterfaceInstantiation;
 import org.pshdl.model.HDLLiteral;
 import org.pshdl.model.HDLObject;
-import org.pshdl.model.HDLObject.GenericMeta;
 import org.pshdl.model.HDLPrimitive;
 import org.pshdl.model.HDLRange;
 import org.pshdl.model.HDLReference;
@@ -120,20 +114,15 @@ import org.pshdl.model.HDLType;
 import org.pshdl.model.HDLUnresolvedFragment;
 import org.pshdl.model.HDLVariable;
 import org.pshdl.model.HDLVariableDeclaration;
-import org.pshdl.model.HDLVariableDeclaration.HDLDirection;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.evaluation.ConstantEvaluate;
 import org.pshdl.model.extensions.FullNameExtension;
 import org.pshdl.model.extensions.TypeExtension;
 import org.pshdl.model.parser.SourceInfo;
-import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations;
+import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider;
 import org.pshdl.model.utils.HDLQualifiedName;
 import org.pshdl.model.utils.HDLQuery;
-import org.pshdl.model.utils.HDLQuery.FieldSelector;
-import org.pshdl.model.utils.HDLQuery.Result;
-import org.pshdl.model.utils.HDLQuery.Selector;
-import org.pshdl.model.utils.HDLQuery.Source;
 import org.pshdl.model.utils.Insulin;
 
 @SuppressWarnings("all")
@@ -157,17 +146,17 @@ public class VHDLStatementExtension {
     }
   }.apply();
   
-  private static GenericMeta<HDLQualifiedName> ORIGINAL_FULLNAME = new Function0<GenericMeta<HDLQualifiedName>>() {
-    public GenericMeta<HDLQualifiedName> apply() {
-      GenericMeta<HDLQualifiedName> _genericMeta = new GenericMeta<HDLQualifiedName>(
+  private static HDLObject.GenericMeta<HDLQualifiedName> ORIGINAL_FULLNAME = new Function0<HDLObject.GenericMeta<HDLQualifiedName>>() {
+    public HDLObject.GenericMeta<HDLQualifiedName> apply() {
+      HDLObject.GenericMeta<HDLQualifiedName> _genericMeta = new HDLObject.GenericMeta<HDLQualifiedName>(
         "ORIGINAL_FULLNAME", true);
       return _genericMeta;
     }
   }.apply();
   
-  public static GenericMeta<Boolean> EXPORT = new Function0<GenericMeta<Boolean>>() {
-    public GenericMeta<Boolean> apply() {
-      GenericMeta<Boolean> _genericMeta = new GenericMeta<Boolean>("EXPORT", true);
+  public static HDLObject.GenericMeta<Boolean> EXPORT = new Function0<HDLObject.GenericMeta<Boolean>>() {
+    public HDLObject.GenericMeta<Boolean> apply() {
+      HDLObject.GenericMeta<Boolean> _genericMeta = new HDLObject.GenericMeta<Boolean>("EXPORT", true);
       return _genericMeta;
     }
   }.apply();
@@ -284,12 +273,7 @@ public class VHDLStatementExtension {
     return _vHDLContext;
   }
   
-  private static EnumSet<HDLDirection> inAndOut = new Function0<EnumSet<HDLDirection>>() {
-    public EnumSet<HDLDirection> apply() {
-      EnumSet<HDLDirection> _of = EnumSet.<HDLDirection>of(HDLDirection.IN, HDLDirection.INOUT, HDLDirection.OUT);
-      return _of;
-    }
-  }.apply();
+  private static EnumSet<HDLVariableDeclaration.HDLDirection> inAndOut = EnumSet.<HDLVariableDeclaration.HDLDirection>of(HDLVariableDeclaration.HDLDirection.IN, HDLVariableDeclaration.HDLDirection.INOUT, HDLVariableDeclaration.HDLDirection.OUT);
   
   protected VHDLContext _toVHDL(final HDLInterfaceInstantiation obj, final int pid) {
     VHDLContext _vHDLContext = new VHDLContext();
@@ -310,12 +294,12 @@ public class VHDLStatementExtension {
     if (!_tripleNotEquals) {
       _and = false;
     } else {
-      HDLAnnotation _annotation = hid.getAnnotation(HDLBuiltInAnnotations.VHDLComponent);
+      HDLAnnotation _annotation = hid.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLComponent);
       boolean _tripleNotEquals_1 = (_annotation != null);
       _and = (_tripleNotEquals && _tripleNotEquals_1);
     }
     if (_and) {
-      final HDLAnnotation anno = hid.getAnnotation(HDLBuiltInAnnotations.VHDLComponent);
+      final HDLAnnotation anno = hid.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLComponent);
       String _value = anno.getValue();
       boolean _equals = "declare".equals(_value);
       if (_equals) {
@@ -326,23 +310,22 @@ public class VHDLStatementExtension {
         VHDLContext _vHDLContext_1 = new VHDLContext();
         final VHDLContext cContext = _vHDLContext_1;
         for (final HDLVariableDeclaration port : ports) {
-          int _minus = (-1);
-          VHDLContext _vHDL = this.toVHDL(port, _minus);
+          VHDLContext _vHDL = this.toVHDL(port, (-1));
           cContext.merge(_vHDL, true);
         }
         for (final Signal signal : cContext.ports) {
-          List<VhdlObjectProvider<Signal>> _port = c.getPort();
+          List _port = c.getPort();
           _port.add(signal);
         }
         for (final ConstantDeclaration cd : cContext.constants) {
-          List<Constant> _objects = cd.getObjects();
+          List _objects = cd.getObjects();
           for (final Object vobj : _objects) {
-            List<VhdlObjectProvider<Constant>> _generic = c.getGeneric();
+            List _generic = c.getGeneric();
             _generic.add(((Constant) vobj));
           }
         }
         for (final Constant constant : cContext.generics) {
-          List<VhdlObjectProvider<Constant>> _generic_1 = c.getGeneric();
+          List _generic_1 = c.getGeneric();
           _generic_1.add(constant);
         }
         res.addComponent(c);
@@ -356,9 +339,9 @@ public class VHDLStatementExtension {
       final Component entity = _component_1;
       ComponentInstantiation _componentInstantiation = new ComponentInstantiation(ifName, entity);
       final ComponentInstantiation inst = _componentInstantiation;
-      List<AssociationElement> _portMap = inst.getPortMap();
+      List _portMap = inst.getPortMap();
       portMap = _portMap;
-      List<AssociationElement> _genericMap = inst.getGenericMap();
+      List _genericMap = inst.getGenericMap();
       genericMap = _genericMap;
       instantiation = inst;
     } else {
@@ -368,22 +351,22 @@ public class VHDLStatementExtension {
       final Entity entity_1 = _entity;
       EntityInstantiation _entityInstantiation = new EntityInstantiation(ifName, entity_1);
       final EntityInstantiation inst_1 = _entityInstantiation;
-      List<AssociationElement> _portMap_1 = inst_1.getPortMap();
+      List _portMap_1 = inst_1.getPortMap();
       portMap = _portMap_1;
-      List<AssociationElement> _genericMap_1 = inst_1.getGenericMap();
+      List _genericMap_1 = inst_1.getGenericMap();
       genericMap = _genericMap_1;
       instantiation = inst_1;
     }
     for (final HDLVariableDeclaration hvd : ports) {
-      HDLDirection _direction = hvd.getDirection();
+      HDLVariableDeclaration.HDLDirection _direction = hvd.getDirection();
       boolean _contains = VHDLStatementExtension.inAndOut.contains(_direction);
       if (_contains) {
-        Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
-        Selector<HDLAnnotation> _from = _select.from(hvd);
-        FieldSelector<HDLAnnotation,String> _where = _from.<String>where(
+        HDLQuery.Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
+        HDLQuery.Selector<HDLAnnotation> _from = _select.from(hvd);
+        HDLQuery.FieldSelector<HDLAnnotation,String> _where = _from.<String>where(
           HDLAnnotation.fName);
-        String _string_3 = HDLBuiltInAnnotations.VHDLType.toString();
-        Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string_3);
+        String _string_3 = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.toString();
+        HDLQuery.Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string_3);
         final Collection<HDLAnnotation> typeAnno = _isEqualTo.getAll();
         ArrayList<HDLVariable> _variables = hvd.getVariables();
         for (final HDLVariable hvar : _variables) {
@@ -402,8 +385,7 @@ public class VHDLStatementExtension {
                 HDLVariableRef _setVar = _hDLVariableRef.setVar(_create);
                 HDLVariableRef _addArray = ref.addArray(_setVar);
                 ref = _addArray;
-                int _plus = (i + 1);
-                i = _plus;
+                i = (i + 1);
               }
             }
             ArrayList<HDLExpression> _dimensions_1 = hVar.getDimensions();
@@ -421,10 +403,10 @@ public class VHDLStatementExtension {
                 String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, true);
                 final HDLQualifiedName name = _packageNameRef.append(_arrayRefName);
                 res.addImport(name);
-                HDLVariableDeclaration _setDirection = hvd.setDirection(HDLDirection.INTERNAL);
+                HDLVariableDeclaration _setDirection = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
                 HDLVariable _setDimensions = sigVar.setDimensions(null);
                 String _string_4 = name.toString();
-                HDLAnnotation _create = HDLBuiltInAnnotations.VHDLType.create(_string_4);
+                HDLAnnotation _create = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.create(_string_4);
                 HDLVariable _addAnnotations = _setDimensions.addAnnotations(_create);
                 Iterable<HDLVariable> _asList = HDLObject.<HDLVariable>asList(_addAnnotations);
                 HDLVariableDeclaration _setVariables = _setDirection.setVariables(_asList);
@@ -432,7 +414,7 @@ public class VHDLStatementExtension {
                 VHDLContext _vHDL_1 = this.toVHDL(newHVD, pid);
                 res.merge(_vHDL_1, false);
               } else {
-                HDLVariableDeclaration _setDirection_1 = hvd.setDirection(HDLDirection.INTERNAL);
+                HDLVariableDeclaration _setDirection_1 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
                 HDLVariable _setDimensions_1 = sigVar.setDimensions(null);
                 Iterable<HDLVariable> _asList_1 = HDLObject.<HDLVariable>asList(_setDimensions_1);
                 HDLVariableDeclaration _setVariables_1 = _setDirection_1.setVariables(_asList_1);
@@ -441,7 +423,7 @@ public class VHDLStatementExtension {
                 res.merge(_vHDL_2, false);
               }
             } else {
-              HDLVariableDeclaration _setDirection_2 = hvd.setDirection(HDLDirection.INTERNAL);
+              HDLVariableDeclaration _setDirection_2 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
               Iterable<HDLVariable> _asList_2 = HDLObject.<HDLVariable>asList(sigVar);
               HDLVariableDeclaration _setVariables_2 = _setDirection_2.setVariables(_asList_2);
               final HDLVariableDeclaration newHVD_2 = _setVariables_2.copyDeepFrozen(obj);
@@ -450,14 +432,14 @@ public class VHDLStatementExtension {
             }
             String _name_1 = hvar.getName();
             String _vHDLName = VHDLUtils.getVHDLName(_name_1);
-            Expression<? extends Object> _vHDL_4 = this.vee.toVHDL(ref);
+            Expression _vHDL_4 = this.vee.toVHDL(ref);
             AssociationElement _associationElement = new AssociationElement(_vHDLName, _vHDL_4);
             portMap.add(_associationElement);
           }
         }
       } else {
-        HDLDirection _direction_1 = hvd.getDirection();
-        boolean _equals_1 = Objects.equal(_direction_1, HDLDirection.PARAMETER);
+        HDLVariableDeclaration.HDLDirection _direction_1 = hvd.getDirection();
+        boolean _equals_1 = Objects.equal(_direction_1, HDLVariableDeclaration.HDLDirection.PARAMETER);
         if (_equals_1) {
           ArrayList<HDLVariable> _variables_1 = hvd.getVariables();
           for (final HDLVariable hvar_1 : _variables_1) {
@@ -472,7 +454,7 @@ public class VHDLStatementExtension {
               }
               final HDLVariableRef ref = hvar_1.asHDLRef();
               String _name = sigVar.getName();
-              Expression<? extends Object> _vHDL_1 = this.vee.toVHDL(ref);
+              Expression _vHDL_1 = this.vee.toVHDL(ref);
               AssociationElement _associationElement = new AssociationElement(_name, _vHDL_1);
               genericMap.add(_associationElement);
             }
@@ -496,7 +478,7 @@ public class VHDLStatementExtension {
           HDLExpression _get = _dimensions_2.get(i);
           HDLArithOp _setLeft = _hDLArithOp.setLeft(_get);
           HDLArithOp _setType = _setLeft.setType(
-            HDLArithOpType.MINUS);
+            HDLArithOp.HDLArithOpType.MINUS);
           HDLLiteral _get_1 = HDLLiteral.get(1);
           final HDLExpression to = _setType.setRight(_get_1);
           HDLRange _hDLRange = new HDLRange();
@@ -504,21 +486,19 @@ public class VHDLStatementExtension {
           HDLRange _setFrom = _hDLRange.setFrom(_get_2);
           HDLRange _setTo = _setFrom.setTo(to);
           final HDLRange range = _setTo.setContainer(obj);
-          String _plus = ("generate_" + ifName);
           String _asIndex = this.asIndex(Integer.valueOf(i));
-          Range _vHDL_1 = this.vee.toVHDL(range, Direction.TO);
-          ForGenerateStatement _forGenerateStatement = new ForGenerateStatement(_plus, _asIndex, _vHDL_1);
+          Range _vHDL_1 = this.vee.toVHDL(range, Range.Direction.TO);
+          ForGenerateStatement _forGenerateStatement = new ForGenerateStatement(("generate_" + ifName), _asIndex, _vHDL_1);
           final ForGenerateStatement newFor = _forGenerateStatement;
           boolean _tripleNotEquals_2 = (forLoop != null);
           if (_tripleNotEquals_2) {
-            List<ConcurrentStatement> _statements = forLoop.getStatements();
+            List _statements = forLoop.getStatements();
             _statements.add(newFor);
           } else {
             res.addConcurrentStatement(newFor);
           }
           forLoop = newFor;
-          int _plus_1 = (i + 1);
-          i = _plus_1;
+          i = (i + 1);
         }
       }
       boolean _tripleEquals = (forLoop == null);
@@ -526,7 +506,7 @@ public class VHDLStatementExtension {
         IllegalArgumentException _illegalArgumentException = new IllegalArgumentException("Should not get here");
         throw _illegalArgumentException;
       }
-      List<ConcurrentStatement> _statements = forLoop.getStatements();
+      List _statements = forLoop.getStatements();
       _statements.add(instantiation);
     }
     return this.attachComment(res, obj);
@@ -534,8 +514,7 @@ public class VHDLStatementExtension {
   
   public String asIndex(final Integer integer) {
     final int i = "I".charAt(0);
-    int _plus = (i + (integer).intValue());
-    return Character.toString(((char) _plus));
+    return Character.toString(((char) (i + (integer).intValue())));
   }
   
   public static String getArrayRefName(final HDLVariable hvar, final boolean external) {
@@ -568,11 +547,11 @@ public class VHDLStatementExtension {
     final HDLPrimitive primitive = obj.getPrimitive();
     SubtypeIndication type = null;
     HDLExpression resetValue = null;
-    Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
-    Selector<HDLAnnotation> _from = _select.from(obj);
-    FieldSelector<HDLAnnotation,String> _where = _from.<String>where(HDLAnnotation.fName);
-    String _string = HDLBuiltInAnnotations.VHDLType.toString();
-    Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string);
+    HDLQuery.Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
+    HDLQuery.Selector<HDLAnnotation> _from = _select.from(obj);
+    HDLQuery.FieldSelector<HDLAnnotation,String> _where = _from.<String>where(HDLAnnotation.fName);
+    String _string = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.toString();
+    HDLQuery.Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string);
     final HDLAnnotation typeAnno = _isEqualTo.getFirst();
     HDLRegisterConfig _register = obj.getRegister();
     boolean _tripleNotEquals = (_register != null);
@@ -583,7 +562,7 @@ public class VHDLStatementExtension {
     }
     char _charAt = "0".charAt(0);
     CharacterLiteral _characterLiteral = new CharacterLiteral(_charAt);
-    Expression<?> otherValue = Aggregate.OTHERS(_characterLiteral);
+    Expression otherValue = Aggregate.OTHERS(_characterLiteral);
     boolean _tripleNotEquals_1 = (typeAnno != null);
     if (_tripleNotEquals_1) {
       String _value = typeAnno.getValue();
@@ -621,10 +600,9 @@ public class VHDLStatementExtension {
           HDLVariable _get_1 = _enums.get(idx);
           HDLQualifiedName _asRef_1 = _get_1.asRef();
           final HDLEnumRef enumReset = _setHEnum.setVar(_asRef_1);
-          Expression<? extends Object> _vHDL = this.vee.toVHDL(enumReset);
+          Expression _vHDL = this.vee.toVHDL(enumReset);
           otherValue = _vHDL;
-          boolean _not = (!(resetValue instanceof HDLArrayInit));
-          if (_not) {
+          if ((!(resetValue instanceof HDLArrayInit))) {
             resetValue = enumReset;
           }
         }
@@ -640,8 +618,8 @@ public class VHDLStatementExtension {
     return this.attachComment(res, obj);
   }
   
-  public void handleVariable(final HDLVariable hvar, final SubtypeIndication type, final HDLVariableDeclaration obj, final VHDLContext res, final HDLExpression resetValue, final Expression<? extends Object> otherValue, final int pid) {
-    HDLAnnotation _annotation = hvar.getAnnotation(HDLBuiltInAnnotations.VHDLNoExplicitReset);
+  public void handleVariable(final HDLVariable hvar, final SubtypeIndication type, final HDLVariableDeclaration obj, final VHDLContext res, final HDLExpression resetValue, final Expression otherValue, final int pid) {
+    HDLAnnotation _annotation = hvar.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLNoExplicitReset);
     final boolean noExplicitResetVar = (_annotation != null);
     SubtypeIndication varType = type;
     ArrayList<HDLExpression> _dimensions = hvar.getDimensions();
@@ -656,7 +634,7 @@ public class VHDLStatementExtension {
           HDLArithOp _hDLArithOp = new HDLArithOp();
           HDLArithOp _setLeft = _hDLArithOp.setLeft(arrayWidth);
           HDLArithOp _setType = _setLeft.setType(
-            HDLArithOpType.MINUS);
+            HDLArithOp.HDLArithOpType.MINUS);
           HDLLiteral _get = HDLLiteral.get(1);
           final HDLExpression newWidth = _setType.setRight(_get);
           HDLRange _hDLRange = new HDLRange();
@@ -664,7 +642,7 @@ public class VHDLStatementExtension {
           HDLRange _setFrom = _hDLRange.setFrom(_get_1);
           HDLRange _setTo = _setFrom.setTo(newWidth);
           HDLRange _copyDeepFrozen = _setTo.copyDeepFrozen(obj);
-          final Range range = this.vee.toVHDL(_copyDeepFrozen, Direction.TO);
+          final Range range = this.vee.toVHDL(_copyDeepFrozen, Range.Direction.TO);
           ranges.add(range);
         }
       }
@@ -684,8 +662,7 @@ public class VHDLStatementExtension {
     if (!_tripleNotEquals) {
       _and_1 = false;
     } else {
-      boolean _not = (!noExplicitResetVar);
-      _and_1 = (_tripleNotEquals && _not);
+      _and_1 = (_tripleNotEquals && (!noExplicitResetVar));
     }
     if (!_and_1) {
       _and = false;
@@ -709,7 +686,7 @@ public class VHDLStatementExtension {
       HDLQualifiedName _asRef = hvar.asRef();
       final HDLVariableRef target = _hDLVariableRef.setVar(_asRef);
       if ((resetValue instanceof HDLArrayInit)) {
-        Expression<? extends Object> _vHDLArray = this.vee.toVHDLArray(resetValue, otherValue);
+        Expression _vHDLArray = this.vee.toVHDLArray(resetValue, otherValue);
         SignalAssignment _signalAssignment = new SignalAssignment(s, _vHDLArray);
         final SignalAssignment sa = _signalAssignment;
         HDLRegisterConfig _register_1 = obj.getRegister();
@@ -732,17 +709,17 @@ public class VHDLStatementExtension {
     boolean _tripleNotEquals_2 = (_defaultValue != null);
     if (_tripleNotEquals_2) {
       HDLExpression _defaultValue_1 = hvar.getDefaultValue();
-      Expression<? extends Object> _vHDLArray_1 = this.vee.toVHDLArray(_defaultValue_1, otherValue);
+      Expression _vHDLArray_1 = this.vee.toVHDLArray(_defaultValue_1, otherValue);
       constant.setDefaultValue(_vHDLArray_1);
     }
     if (noExplicitResetVar) {
       if ((resetValue instanceof HDLArrayInit)) {
-        Expression<? extends Object> _vHDLArray_2 = this.vee.toVHDLArray(resetValue, otherValue);
+        Expression _vHDLArray_2 = this.vee.toVHDLArray(resetValue, otherValue);
         s.setDefaultValue(_vHDLArray_2);
       } else {
         boolean _tripleNotEquals_3 = (resetValue != null);
         if (_tripleNotEquals_3) {
-          Expression<?> assign = this.vee.toVHDL(resetValue);
+          Expression assign = this.vee.toVHDL(resetValue);
           ArrayList<HDLExpression> _dimensions_4 = hvar.getDimensions();
           for (final HDLExpression exp : _dimensions_4) {
             Aggregate _OTHERS = Aggregate.OTHERS(assign);
@@ -752,32 +729,32 @@ public class VHDLStatementExtension {
         }
       }
     }
-    HDLDirection _direction = obj.getDirection();
-    final HDLDirection _switchValue = _direction;
+    HDLVariableDeclaration.HDLDirection _direction = obj.getDirection();
+    final HDLVariableDeclaration.HDLDirection _switchValue = _direction;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLDirection.IN)) {
+      if (Objects.equal(_switchValue,HDLVariableDeclaration.HDLDirection.IN)) {
         _matched=true;
-        s.setMode(Mode.IN);
+        s.setMode(VhdlObject.Mode.IN);
         res.addPortDeclaration(s);
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLDirection.OUT)) {
+      if (Objects.equal(_switchValue,HDLVariableDeclaration.HDLDirection.OUT)) {
         _matched=true;
-        s.setMode(Mode.OUT);
+        s.setMode(VhdlObject.Mode.OUT);
         res.addPortDeclaration(s);
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLDirection.INOUT)) {
+      if (Objects.equal(_switchValue,HDLVariableDeclaration.HDLDirection.INOUT)) {
         _matched=true;
-        s.setMode(Mode.INOUT);
+        s.setMode(VhdlObject.Mode.INOUT);
         res.addPortDeclaration(s);
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLDirection.INTERNAL)) {
+      if (Objects.equal(_switchValue,HDLVariableDeclaration.HDLDirection.INTERNAL)) {
         _matched=true;
         SignalDeclaration _signalDeclaration = new SignalDeclaration(s);
         final SignalDeclaration sd = _signalDeclaration;
@@ -786,13 +763,13 @@ public class VHDLStatementExtension {
     }
     if (!_matched) {
       boolean _or = false;
-      HDLDirection _direction_1 = obj.getDirection();
-      boolean _equals = Objects.equal(_direction_1, HDLDirection.HIDDEN);
+      HDLVariableDeclaration.HDLDirection _direction_1 = obj.getDirection();
+      boolean _equals = Objects.equal(_direction_1, HDLVariableDeclaration.HDLDirection.HIDDEN);
       if (_equals) {
         _or = true;
       } else {
-        HDLDirection _direction_2 = obj.getDirection();
-        boolean _equals_1 = Objects.equal(_direction_2, HDLDirection.CONSTANT);
+        HDLVariableDeclaration.HDLDirection _direction_2 = obj.getDirection();
+        boolean _equals_1 = Objects.equal(_direction_2, HDLVariableDeclaration.HDLDirection.CONSTANT);
         _or = (_equals || _equals_1);
       }
       if (_or) {
@@ -808,7 +785,7 @@ public class VHDLStatementExtension {
       }
     }
     if (!_matched) {
-      if (Objects.equal(_switchValue,HDLDirection.PARAMETER)) {
+      if (Objects.equal(_switchValue,HDLVariableDeclaration.HDLDirection.PARAMETER)) {
         _matched=true;
         res.addGenericDeclaration(constant);
       }
@@ -841,7 +818,7 @@ public class VHDLStatementExtension {
         throw _illegalArgumentException;
       }
     }
-    final Expression<?> caseExp = this.vee.toVHDL(hCaseExp);
+    final Expression caseExp = this.vee.toVHDL(hCaseExp);
     LinkedHashMap<HDLSwitchCaseStatement,VHDLContext> _linkedHashMap = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>();
     final Map<HDLSwitchCaseStatement,VHDLContext> ctxs = _linkedHashMap;
     HashSet<HDLRegisterConfig> _hashSet = new HashSet<HDLRegisterConfig>();
@@ -865,15 +842,15 @@ public class VHDLStatementExtension {
       {
         CaseStatement _caseStatement = new CaseStatement(caseExp);
         final CaseStatement cs_1 = _caseStatement;
-        Set<Entry<HDLSwitchCaseStatement,VHDLContext>> _entrySet = ctxs.entrySet();
-        for (final Entry<HDLSwitchCaseStatement,VHDLContext> e : _entrySet) {
+        Set<Map.Entry<HDLSwitchCaseStatement,VHDLContext>> _entrySet = ctxs.entrySet();
+        for (final Map.Entry<HDLSwitchCaseStatement,VHDLContext> e : _entrySet) {
           {
-            final Alternative alt = this.createAlternative(cs_1, e, width);
+            final CaseStatement.Alternative alt = this.createAlternative(cs_1, e, width);
             VHDLContext _value = e.getValue();
             final LinkedList<SequentialStatement> clockCase = _value.clockedStatements.get(hdlRegisterConfig);
             boolean _tripleNotEquals = (clockCase != null);
             if (_tripleNotEquals) {
-              List<SequentialStatement> _statements = alt.getStatements();
+              List _statements = alt.getStatements();
               _statements.addAll(clockCase);
             }
           }
@@ -884,15 +861,15 @@ public class VHDLStatementExtension {
     if (hasUnclocked) {
       CaseStatement _caseStatement = new CaseStatement(caseExp);
       final CaseStatement cs_1 = _caseStatement;
-      Set<Entry<HDLSwitchCaseStatement,VHDLContext>> _entrySet = ctxs.entrySet();
-      for (final Entry<HDLSwitchCaseStatement,VHDLContext> e : _entrySet) {
+      Set<Map.Entry<HDLSwitchCaseStatement,VHDLContext>> _entrySet = ctxs.entrySet();
+      for (final Map.Entry<HDLSwitchCaseStatement,VHDLContext> e : _entrySet) {
         {
-          final Alternative alt = this.createAlternative(cs_1, e, width);
+          final CaseStatement.Alternative alt = this.createAlternative(cs_1, e, width);
           VHDLContext _value = e.getValue();
           LinkedList<SequentialStatement> _get_2 = _value.unclockedStatements.get(Integer.valueOf(pid));
           boolean _tripleNotEquals = (_get_2 != null);
           if (_tripleNotEquals) {
-            List<SequentialStatement> _statements = alt.getStatements();
+            List _statements = alt.getStatements();
             VHDLContext _value_1 = e.getValue();
             LinkedList<SequentialStatement> _get_3 = _value_1.unclockedStatements.get(Integer.valueOf(pid));
             _statements.addAll(_get_3);
@@ -904,8 +881,8 @@ public class VHDLStatementExtension {
     return this.attachComment(context, obj);
   }
   
-  private Alternative createAlternative(final CaseStatement cs, final Entry<HDLSwitchCaseStatement,VHDLContext> e, final Optional<BigInteger> bits) {
-    Alternative alt = null;
+  private CaseStatement.Alternative createAlternative(final CaseStatement cs, final Map.Entry<HDLSwitchCaseStatement,VHDLContext> e, final Optional<BigInteger> bits) {
+    CaseStatement.Alternative alt = null;
     HDLSwitchCaseStatement _key = e.getKey();
     final HDLExpression label = _key.getLabel();
     boolean _tripleNotEquals = (label != null);
@@ -922,16 +899,16 @@ public class VHDLStatementExtension {
         BigInteger _get = bits.get();
         int _intValue = _get.intValue();
         BigInteger _get_1 = eval.get();
-        Literal<? extends Object> _binaryLiteral = VHDLUtils.toBinaryLiteral(_intValue, _get_1);
-        Alternative _createAlternative = cs.createAlternative(_binaryLiteral);
+        Literal _binaryLiteral = VHDLUtils.toBinaryLiteral(_intValue, _get_1);
+        CaseStatement.Alternative _createAlternative = cs.createAlternative(_binaryLiteral);
         alt = _createAlternative;
       } else {
-        Expression<? extends Object> _vHDL = this.vee.toVHDL(label);
-        Alternative _createAlternative_1 = cs.createAlternative(_vHDL);
+        Expression _vHDL = this.vee.toVHDL(label);
+        CaseStatement.Alternative _createAlternative_1 = cs.createAlternative(_vHDL);
         alt = _createAlternative_1;
       }
     } else {
-      Alternative _createAlternative_2 = cs.createAlternative(Choices.OTHERS);
+      CaseStatement.Alternative _createAlternative_2 = cs.createAlternative(Choices.OTHERS);
       alt = _createAlternative_2;
     }
     return alt;
@@ -983,40 +960,40 @@ public class VHDLStatementExtension {
         _and_1 = (_notEquals_1 && _notEquals_2);
       }
       if (_and_1) {
-        final HDLAnnotation typeAnno = hvar.getAnnotation(HDLBuiltInAnnotations.VHDLType);
+        final HDLAnnotation typeAnno = hvar.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType);
         boolean _tripleNotEquals = (typeAnno != null);
         if (_tripleNotEquals) {
-          Expression<? extends Object> _vHDL = this.vee.toVHDL(ref);
+          Expression _vHDL = this.vee.toVHDL(ref);
           String _value = typeAnno.getValue();
           UnresolvedType _unresolvedType = new UnresolvedType(_value);
           HDLExpression _right_1 = obj.getRight();
-          Expression<? extends Object> _vHDL_1 = this.vee.toVHDL(_right_1);
+          Expression _vHDL_1 = this.vee.toVHDL(_right_1);
           TypeConversion _typeConversion = new TypeConversion(_unresolvedType, _vHDL_1);
           SignalAssignment _signalAssignment = new SignalAssignment(((SignalAssignmentTarget) _vHDL), _typeConversion);
           sa = _signalAssignment;
         } else {
           final HDLVariableDeclaration hvd = hvar.<HDLVariableDeclaration>getContainer(HDLVariableDeclaration.class);
-          Expression<? extends Object> _vHDL_2 = this.vee.toVHDL(ref);
+          Expression _vHDL_2 = this.vee.toVHDL(ref);
           boolean _isExternal = hvd.isExternal();
           String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, _isExternal);
           UnresolvedType _unresolvedType_1 = new UnresolvedType(_arrayRefName);
           HDLExpression _right_2 = obj.getRight();
-          Expression<? extends Object> _vHDL_3 = this.vee.toVHDL(_right_2);
+          Expression _vHDL_3 = this.vee.toVHDL(_right_2);
           TypeConversion _typeConversion_1 = new TypeConversion(_unresolvedType_1, _vHDL_3);
           SignalAssignment _signalAssignment_1 = new SignalAssignment(((SignalAssignmentTarget) _vHDL_2), _typeConversion_1);
           sa = _signalAssignment_1;
         }
       } else {
-        Expression<? extends Object> _vHDL_4 = this.vee.toVHDL(ref);
+        Expression _vHDL_4 = this.vee.toVHDL(ref);
         HDLExpression _right_3 = obj.getRight();
-        Expression<? extends Object> _vHDL_5 = this.vee.toVHDL(_right_3);
+        Expression _vHDL_5 = this.vee.toVHDL(_right_3);
         SignalAssignment _signalAssignment_2 = new SignalAssignment(((SignalAssignmentTarget) _vHDL_4), _vHDL_5);
         sa = _signalAssignment_2;
       }
     } else {
-      Expression<? extends Object> _vHDL_6 = this.vee.toVHDL(ref);
+      Expression _vHDL_6 = this.vee.toVHDL(ref);
       HDLExpression _right_4 = obj.getRight();
-      Expression<? extends Object> _vHDL_7 = this.vee.toVHDL(_right_4);
+      Expression _vHDL_7 = this.vee.toVHDL(_right_4);
       SignalAssignment _signalAssignment_3 = new SignalAssignment(((SignalAssignmentTarget) _vHDL_6), _vHDL_7);
       sa = _signalAssignment_3;
     }
@@ -1050,18 +1027,18 @@ public class VHDLStatementExtension {
     VHDLContext _vHDLContext_1 = new VHDLContext();
     final VHDLContext res = _vHDLContext_1;
     res.merge(context, true);
-    Set<Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet = context.clockedStatements.entrySet();
-    for (final Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> e : _entrySet) {
+    Set<Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet = context.clockedStatements.entrySet();
+    for (final Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> e : _entrySet) {
       {
         HDLVariable _param = obj.getParam();
         String _name = _param.getName();
         String _vHDLName = VHDLUtils.getVHDLName(_name);
         ArrayList<HDLRange> _range = obj.getRange();
         HDLRange _get = _range.get(0);
-        Range _vHDL_1 = this.vee.toVHDL(_get, Direction.TO);
+        Range _vHDL_1 = this.vee.toVHDL(_get, Range.Direction.TO);
         ForStatement _forStatement = new ForStatement(_vHDLName, _vHDL_1);
         final ForStatement fStmnt = _forStatement;
-        List<SequentialStatement> _statements = fStmnt.getStatements();
+        List _statements = fStmnt.getStatements();
         LinkedList<SequentialStatement> _value = e.getValue();
         _statements.addAll(_value);
         HDLRegisterConfig _key = e.getKey();
@@ -1076,10 +1053,10 @@ public class VHDLStatementExtension {
       String _vHDLName = VHDLUtils.getVHDLName(_name);
       ArrayList<HDLRange> _range = obj.getRange();
       HDLRange _get_1 = _range.get(0);
-      Range _vHDL_1 = this.vee.toVHDL(_get_1, Direction.TO);
+      Range _vHDL_1 = this.vee.toVHDL(_get_1, Range.Direction.TO);
       ForStatement _forStatement = new ForStatement(_vHDLName, _vHDL_1);
       final ForStatement fStmnt = _forStatement;
-      List<SequentialStatement> _statements = fStmnt.getStatements();
+      List _statements = fStmnt.getStatements();
       LinkedList<SequentialStatement> _get_2 = context.unclockedStatements.get(Integer.valueOf(pid));
       _statements.addAll(_get_2);
       res.addUnclockedStatement(pid, fStmnt, obj);
@@ -1113,7 +1090,7 @@ public class VHDLStatementExtension {
     res.merge(thenCtx, true);
     res.merge(elseCtx, true);
     HDLExpression _ifExp = obj.getIfExp();
-    final Expression<?> ifExp = this.vee.toVHDL(_ifExp);
+    final Expression ifExp = this.vee.toVHDL(_ifExp);
     for (final HDLRegisterConfig config : configs) {
       {
         IfStatement _ifStatement = new IfStatement(ifExp);
@@ -1121,14 +1098,14 @@ public class VHDLStatementExtension {
         LinkedList<SequentialStatement> _get = thenCtx.clockedStatements.get(config);
         boolean _tripleNotEquals = (_get != null);
         if (_tripleNotEquals) {
-          List<SequentialStatement> _statements = ifs.getStatements();
+          List _statements = ifs.getStatements();
           LinkedList<SequentialStatement> _get_1 = thenCtx.clockedStatements.get(config);
           _statements.addAll(_get_1);
         }
         LinkedList<SequentialStatement> _get_2 = elseCtx.clockedStatements.get(config);
         boolean _tripleNotEquals_1 = (_get_2 != null);
         if (_tripleNotEquals_1) {
-          List<SequentialStatement> _elseStatements = ifs.getElseStatements();
+          List _elseStatements = ifs.getElseStatements();
           LinkedList<SequentialStatement> _get_3 = elseCtx.clockedStatements.get(config);
           _elseStatements.addAll(_get_3);
         }
@@ -1151,14 +1128,14 @@ public class VHDLStatementExtension {
       LinkedList<SequentialStatement> _get = thenCtx.unclockedStatements.get(Integer.valueOf(pid));
       boolean _tripleNotEquals = (_get != null);
       if (_tripleNotEquals) {
-        List<SequentialStatement> _statements = ifs.getStatements();
+        List _statements = ifs.getStatements();
         LinkedList<SequentialStatement> _get_1 = thenCtx.unclockedStatements.get(Integer.valueOf(pid));
         _statements.addAll(_get_1);
       }
       LinkedList<SequentialStatement> _get_2 = elseCtx.unclockedStatements.get(Integer.valueOf(pid));
       boolean _tripleNotEquals_1 = (_get_2 != null);
       if (_tripleNotEquals_1) {
-        List<SequentialStatement> _elseStatements = ifs.getElseStatements();
+        List _elseStatements = ifs.getElseStatements();
         LinkedList<SequentialStatement> _get_3 = elseCtx.unclockedStatements.get(Integer.valueOf(pid));
         _elseStatements.addAll(_get_3);
       }

@@ -38,7 +38,7 @@ import de.upb.hni.vmagic.expression.*;
 import de.upb.hni.vmagic.literal.*;
 
 public class VHDLUtils {
-	public static Literal<?> toBinaryLiteral(int widthInt, BigInteger lit) {
+	public static Literal toBinaryLiteral(int widthInt, BigInteger lit) {
 		StringBuilder sb = new StringBuilder(widthInt);
 		if (lit.signum() < 0) {
 			final BigInteger mask = BigInteger.ONE.shiftLeft(widthInt).subtract(BigInteger.ONE);
@@ -52,7 +52,7 @@ public class VHDLUtils {
 		return new BinaryLiteral(string);
 	}
 
-	public static Literal<?> toHexLiteral(int widthInt, BigInteger lit) {
+	public static Literal toHexLiteral(int widthInt, BigInteger lit) {
 		StringBuilder sb = new StringBuilder(widthInt / 4);
 		if ((widthInt % 4) != 0)
 			return toBinaryLiteral(widthInt, lit);

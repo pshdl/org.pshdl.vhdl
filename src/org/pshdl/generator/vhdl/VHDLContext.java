@@ -155,7 +155,7 @@ public class VHDLContext {
 		ports.add(sd);
 	}
 
-	public void addInternalSignalDeclaration(ObjectDeclaration<?> sd) {
+	public void addInternalSignalDeclaration(ObjectDeclaration sd) {
 		internals.add(sd);
 	}
 

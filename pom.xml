@@ -96,9 +96,14 @@
 			<version>0.1.57</version>
 		</dependency>
 		<dependency>
+			<groupId>net.sf.retrotranslator</groupId>
+			<artifactId>retrotranslator-runtime</artifactId>
+			<version>1.2.9</version>
+		</dependency>
+		<dependency>
 			<groupId>org.pshdl</groupId>
 			<artifactId>de.upb.hni.vmagic</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.2</version>
 		</dependency>
 	</dependencies>
 </project>

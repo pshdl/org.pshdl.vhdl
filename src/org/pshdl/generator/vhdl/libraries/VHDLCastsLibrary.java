@@ -177,17 +177,17 @@ public class VHDLCastsLibrary {
 	}
 
 	public static class TargetType {
-		public final Expression<?> resized;
+		public final Expression resized;
 		public final HDLPrimitiveType newType;
 
-		public TargetType(Expression<?> resized, HDLPrimitiveType newType) {
+		public TargetType(Expression resized, HDLPrimitiveType newType) {
 			super();
 			this.resized = resized;
 			this.newType = newType;
 		}
 	}
 
-	public static TargetType getResize(Expression<?> exp, HDLPrimitive actualType, HDLExpression tWidth) {
+	public static TargetType getResize(Expression exp, HDLPrimitive actualType, HDLExpression tWidth) {
 		if (actualType.getWidth() != null) {
 			final Optional<BigInteger> bt = ConstantEvaluate.valueOf(actualType.getWidth(), null);
 			if (bt.isPresent()) {
@@ -196,7 +196,7 @@ public class VHDLCastsLibrary {
 					return new TargetType(exp, actualType.getType());
 			}
 		}
-		final Expression<?> width = VHDLExpressionExtension.vhdlOf(tWidth);
+		final Expression width = VHDLExpressionExtension.vhdlOf(tWidth);
 		FunctionCall resize = null;
 		HDLPrimitiveType resType = actualType.getType();
 		switch (actualType.getType()) {
@@ -232,7 +232,7 @@ public class VHDLCastsLibrary {
 		return new TargetType(resize, resType);
 	}
 
-	public static Expression<?> handleLiteral(IHDLObject container, HDLLiteral lit, HDLPrimitive targetType, HDLExpression tWidth) {
+	public static Expression handleLiteral(IHDLObject container, HDLLiteral lit, HDLPrimitive targetType, HDLExpression tWidth) {
 		if ((container != null) && (container.getClassType() == HDLClass.HDLArithOp))
 			return VHDLExpressionExtension.vhdlOf(lit);
 		final BigInteger val = lit.getValueAsBigInt();
@@ -275,7 +275,7 @@ public class VHDLCastsLibrary {
 		throw new IllegalArgumentException("Should not get here");
 	}
 
-	private static Expression<?> handleIntUint(IHDLObject container, HDLExpression tWidth, HDLLiteral lit, BigInteger val, Optional<BigInteger> width, HDLPrimitiveType to,
+	private static Expression handleIntUint(IHDLObject container, HDLExpression tWidth, HDLLiteral lit, BigInteger val, Optional<BigInteger> width, HDLPrimitiveType to,
 			Function castFunc, FunctionDeclaration resize) {
 		if (BigInteger.ZERO.equals(val) && (container != null) && (container.getClassType() == HDLClass.HDLAssignment))
 			return Aggregate.OTHERS(new CharacterLiteral('0'));
@@ -296,11 +296,11 @@ public class VHDLCastsLibrary {
 		return functionCall;
 	}
 
-	public static Expression<?> cast(Expression<?> vhdlExpr, HDLPrimitiveType from, HDLPrimitiveType to) {
+	public static Expression cast(Expression vhdlExpr, HDLPrimitiveType from, HDLPrimitiveType to) {
 		if (from.equals(to))
 			return vhdlExpr;
 		final String name = getCastName(from, to);
-		final Function resolve = PACKAGE.getScope().resolve(name, Function.class);
+		final Function resolve = (Function) PACKAGE.getScope().resolve(name, Function.class);
 		final FunctionCall call = new FunctionCall(resolve);
 		call.getParameters().add(new AssociationElement(vhdlExpr));
 		return call;

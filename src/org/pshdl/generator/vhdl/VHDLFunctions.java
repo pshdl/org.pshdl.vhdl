@@ -28,7 +28,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	private static Collection<IVHDLCodeFunctionProvider> codeProvider = HDLCore.getAllImplementations(IVHDLCodeFunctionProvider.class);
 
 	@Override
-	public Expression<?> toVHDLExpression(HDLFunctionCall function) {
+	public Expression toVHDLExpression(HDLFunctionCall function) {
 		final HDLQualifiedName refName = function.getNameRefName();
 		final Optional<BuiltInFunctions> e = Enums.getIfPresent(BuiltInFunctions.class, refName.getLastSegment());
 		if (e.isPresent()) {
@@ -136,9 +136,9 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 		return null;
 	}
 
-	public static Expression<?> toOutputExpression(HDLFunctionCall call) {
+	public static Expression toOutputExpression(HDLFunctionCall call) {
 		for (final IVHDLCodeFunctionProvider provider : codeProvider) {
-			final Expression<?> vhdlContext = provider.toVHDLExpression(call);
+			final Expression vhdlContext = provider.toVHDLExpression(call);
 			if (vhdlContext != null)
 				return vhdlContext;
 		}

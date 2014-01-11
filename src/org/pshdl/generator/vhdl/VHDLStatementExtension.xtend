@@ -350,7 +350,7 @@ class VHDLStatementExtension {
 		if (obj.register !== null) {
 			resetValue = obj.register.resetValue
 		}
-		var Expression<?> otherValue=Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0)))
+		var Expression otherValue=Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0)))
 		if (typeAnno !== null) {
 			val HDLQualifiedName value = new HDLQualifiedName(typeAnno.value)
 			res.addImport(value)
@@ -382,7 +382,7 @@ class VHDLStatementExtension {
 		return res.attachComment(obj)
 	}
 	
-	def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res, HDLExpression resetValue, Expression<?> otherValue, int pid) {
+	def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res, HDLExpression resetValue, Expression otherValue, int pid) {
 		val boolean noExplicitResetVar = hvar.getAnnotation(VHDLNoExplicitReset) !== null
 		var SubtypeIndication varType = type
 		if (hvar.dimensions.size != 0) {
@@ -425,7 +425,7 @@ class VHDLStatementExtension {
 				s.setDefaultValue(resetValue.toVHDLArray(otherValue))
 			} else {
 				if (resetValue !== null) {
-					var Expression<?> assign = resetValue.toVHDL
+					var Expression assign = resetValue.toVHDL
 					for (HDLExpression exp : hvar.dimensions)
 						assign = Aggregate::OTHERS(assign)
 					s.setDefaultValue(assign)
@@ -471,7 +471,7 @@ class VHDLStatementExtension {
 			if (!width.present)
 				throw new IllegalArgumentException("HDLPrimitive switch case needs to have constant width")
 		}
-		val Expression<?> caseExp = hCaseExp.toVHDL
+		val Expression caseExp = hCaseExp.toVHDL
 		val Map<HDLSwitchCaseStatement, VHDLContext> ctxs = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>
 		val Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>
 		var boolean hasUnclocked = false
@@ -614,7 +614,7 @@ class VHDLStatementExtension {
 			val VHDLContext res = new VHDLContext
 			res.merge(thenCtx, true)
 			res.merge(elseCtx, true)
-			val Expression<?> ifExp = obj.ifExp.toVHDL
+			val Expression ifExp = obj.ifExp.toVHDL
 			for (HDLRegisterConfig config : configs) {
 				val IfStatement ifs = new IfStatement(ifExp)
 				if (thenCtx.clockedStatements.get(config) !== null)

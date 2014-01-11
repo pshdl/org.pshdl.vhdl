@@ -102,16 +102,16 @@ class VHDLExpressionExtension {
 
 	public static VHDLExpressionExtension INST = new VHDLExpressionExtension
 
-	def static Expression<?> vhdlOf(HDLExpression exp) {
+	def static Expression vhdlOf(HDLExpression exp) {
 		return INST.toVHDL(exp)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLExpression exp) {
-		throw new IllegalArgumentException("Not implemented for type:" + exp.classType+" expression is:"+exp)
+	def dispatch Expression toVHDL(HDLExpression exp) {
+		throw new IllegalArgumentException('''Not implemented for type: «exp.classType» expression is: «exp»''')
 	}
 
-	def dispatch Name<?> toVHDL(HDLReference ref) {
-		throw new IllegalArgumentException("Not implemented for type:" + ref.classType+" ref is:"+ref)
+	def dispatch Name toVHDL(HDLReference ref) {
+		throw new IllegalArgumentException('''Not implemented for type: «ref.classType» reference is: «ref»''')
 	}
 
 	def dispatch String getVHDLName(HDLVariableRef obj) {
@@ -122,13 +122,13 @@ class VHDLExpressionExtension {
 		return VHDLUtils::mapName(obj)
 	}
 
-	def dispatch Name<?> toVHDL(HDLVariableRef obj) {
-		var Name<?> result = new Signal(obj.VHDLName, UnresolvedType::NO_NAME)
+	def dispatch Name toVHDL(HDLVariableRef obj) {
+		var Name result = new Signal(obj.VHDLName, UnresolvedType::NO_NAME)
 		result = getRef(result, obj)
 		return result
 	}
 
-	def private Name<?> getRef(Name name, HDLVariableRef ref) {
+	def private Name getRef(Name name, HDLVariableRef ref) {
 		var result = name
 		if (ref.array.size != 0) {
 			val List<Expression> indices = new LinkedList
@@ -144,7 +144,7 @@ class VHDLExpressionExtension {
 				throw new IllegalArgumentException("Multi bit access not supported")
 			val HDLRange r = ref.bits.get(0)
 			if (r.from === null) {
-				result = new ArrayElement<Name>(result, r.to.toVHDL)
+				result = new ArrayElement(result, r.to.toVHDL)
 			} else {
 				result = new Slice(result, r.toVHDL(Range.Direction::DOWNTO))
 			}
@@ -152,14 +152,14 @@ class VHDLExpressionExtension {
 		return result
 	}
 
-	def dispatch Expression<?> toVHDL(HDLArrayInit obj) {
+	def dispatch Expression toVHDL(HDLArrayInit obj) {
 		toVHDLArray(obj, Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0))))
 	}
 	
-	def dispatch Expression<?> toVHDLArray(HDLExpression obj, Expression<?> otherValue) {
+	def dispatch Expression toVHDLArray(HDLExpression obj, Expression otherValue) {
 		return obj.toVHDL
 	}
-	def dispatch Expression<?> toVHDLArray(HDLArrayInit obj, Expression<?> otherValue) {
+	def dispatch Expression toVHDLArray(HDLArrayInit obj, Expression otherValue) {
 		if (obj.exp.size == 1)
 			return obj.exp.get(0).toVHDL
 		val aggr = new Aggregate()
@@ -168,7 +168,7 @@ class VHDLExpressionExtension {
 		return aggr
 	}
 
-	def dispatch Name<?> toVHDL(HDLInterfaceRef obj) {
+	def dispatch Name toVHDL(HDLInterfaceRef obj) {
 		var Name result = new Signal(obj.VHDLName, UnresolvedType::NO_NAME)
 		if (obj.ifArray.size != 0) {
 			result = new ArrayElement(result,
@@ -177,7 +177,7 @@ class VHDLExpressionExtension {
 		return getRef(result, obj)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLFunctionCall obj) {
+	def dispatch Expression toVHDL(HDLFunctionCall obj) {
 		return VHDLFunctions::toOutputExpression(obj)
 	}
 
@@ -185,9 +185,9 @@ class VHDLExpressionExtension {
 		return new Signal(obj.varRefName.lastSegment, UnresolvedType::NO_NAME)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLConcat obj) {
+	def dispatch Expression toVHDL(HDLConcat obj) {
 		val List<HDLExpression> cats = obj.cats
-		var Expression<?> res = cats.get(0).toVHDL
+		var Expression res = cats.get(0).toVHDL
 		cats.remove(0)
 		for (HDLExpression cat : cats) {
 			res = new Concatenate(res, cat.toVHDL)
@@ -195,7 +195,7 @@ class VHDLExpressionExtension {
 		return res
 	}
 
-	def dispatch Expression<?> toVHDL(HDLManip obj) {
+	def dispatch Expression toVHDL(HDLManip obj) {
 		switch (type:obj.type) {
 			case ARITH_NEG:
 				return new Minus(obj.target.toVHDL)
@@ -210,7 +210,7 @@ class VHDLExpressionExtension {
 					return VHDLCastsLibrary::handleLiteral(obj.container, obj.target as HDLLiteral, targetType, tWidth)
 				}
 				val HDLPrimitive t = TypeExtension::typeOf(obj.target).get as HDLPrimitive
-				var Expression<?> exp = obj.target.toVHDL
+				var Expression exp = obj.target.toVHDL
 				var HDLPrimitiveType actualType = t.type
 				if (tWidth !== null) {
 					val TargetType resized = VHDLCastsLibrary::getResize(exp, t, tWidth)
@@ -224,20 +224,20 @@ class VHDLExpressionExtension {
 	}
 
 	def Range toVHDL(HDLRange obj, Range.Direction dir) {
-		val Expression<?> to = HDLPrimitives::simplifyWidth(obj, obj.to).toVHDL
+		val Expression to = HDLPrimitives::simplifyWidth(obj, obj.to).toVHDL
 		if (obj.from === null)
 			return new Range(to, dir, to)
 		return new Range(HDLPrimitives::simplifyWidth(obj, obj.from).toVHDL, dir, to)
 	}
 
-	def dispatch Literal<?> toVHDL(HDLLiteral obj) {
+	def dispatch Literal toVHDL(HDLLiteral obj) {
 		var int length = -1
 		if (obj.valueAsBigInt !== null)
 			length = obj.valueAsBigInt.bitLength
 		return obj.toVHDL(length, false)
 	}
 
-	def Literal<?> toVHDL(HDLLiteral obj, int length, boolean asString) {
+	def Literal toVHDL(HDLLiteral obj, int length, boolean asString) {
 		var l = length
 		var String sVal = obj.^val
 		if (l == 0)
@@ -254,12 +254,12 @@ class VHDLExpressionExtension {
 			case HEX: {
 				if (asString || dec.bitLength > 32)
 					return VHDLUtils::toHexLiteral(l, dec)
-				return new BasedLiteral("16#" + sVal.substring(2) + "#")
+				return new BasedLiteral('''16#« sVal.substring(2)»#''')
 			}
 			case BIN: {
 				if (asString || dec.bitLength > 32)
 					return VHDLUtils::toBinaryLiteral(l, dec)
-				return new BasedLiteral("2#" + sVal.substring(2) + "#")
+				return new BasedLiteral('''2#«sVal.substring(2)»#''')
 			}
 		}
 		if (dec.bitLength > 31 || asString)
@@ -267,12 +267,12 @@ class VHDLExpressionExtension {
 		return new DecimalLiteral(sVal)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLShiftOp obj) {
+	def dispatch Expression toVHDL(HDLShiftOp obj) {
 		val HDLPrimitive type = TypeExtension::typeOf(obj.left).get as HDLPrimitive
 		return VHDLShiftLibrary::shift(obj.left.toVHDL, obj.right.toVHDL, type.type, obj.type)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLEqualityOp obj) {
+	def dispatch Expression toVHDL(HDLEqualityOp obj) {
 		switch (obj.type) {
 			case EQ:
 				return new Parentheses(new Equals(obj.left.toVHDL, obj.right.toVHDL))
@@ -290,7 +290,7 @@ class VHDLExpressionExtension {
 		throw new IllegalArgumentException("Not supported:" + obj)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLBitOp obj) {
+	def dispatch Expression toVHDL(HDLBitOp obj) {
 		switch (type:obj.type) {
 			case type === AND || type === LOGI_AND:
 				return new Parentheses(new And(obj.left.toVHDL, obj.right.toVHDL))
@@ -302,7 +302,7 @@ class VHDLExpressionExtension {
 		throw new IllegalArgumentException("Not supported:" + obj)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLArithOp obj) {
+	def dispatch Expression toVHDL(HDLArithOp obj) {
 		switch (obj.type) {
 			case PLUS:
 				return new Parentheses(new Add(obj.left.toVHDL, obj.right.toVHDL))
@@ -320,7 +320,7 @@ class VHDLExpressionExtension {
 		throw new IllegalArgumentException("Not supported:" + obj)
 	}
 
-	def dispatch Expression<?> toVHDL(HDLTernary obj) {
+	def dispatch Expression toVHDL(HDLTernary obj) {
 		val FunctionCall fc = new FunctionCall(VHDLTypesLibrary::TERNARY_SLV)
 		val List<AssociationElement> parameters = fc.parameters
 		parameters.add(new AssociationElement(obj.ifExpr.toVHDL))
@@ -329,7 +329,7 @@ class VHDLExpressionExtension {
 		return fc
 	}
 
-	def dispatch Expression<?> toVHDL(HDLFunction obj) {
+	def dispatch Expression toVHDL(HDLFunction obj) {
 		throw new IllegalArgumentException("Not supported:" + obj)
 	}
 }

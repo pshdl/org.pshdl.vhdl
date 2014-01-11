@@ -77,8 +77,8 @@ public class VHDLImporter {
 					final Entity entity = (Entity) unit;
 					final String id = entity.getIdentifier();
 					HDLInterface vInterface = new HDLInterface().setName(pkg.append(id).toString());
-					final List<VhdlObjectProvider<Signal>> ports = entity.getPort();
-					for (final VhdlObjectProvider<Signal> port : ports) {
+					final List<VhdlObjectProvider> ports = entity.getPort();
+					for (final VhdlObjectProvider port : ports) {
 						final List<Signal> signals = port.getVhdlObjects();
 						for (final Signal signal : signals) {
 							final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
@@ -87,8 +87,8 @@ public class VHDLImporter {
 							vInterface = vInterface.addPorts(var);
 						}
 					}
-					final List<VhdlObjectProvider<Constant>> param = entity.getGeneric();
-					for (final VhdlObjectProvider<Constant> port : param) {
+					final List<VhdlObjectProvider> param = entity.getGeneric();
+					for (final VhdlObjectProvider port : param) {
 						final List<Constant> signals = port.getVhdlObjects();
 						for (final Constant signal : signals) {
 							final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
@@ -127,7 +127,7 @@ public class VHDLImporter {
 		return scopes;
 	}
 
-	public static HDLVariableDeclaration getVariable(Expression<?> defaultValue, SubtypeIndication left, HDLDirection direction, HDLQualifiedName qfn, HDLExpression width,
+	public static HDLVariableDeclaration getVariable(Expression defaultValue, SubtypeIndication left, HDLDirection direction, HDLQualifiedName qfn, HDLExpression width,
 			ArrayList<HDLExpression> dimensions, Scopes scopes) {
 		if (left instanceof IndexSubtypeIndication) {
 			final IndexSubtypeIndication isi = (IndexSubtypeIndication) left;
@@ -156,7 +156,7 @@ public class VHDLImporter {
 			@SuppressWarnings("rawtypes")
 			final List<DiscreteRange> ranges = ca.getIndexRanges();
 			scopes.workScope.getScope().resolve(ca.getIdentifier());
-			for (final DiscreteRange<?> discreteRange : ranges) {
+			for (final DiscreteRange discreteRange : ranges) {
 				dimensions.add(convertRange((Range) discreteRange));
 			}
 			HDLVariableDeclaration var = getVariable(defaultValue, ca.getElementType(), direction, qfn, null, dimensions, scopes);
@@ -179,9 +179,9 @@ public class VHDLImporter {
 
 	private static String getFullName(String identifier, Scopes scopes) {
 		String pkg = null;
-		for (final LibraryDeclarativeRegion lib : scopes.rootScope.getLibraries()) {
-			for (final VhdlFile file : lib.getFiles()) {
-				for (final LibraryUnit libraryUnit : file.getElements())
+		for (final Object lib : scopes.rootScope.getLibraries()) {
+			for (final Object file : ((LibraryDeclarativeRegion) lib).getFiles()) {
+				for (final Object libraryUnit : ((VhdlFile) file).getElements())
 					if (libraryUnit instanceof PackageDeclaration) {
 						final PackageDeclaration pd = (PackageDeclaration) libraryUnit;
 						pkg = pd.getIdentifier();
@@ -210,7 +210,7 @@ public class VHDLImporter {
 		return width;
 	}
 
-	private static HDLVariableDeclaration createVar(Expression<?> defaultValue, HDLDirection direction, HDLPrimitiveType pt, HDLQualifiedName name, HDLExpression width,
+	private static HDLVariableDeclaration createVar(Expression defaultValue, HDLDirection direction, HDLPrimitiveType pt, HDLQualifiedName name, HDLExpression width,
 			ArrayList<HDLExpression> dimensions) {
 		final HDLPrimitive p = new HDLPrimitive().setType(pt).setWidth(width);
 		HDLExpression hDefault = null;
@@ -231,7 +231,7 @@ public class VHDLImporter {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	private static HDLExpression getExpression(Expression<?> from, boolean canBeString) {
+	private static HDLExpression getExpression(Expression from, boolean canBeString) {
 		// TODO Support references to Generics
 		if ((from instanceof HexLiteral) || (from instanceof BinaryLiteral) || (from instanceof CharacterLiteral)) {
 			final String hex = from.toString();
@@ -248,23 +248,23 @@ public class VHDLImporter {
 			final StringLiteral sl = (StringLiteral) from;
 			return new HDLLiteral().setStr(canBeString).setVal(sl.getString());
 		}
-		if (from instanceof BinaryExpression<?>) {
-			final BinaryExpression<?> bin = (BinaryExpression<?>) from;
+		if (from instanceof BinaryExpression) {
+			final BinaryExpression bin = (BinaryExpression) from;
 			final HDLExpression left = getExpression(bin.getLeft(), false);
 			final HDLExpression right = getExpression(bin.getRight(), false);
 			final ExpressionKind kind = bin.getExpressionKind();
-			switch (kind) {
-			case PLUS:
+			switch (kind.getUpperCase()) {
+			case "PLUS":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.PLUS).setRight(right);
-			case MINUS:
+			case "MINUS":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MINUS).setRight(right);
-			case MULTIPLY:
+			case "MULTIPLY":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MUL).setRight(right);
-			case DIVIDE:
+			case "DIVIDE":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.DIV).setRight(right);
-			case MOD:
+			case "MOD":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MOD).setRight(right);
-			case POW:
+			case "POW":
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.POW).setRight(right);
 			}
 		}
