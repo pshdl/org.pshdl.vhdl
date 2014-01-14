@@ -253,18 +253,18 @@ public class VHDLImporter {
 			final HDLExpression left = getExpression(bin.getLeft(), false);
 			final HDLExpression right = getExpression(bin.getRight(), false);
 			final ExpressionKind kind = bin.getExpressionKind();
-			switch (kind.getUpperCase()) {
-			case "PLUS":
+			switch (kind) {
+			case PLUS:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.PLUS).setRight(right);
-			case "MINUS":
+			case MINUS:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MINUS).setRight(right);
-			case "MULTIPLY":
+			case MULTIPLY:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MUL).setRight(right);
-			case "DIVIDE":
+			case DIVIDE:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.DIV).setRight(right);
-			case "MOD":
+			case MOD:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MOD).setRight(right);
-			case "POW":
+			case POW:
 				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.POW).setRight(right);
 			}
 		}
