@@ -53,7 +53,6 @@ import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.IfStatement;
-import de.upb.hni.vmagic.statement.IfStatement.ElsifPart;
 import de.upb.hni.vmagic.statement.SequentialStatement;
 import de.upb.hni.vmagic.type.Type;
 import de.upb.hni.vmagic.type.UnresolvedType;
@@ -64,7 +63,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.eclipse.xtend2.lib.StringConcatenation;
@@ -87,16 +86,12 @@ import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLPackage;
 import org.pshdl.model.HDLReference;
 import org.pshdl.model.HDLRegisterConfig;
-import org.pshdl.model.HDLRegisterConfig.HDLRegClockType;
-import org.pshdl.model.HDLRegisterConfig.HDLRegResetActiveType;
-import org.pshdl.model.HDLRegisterConfig.HDLRegSyncType;
 import org.pshdl.model.HDLResolvedRef;
 import org.pshdl.model.HDLStatement;
 import org.pshdl.model.HDLUnit;
 import org.pshdl.model.HDLUnresolvedFragment;
 import org.pshdl.model.HDLVariable;
 import org.pshdl.model.HDLVariableDeclaration;
-import org.pshdl.model.HDLVariableDeclaration.HDLDirection;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.extensions.FullNameExtension;
@@ -177,8 +172,7 @@ public class VHDLPackageExtension {
         boolean _isPresent = variable.isPresent();
         boolean _not = (!_isPresent);
         if (_not) {
-          String _plus = ("Can not resolve:" + variableRef);
-          IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(_plus);
+          IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Can not resolve:" + variableRef));
           throw _illegalArgumentException;
         }
         HDLVariable _get = variable.get();
@@ -198,14 +192,13 @@ public class VHDLPackageExtension {
           HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(_get_1);
           final HDLQualifiedName type = _fullNameOf.skipLast(1);
           boolean _and = false;
-          boolean _greaterThan = (type.length > 0);
-          if (!_greaterThan) {
+          if (!(type.length > 0)) {
             _and = false;
           } else {
             String _segment = type.getSegment(0);
             boolean _equals_1 = _segment.equals("pshdl");
             boolean _not_2 = (!_equals_1);
-            _and = (_greaterThan && _not_2);
+            _and = ((type.length > 0) && _not_2);
           }
           if (_and) {
             String _packageName = this.getPackageName(type);
@@ -257,8 +250,8 @@ public class VHDLPackageExtension {
     _declarations_3.addAll(((List) unit.internals));
     List<ConcurrentStatement> _statements_1 = a.getStatements();
     _statements_1.addAll(unit.concurrentStatements);
-    Set<Entry<Integer,LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
-    for (final Entry<Integer,LinkedList<SequentialStatement>> uc : _entrySet) {
+    Set<Map.Entry<Integer,LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
+    for (final Map.Entry<Integer,LinkedList<SequentialStatement>> uc : _entrySet) {
       {
         ProcessStatement _processStatement = new ProcessStatement();
         final ProcessStatement ps = _processStatement;
@@ -273,8 +266,8 @@ public class VHDLPackageExtension {
         _statements_3.add(ps);
       }
     }
-    Set<Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
-    for (final Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> pc : _entrySet_1) {
+    Set<Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
+    for (final Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> pc : _entrySet_1) {
       {
         ProcessStatement _processStatement = new ProcessStatement();
         final ProcessStatement ps = _processStatement;
@@ -357,13 +350,8 @@ public class VHDLPackageExtension {
     }
   }
   
-  private static EnumSet<HDLDirection> notSensitive = new Function0<EnumSet<HDLDirection>>() {
-    public EnumSet<HDLDirection> apply() {
-      EnumSet<HDLDirection> _of = EnumSet.<HDLDirection>of(HDLDirection.HIDDEN, HDLDirection.PARAMETER, 
-        HDLDirection.CONSTANT);
-      return _of;
-    }
-  }.apply();
+  private static EnumSet<HDLVariableDeclaration.HDLDirection> notSensitive = EnumSet.<HDLVariableDeclaration.HDLDirection>of(HDLVariableDeclaration.HDLDirection.HIDDEN, HDLVariableDeclaration.HDLDirection.PARAMETER, 
+    HDLVariableDeclaration.HDLDirection.CONSTANT);
   
   private Collection<? extends Signal> createSensitivyList(final VHDLContext ctx, final int pid) {
     boolean _containsKey = ctx.noSensitivity.containsKey(Integer.valueOf(pid));
@@ -385,7 +373,7 @@ public class VHDLPackageExtension {
             final IHDLObject container = _get_1.getContainer();
             if ((container instanceof HDLVariableDeclaration)) {
               final HDLVariableDeclaration hdv = ((HDLVariableDeclaration) container);
-              HDLDirection _direction = hdv.getDirection();
+              HDLVariableDeclaration.HDLDirection _direction = hdv.getDirection();
               boolean _contains = VHDLPackageExtension.notSensitive.contains(_direction);
               boolean _not = (!_contains);
               if (_not) {
@@ -443,8 +431,8 @@ public class VHDLPackageExtension {
     List<Signal> _sensitivityList = ps.getSensitivityList();
     _sensitivityList.add(clk);
     EnumerationLiteral activeRst = null;
-    HDLRegResetActiveType _resetType = key.getResetType();
-    boolean _tripleEquals = (_resetType == HDLRegResetActiveType.HIGH);
+    HDLRegisterConfig.HDLRegResetActiveType _resetType = key.getResetType();
+    boolean _tripleEquals = (_resetType == HDLRegisterConfig.HDLRegResetActiveType.HIGH);
     if (_tripleEquals) {
       activeRst = StdLogic1164.STD_LOGIC_1;
     } else {
@@ -460,8 +448,8 @@ public class VHDLPackageExtension {
       _statements.addAll(resets);
     }
     FunctionCall edge = null;
-    HDLRegClockType _clockType = key.getClockType();
-    boolean _tripleEquals_1 = (_clockType == HDLRegClockType.RISING);
+    HDLRegisterConfig.HDLRegClockType _clockType = key.getClockType();
+    boolean _tripleEquals_1 = (_clockType == HDLRegisterConfig.HDLRegClockType.RISING);
     if (_tripleEquals_1) {
       FunctionCall _functionCall = new FunctionCall(StdLogic1164.RISING_EDGE);
       edge = _functionCall;
@@ -472,12 +460,12 @@ public class VHDLPackageExtension {
     List<AssociationElement> _parameters = edge.getParameters();
     AssociationElement _associationElement = new AssociationElement(clk);
     _parameters.add(_associationElement);
-    HDLRegSyncType _syncType = key.getSyncType();
-    boolean _tripleEquals_2 = (_syncType == HDLRegSyncType.ASYNC);
+    HDLRegisterConfig.HDLRegSyncType _syncType = key.getSyncType();
+    boolean _tripleEquals_2 = (_syncType == HDLRegisterConfig.HDLRegSyncType.ASYNC);
     if (_tripleEquals_2) {
       List<Signal> _sensitivityList_1 = ps.getSensitivityList();
       _sensitivityList_1.add(rst);
-      final ElsifPart elsifPart = rstIfStmnt.createElsifPart(edge);
+      final IfStatement.ElsifPart elsifPart = rstIfStmnt.createElsifPart(edge);
       List<SequentialStatement> _statements_1 = elsifPart.getStatements();
       _statements_1.addAll(value);
       return rstIfStmnt;
