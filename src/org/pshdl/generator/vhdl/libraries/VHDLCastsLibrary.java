@@ -300,7 +300,7 @@ public class VHDLCastsLibrary {
 		if (from.equals(to))
 			return vhdlExpr;
 		final String name = getCastName(from, to);
-		final Function resolve = (Function) PACKAGE.getScope().resolve(name, Function.class);
+		final Function resolve = PACKAGE.getScope().resolve(name, Function.class);
 		final FunctionCall call = new FunctionCall(resolve);
 		call.getParameters().add(new AssociationElement(vhdlExpr));
 		return call;

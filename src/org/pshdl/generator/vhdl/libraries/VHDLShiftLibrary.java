@@ -67,7 +67,7 @@ public class VHDLShiftLibrary {
 
 	public static Expression shift(Expression vhdlExpr, Expression amount, HDLPrimitiveType type, HDLShiftOpType op) {
 		final String name = getFunctionName(op, type);
-		final Function resolve = (Function) PACKAGE.getScope().resolve(name, Function.class);
+		final Function resolve = PACKAGE.getScope().resolve(name, Function.class);
 		final FunctionCall call = new FunctionCall(resolve);
 		call.getParameters().add(new AssociationElement(vhdlExpr));
 		call.getParameters().add(new AssociationElement(amount));
