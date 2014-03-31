@@ -114,7 +114,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 			if (!file.exists())
 				return "File: " + file + " does not exist";
 			if (string.endsWith(".vhdl") || string.endsWith(".vhd")) {
-				final List<HDLInterface> vhdl = addVHDL(file);
+				final List<HDLInterface> vhdl = addVHDL(this, file);
 				if (cli.hasOption('i')) {
 					final File ifFile = new File(outDir, file.getName() + ".pshdl");
 					final PrintStream ps = new PrintStream(ifFile);
@@ -166,10 +166,10 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 * @return
 	 * @throws IOException
 	 */
-	public List<HDLInterface> addVHDL(File file) throws IOException {
+	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, File file) throws IOException {
 		final FileInputStream fis = new FileInputStream(file);
 		try {
-			return addVHDL(fis, file.getAbsolutePath());
+			return addVHDL(comp, fis, file.getAbsolutePath());
 		} finally {
 			fis.close();
 		}
@@ -179,14 +179,17 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 * Imports the given stream as HDLInterface. This allows it to be
 	 * referenced. The generated interface can be found in package VHDL.work
 	 * 
+	 * @param comp
+	 * 
 	 * @param contents
 	 *            the contents of the VHDL file
 	 * @param asSrc
 	 *            a src id under which to register the {@link HDLInterface}
 	 * @return
 	 */
-	public List<HDLInterface> addVHDL(InputStream contents, String asSrc) {
-		validated = false;
+	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, InputStream contents, String asSrc) {
+		comp.invalidate();
+		final HDLLibrary lib = HDLLibrary.getLibrary(comp.uri);
 		final List<HDLInterface> importFile = VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
 		return importFile;
 	}
