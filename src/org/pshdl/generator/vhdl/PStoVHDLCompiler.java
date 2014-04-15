@@ -1,26 +1,26 @@
 /*******************************************************************************
  * PSHDL is a library and (trans-)compiler for PSHDL input. It generates
  *     output suitable for implementation or simulation of it.
- *     
+ *
  *     Copyright (C) 2013 Karsten Becker (feedback (at) pshdl (dot) org)
- * 
+ *
  *     This program is free software: you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
  *     the Free Software Foundation, either version 3 of the License, or
  *     (at your option) any later version.
- * 
+ *
  *     This program is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of
  *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *     GNU General Public License for more details.
- * 
+ *
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  *     This License does not grant permission to use the trade names, trademarks,
- *     service marks, or product names of the Licensor, except as required for 
+ *     service marks, or product names of the Licensor, except as required for
  *     reasonable and customary use in describing the origin of the Work.
- * 
+ *
  * Contributors:
  *     Karsten Becker - initial API and implementation
  ******************************************************************************/
@@ -43,7 +43,7 @@ import de.upb.hni.vmagic.output.*;
 /**
  * This compiler is the central place for generating VHDL output and auxiliary
  * files for PSHDL. The basic operation is like this:
- * 
+ *
  * <ol>
  * <li>{@link #setup(String)}</li>
  * <li>{@link #add(File)} Add as many files as you want. You can also add VHDL
@@ -51,9 +51,9 @@ import de.upb.hni.vmagic.output.*;
  * <li>{@link #doCompile(ICompilationListener)} generates all VHDL code and
  * auxiliary files</li>
  * </ol>
- * 
+ *
  * @author Karsten Becker
- * 
+ *
  */
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
@@ -92,7 +92,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 
 	/**
 	 * This is the command line version of the compiler
-	 * 
+	 *
 	 * @param args
 	 * @throws FileNotFoundException
 	 * @throws IOException
@@ -160,7 +160,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	/**
 	 * Adds a VHDL file to the {@link HDLLibrary} so that interfaces can be
 	 * resolved
-	 * 
+	 *
 	 * @param file
 	 *            the VHDL file
 	 * @return
@@ -178,9 +178,9 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	/**
 	 * Imports the given stream as HDLInterface. This allows it to be
 	 * referenced. The generated interface can be found in package VHDL.work
-	 * 
+	 *
 	 * @param comp
-	 * 
+	 *
 	 * @param contents
 	 *            the contents of the VHDL file
 	 * @param asSrc

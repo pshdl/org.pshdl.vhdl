@@ -68,7 +68,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.Extension;
-import org.eclipse.xtext.xbase.lib.Functions.Function0;
 import org.pshdl.generator.vhdl.VHDLContext;
 import org.pshdl.generator.vhdl.VHDLExpressionExtension;
 import org.pshdl.generator.vhdl.VHDLStatementExtension;
@@ -102,37 +101,19 @@ import org.pshdl.model.utils.Refactoring;
 @SuppressWarnings("all")
 public class VHDLPackageExtension {
   @Extension
-  private VHDLExpressionExtension vee = new Function0<VHDLExpressionExtension>() {
-    public VHDLExpressionExtension apply() {
-      VHDLExpressionExtension _vHDLExpressionExtension = new VHDLExpressionExtension();
-      return _vHDLExpressionExtension;
-    }
-  }.apply();
+  private VHDLExpressionExtension vee = new VHDLExpressionExtension();
   
   @Extension
-  private VHDLStatementExtension vse = new Function0<VHDLStatementExtension>() {
-    public VHDLStatementExtension apply() {
-      VHDLStatementExtension _vHDLStatementExtension = new VHDLStatementExtension();
-      return _vHDLStatementExtension;
-    }
-  }.apply();
+  private VHDLStatementExtension vse = new VHDLStatementExtension();
   
-  public static VHDLPackageExtension INST = new Function0<VHDLPackageExtension>() {
-    public VHDLPackageExtension apply() {
-      VHDLPackageExtension _vHDLPackageExtension = new VHDLPackageExtension();
-      return _vHDLPackageExtension;
-    }
-  }.apply();
+  public static VHDLPackageExtension INST = new VHDLPackageExtension();
   
   public List<LibraryUnit> toVHDL(final HDLUnit obj) {
-    LinkedList<LibraryUnit> _linkedList = new LinkedList<LibraryUnit>();
-    final List<LibraryUnit> res = _linkedList;
+    final List<LibraryUnit> res = new LinkedList<LibraryUnit>();
     final HDLQualifiedName entityName = FullNameExtension.fullNameOf(obj);
     String _dashString = this.dashString(entityName);
-    Entity _entity = new Entity(_dashString);
-    final Entity e = _entity;
-    VHDLContext _vHDLContext = new VHDLContext();
-    final VHDLContext unit = _vHDLContext;
+    final Entity e = new Entity(_dashString);
+    final VHDLContext unit = new VHDLContext();
     final HDLEnumRef[] hRefs = obj.<HDLEnumRef>getAllObjectsOf(HDLEnumRef.class, true);
     for (final HDLEnumRef hdlEnumRef : hRefs) {
       {
@@ -147,7 +128,7 @@ public class VHDLPackageExtension {
           HDLUnit _container = hdlEnumRef.<HDLUnit>getContainer(HDLUnit.class);
           boolean _equals = enumContainer.equals(_container);
           boolean _not = (!_equals);
-          _or = (_tripleEquals || _not);
+          _or = _not;
         }
         if (_or) {
           HDLEnum _get_1 = resolveHEnum.get();
@@ -172,8 +153,7 @@ public class VHDLPackageExtension {
         boolean _isPresent = variable.isPresent();
         boolean _not = (!_isPresent);
         if (_not) {
-          IllegalArgumentException _illegalArgumentException = new IllegalArgumentException(("Can not resolve:" + variableRef));
-          throw _illegalArgumentException;
+          throw new IllegalArgumentException(("Can not resolve:" + variableRef));
         }
         HDLVariable _get = variable.get();
         final HDLUnit enumContainer = _get.<HDLUnit>getContainer(HDLUnit.class);
@@ -185,7 +165,7 @@ public class VHDLPackageExtension {
           HDLUnit _container = variableRef.<HDLUnit>getContainer(HDLUnit.class);
           boolean _equals = enumContainer.equals(_container);
           boolean _not_1 = (!_equals);
-          _or = (_tripleEquals || _not_1);
+          _or = _not_1;
         }
         if (_or) {
           HDLVariable _get_1 = variable.get();
@@ -198,7 +178,7 @@ public class VHDLPackageExtension {
             String _segment = type.getSegment(0);
             boolean _equals_1 = _segment.equals("pshdl");
             boolean _not_2 = (!_equals_1);
-            _and = ((type.length > 0) && _not_2);
+            _and = _not_2;
           }
           if (_and) {
             String _packageName = this.getPackageName(type);
@@ -222,8 +202,7 @@ public class VHDLPackageExtension {
     boolean _hasPkgDeclarations = unit.hasPkgDeclarations();
     if (_hasPkgDeclarations) {
       final String libName = this.getPackageName(entityName);
-      PackageDeclaration _packageDeclaration = new PackageDeclaration(libName);
-      final PackageDeclaration pd = _packageDeclaration;
+      final PackageDeclaration pd = new PackageDeclaration(libName);
       List<PackageDeclarativeItem> _declarations = pd.getDeclarations();
       _declarations.addAll(((List) unit.externalTypes));
       List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
@@ -244,8 +223,7 @@ public class VHDLPackageExtension {
     List<EntityDeclarativeItem> _declarations_2 = e.getDeclarations();
     _declarations_2.addAll(((List) unit.internalTypesConstants));
     res.add(e);
-    Architecture _architecture = new Architecture("pshdlGenerated", e);
-    final Architecture a = _architecture;
+    final Architecture a = new Architecture("pshdlGenerated", e);
     List<BlockDeclarativeItem> _declarations_3 = a.getDeclarations();
     _declarations_3.addAll(((List) unit.internals));
     List<ConcurrentStatement> _statements_1 = a.getStatements();
@@ -253,8 +231,7 @@ public class VHDLPackageExtension {
     Set<Map.Entry<Integer,LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
     for (final Map.Entry<Integer,LinkedList<SequentialStatement>> uc : _entrySet) {
       {
-        ProcessStatement _processStatement = new ProcessStatement();
-        final ProcessStatement ps = _processStatement;
+        final ProcessStatement ps = new ProcessStatement();
         List<Signal> _sensitivityList = ps.getSensitivityList();
         Integer _key = uc.getKey();
         Collection<? extends Signal> _createSensitivyList = this.createSensitivyList(unit, (_key).intValue());
@@ -269,8 +246,7 @@ public class VHDLPackageExtension {
     Set<Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
     for (final Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> pc : _entrySet_1) {
       {
-        ProcessStatement _processStatement = new ProcessStatement();
-        final ProcessStatement ps = _processStatement;
+        final ProcessStatement ps = new ProcessStatement();
         List<SequentialStatement> _statements_2 = ps.getStatements();
         HDLRegisterConfig _key = pc.getKey();
         LinkedList<SequentialStatement> _value = pc.getValue();
@@ -328,8 +304,7 @@ public class VHDLPackageExtension {
     res.add(VHDLCastsLibrary.USE_CLAUSE);
     res.add(VHDLShiftLibrary.USE_CLAUSE);
     res.add(VHDLTypesLibrary.USE_CLAUSE);
-    HashSet<String> _hashSet = new HashSet<String>();
-    final Set<String> usedLibs = _hashSet;
+    final Set<String> usedLibs = new HashSet<String>();
     usedLibs.add("ieee");
     usedLibs.add("work");
     for (final HDLQualifiedName i : unit.imports) {
@@ -358,10 +333,8 @@ public class VHDLPackageExtension {
     if (_containsKey) {
       return Collections.<Signal>emptyList();
     }
-    LinkedList<Signal> _linkedList = new LinkedList<Signal>();
-    final List<Signal> sensitivity = _linkedList;
-    TreeSet<String> _treeSet = new TreeSet<String>();
-    final Set<String> vars = _treeSet;
+    final List<Signal> sensitivity = new LinkedList<Signal>();
+    final Set<String> vars = new TreeSet<String>();
     LinkedList<HDLStatement> _get = ctx.sensitiveStatements.get(Integer.valueOf(pid));
     for (final HDLStatement stmnt : _get) {
       {
@@ -413,8 +386,7 @@ public class VHDLPackageExtension {
   
   public HDLVariable resolveVar(final HDLReference reference) {
     if ((reference instanceof HDLUnresolvedFragment)) {
-      RuntimeException _runtimeException = new RuntimeException("Can not use unresolved fragments");
-      throw _runtimeException;
+      throw new RuntimeException("Can not use unresolved fragments");
     }
     Optional<HDLVariable> _resolveVar = ((HDLResolvedRef) reference).resolveVar();
     return _resolveVar.get();
@@ -439,8 +411,7 @@ public class VHDLPackageExtension {
       activeRst = StdLogic1164.STD_LOGIC_0;
     }
     Equals _equals = new Equals(rst, activeRst);
-    IfStatement _ifStatement = new IfStatement(_equals);
-    IfStatement rstIfStmnt = _ifStatement;
+    IfStatement rstIfStmnt = new IfStatement(_equals);
     final LinkedList<SequentialStatement> resets = unit.resetStatements.get(key);
     boolean _tripleNotEquals = (resets != null);
     if (_tripleNotEquals) {
@@ -470,8 +441,7 @@ public class VHDLPackageExtension {
       _statements_1.addAll(value);
       return rstIfStmnt;
     }
-    IfStatement _ifStatement_1 = new IfStatement(edge);
-    final IfStatement clkIf = _ifStatement_1;
+    final IfStatement clkIf = new IfStatement(edge);
     List<SequentialStatement> _statements_2 = clkIf.getStatements();
     _statements_2.add(rstIfStmnt);
     List<SequentialStatement> _elseStatements = rstIfStmnt.getElseStatements();
@@ -480,8 +450,7 @@ public class VHDLPackageExtension {
   }
   
   public VhdlFile toVHDL(final HDLPackage obj) {
-    VhdlFile _vhdlFile = new VhdlFile();
-    final VhdlFile res = _vhdlFile;
+    final VhdlFile res = new VhdlFile();
     PackageDeclaration pd = null;
     ArrayList<HDLDeclaration> _declarations = obj.getDeclarations();
     for (final HDLDeclaration decl : _declarations) {
@@ -506,18 +475,16 @@ public class VHDLPackageExtension {
           if (_isEmpty) {
             _xifexpression = null;
           } else {
-            ConstantDeclaration _first = vhdl.constants.getFirst();
-            _xifexpression = _first;
+            _xifexpression = vhdl.constants.getFirst();
           }
           ConstantDeclaration first = _xifexpression;
           boolean _tripleEquals_1 = (first == null);
           if (_tripleEquals_1) {
-            ConstantDeclaration _first_1 = vhdl.constantsPkg.getFirst();
-            first = _first_1;
+            ConstantDeclaration _first = vhdl.constantsPkg.getFirst();
+            first = _first;
             boolean _tripleEquals_2 = (first == null);
             if (_tripleEquals_2) {
-              IllegalArgumentException _illegalArgumentException = new IllegalArgumentException("Expected constant declaration but found none!");
-              throw _illegalArgumentException;
+              throw new IllegalArgumentException("Expected constant declaration but found none!");
             }
           }
           List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
@@ -530,17 +497,15 @@ public class VHDLPackageExtension {
           HDLEnum _hEnum = hvd_1.getHEnum();
           HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(_hEnum);
           String _packageName_1 = this.getPackageName(_fullNameOf);
-          PackageDeclaration _packageDeclaration_1 = new PackageDeclaration(_packageName_1);
-          final PackageDeclaration enumPd = _packageDeclaration_1;
+          final PackageDeclaration enumPd = new PackageDeclaration(_packageName_1);
           List<LibraryUnit> _elements_1 = res.getElements();
           _elements_1.add(enumPd);
           final VHDLContext vhdl_1 = this.vse.toVHDL(hvd_1, VHDLContext.DEFAULT_CTX);
-          DeclarativeItemMarker _first_2 = vhdl_1.internalTypes.getFirst();
-          final Type first_1 = ((Type) _first_2);
+          DeclarativeItemMarker _first_1 = vhdl_1.internalTypes.getFirst();
+          final Type first_1 = ((Type) _first_1);
           boolean _tripleEquals_3 = (first_1 == null);
           if (_tripleEquals_3) {
-            IllegalArgumentException _illegalArgumentException_1 = new IllegalArgumentException("Expected enum type declaration but found none!");
-            throw _illegalArgumentException_1;
+            throw new IllegalArgumentException("Expected enum type declaration but found none!");
           }
           List<PackageDeclarativeItem> _declarations_2 = enumPd.getDeclarations();
           _declarations_2.add(first_1);
@@ -550,8 +515,7 @@ public class VHDLPackageExtension {
     ArrayList<HDLUnit> _units = obj.getUnits();
     for (final HDLUnit unit : _units) {
       {
-        ModificationSet _modificationSet = new ModificationSet();
-        final ModificationSet ms = _modificationSet;
+        final ModificationSet ms = new ModificationSet();
         final HDLVariableDeclaration[] hvds = unit.<HDLVariableDeclaration>getAllObjectsOf(HDLVariableDeclaration.class, true);
         for (final HDLVariableDeclaration hvd : hvds) {
           ArrayList<HDLVariable> _variables = hvd.getVariables();
