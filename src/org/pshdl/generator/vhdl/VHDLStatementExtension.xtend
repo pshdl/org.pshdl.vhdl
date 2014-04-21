@@ -140,7 +140,7 @@ class VHDLStatementExtension {
 	}
 
 	def dispatch VHDLContext toVHDL(HDLFunctionCall obj, int pid) {
-		return VHDLFunctions::toOutputStatement(obj, pid)
+		return VHDLFunctions.toOutputStatement(obj, pid)
 	}
 
 	def dispatch VHDLContext toVHDL(HDLBlock obj, int pid) {
@@ -158,7 +158,7 @@ class VHDLStatementExtension {
 
 	def VHDLContext attachComment(VHDLContext context, IHDLObject block) {
 		try {
-			val srcInfo = block.getMeta(SourceInfo::INFO)
+			val srcInfo = block.getMeta(SourceInfo.INFO)
 			if (srcInfo !== null && context.statement !== null) {
 				val newComments = new ArrayList<String>
 				for (String comment : srcInfo.comments) {
@@ -169,7 +169,7 @@ class VHDLStatementExtension {
 						newComments.addAll(newComment.split("\n"))
 					}
 				}
-				Comments::setComments(context.statement, newComments)
+				Comments.setComments(context.statement, newComments)
 			}
 		} catch (Exception e) {
 		}
@@ -192,7 +192,7 @@ class VHDLStatementExtension {
 		return new VHDLContext
 	}
 
-	private static EnumSet<HDLDirection> inAndOut = EnumSet::of(HDLDirection::IN, HDLDirection::INOUT, HDLDirection::OUT)
+	private static EnumSet<HDLDirection> inAndOut = EnumSet.of(HDLDirection.IN, HDLDirection.INOUT, HDLDirection.OUT)
 
 	def dispatch VHDLContext toVHDL(HDLInterfaceInstantiation obj, int pid) {
 		val VHDLContext res = new VHDLContext
@@ -228,14 +228,14 @@ class VHDLStatementExtension {
 				}
 				res.addComponent(c)
 			} else
-				res.addImport(VHDLPackageExtension::INST.getNameRef(asRef))
+				res.addImport(VHDLPackageExtension.INST.getNameRef(asRef))
 			val Component entity = new Component(asRef.lastSegment.toString)
 			val ComponentInstantiation inst = new ComponentInstantiation(ifName, entity)
 			portMap = inst.portMap
 			genericMap = inst.genericMap
 			instantiation = inst
 		} else {
-			val Entity entity = new Entity(VHDLPackageExtension::INST.getNameRef(asRef).toString)
+			val Entity entity = new Entity(VHDLPackageExtension.INST.getNameRef(asRef).toString)
 			val EntityInstantiation inst = new EntityInstantiation(ifName, entity)
 			portMap = inst.portMap
 			genericMap = inst.genericMap
@@ -243,14 +243,14 @@ class VHDLStatementExtension {
 		}
 		for (HDLVariableDeclaration hvd : ports) {
 			if (inAndOut.contains(hvd.direction)) {
-				val Collection<HDLAnnotation> typeAnno = HDLQuery::select(typeof(HDLAnnotation)).from(hvd).where(
-					HDLAnnotation::fName).isEqualTo(VHDLType.toString).all
+				val Collection<HDLAnnotation> typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(hvd).where(
+					HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
 				for (HDLVariable hvar : hvd.variables) {
-					var HDLVariable sigVar = hvar.setName(VHDLUtils::mapName(ifName, hvar.name))
+					var HDLVariable sigVar = hvar.setName(VHDLUtils.mapName(ifName, hvar.name))
 					var HDLVariableRef ref = sigVar.asHDLRef
 					var i = 0
 					for (HDLExpression exp : hVar.dimensions) {
-						ref = ref.addArray(new HDLVariableRef().setVar(HDLQualifiedName::create(i.asIndex)))
+						ref = ref.addArray(new HDLVariableRef().setVar(HDLQualifiedName.create(i.asIndex)))
 						i = i + 1;
 					}
 					for (HDLExpression exp : hVar.dimensions) {
@@ -260,35 +260,35 @@ class VHDLStatementExtension {
 
 						//Arrays are always named in VHDL, so the type annotation should be present
 						if (typeAnno.isEmpty) {
-							val HDLQualifiedName name = VHDLPackageExtension::INST.getPackageNameRef(asRef).append(
+							val HDLQualifiedName name = VHDLPackageExtension.INST.getPackageNameRef(asRef).append(
 								getArrayRefName(hvar, true))
 							res.addImport(name)
-							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection::INTERNAL).
+							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
 								setVariables(
-									HDLObject::asList(
+									HDLObject.asList(
 										sigVar.setDimensions(null).addAnnotations(VHDLType.create(name.toString)))).
 								copyDeepFrozen(obj)
 							res.merge(newHVD.toVHDL(pid), false)
 						} else {
-							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection::INTERNAL).
-								setVariables(HDLObject::asList(sigVar.setDimensions(null))).copyDeepFrozen(obj)
+							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
+								setVariables(HDLObject.asList(sigVar.setDimensions(null))).copyDeepFrozen(obj)
 							res.merge(newHVD.toVHDL(pid), false)
 						}
 					} else {
-						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection::INTERNAL).
-							setVariables(HDLObject::asList(sigVar)).copyDeepFrozen(obj)
+						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
+							setVariables(HDLObject.asList(sigVar)).copyDeepFrozen(obj)
 						res.merge(newHVD.toVHDL(pid), false)
 					}
-					portMap.add(new AssociationElement(VHDLUtils::getVHDLName(hvar.name), ref.toVHDL))
+					portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
 				}
 			} else {
 
 				//Parameter get a special treatment because they have been renamed by HDLInterfaceInstantiation resolveIF
-				if (hvd.direction == HDLDirection::PARAMETER) {
+				if (hvd.direction == HDLDirection.PARAMETER) {
 					for (HDLVariable hvar : hvd.variables) {
 						var HDLVariable sigVar = hvar
-						if (hvar.getMeta(HDLInterfaceInstantiation::ORIG_NAME) !== null)
-							sigVar = hvar.setName(hvar.getMeta(HDLInterfaceInstantiation::ORIG_NAME))
+						if (hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME) !== null)
+							sigVar = hvar.setName(hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME))
 
 						val HDLVariableRef ref = hvar.asHDLRef
 						genericMap.add(new AssociationElement(sigVar.name, ref.toVHDL))
@@ -303,10 +303,10 @@ class VHDLStatementExtension {
 			var i = 0;
 			for (HDLExpression exp : hVar.dimensions) {
 				val HDLExpression to = new HDLArithOp().setLeft(hVar.dimensions.get(i)).setType(
-					HDLArithOp.HDLArithOpType::MINUS).setRight(HDLLiteral::get(1))
-				val HDLRange range = new HDLRange().setFrom(HDLLiteral::get(0)).setTo(to).setContainer(obj)
+					HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
+				val HDLRange range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(to).setContainer(obj)
 				val ForGenerateStatement newFor = new ForGenerateStatement("generate_" + ifName, i.asIndex,
-					range.toVHDL(Range.Direction::TO))
+					range.toVHDL(Range.Direction.TO))
 				if (forLoop !== null)
 					forLoop.statements.add(newFor)
 				else
@@ -323,7 +323,7 @@ class VHDLStatementExtension {
 
 	def String asIndex(Integer integer) {
 		val int i = 'I'.charAt(0)
-		return Character::toString((i + integer) as char);
+		return Character.toString((i + integer) as char);
 	}
 
 	def static String getArrayRefName(HDLVariable hvar, boolean external) {
@@ -333,11 +333,11 @@ class VHDLStatementExtension {
 			if (hvar.getMeta(ORIGINAL_FULLNAME) !== null)
 				fullName = hvar.getMeta(ORIGINAL_FULLNAME)
 			else
-				fullName = FullNameExtension::fullNameOf(hvar)
+				fullName = FullNameExtension.fullNameOf(hvar)
 			res = fullName.toString('_')
 		} else
 			res = hvar.name
-		return VHDLUtils::getVHDLName(VHDLUtils::unescapeVHDLName(res) + "_array")
+		return VHDLUtils.getVHDLName(VHDLUtils.unescapeVHDLName(res) + "_array")
 	}
 
 	def dispatch VHDLContext toVHDL(HDLVariableDeclaration obj, int pid) {
@@ -345,19 +345,19 @@ class VHDLStatementExtension {
 		val HDLPrimitive primitive = obj.primitive
 		var SubtypeIndication type = null
 		var HDLExpression resetValue = null
-		val HDLAnnotation typeAnno = HDLQuery::select(typeof(HDLAnnotation)).from(obj).where(HDLAnnotation::fName).
+		val HDLAnnotation typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(obj).where(HDLAnnotation.fName).
 			isEqualTo(VHDLType.toString).first
 		if (obj.register !== null) {
 			resetValue = obj.register.resetValue
 		}
-		var Expression otherValue=Aggregate::OTHERS(new CharacterLiteral('0'.charAt(0)))
+		var Expression otherValue=Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
 		if (typeAnno !== null) {
 			val HDLQualifiedName value = new HDLQualifiedName(typeAnno.value)
 			res.addImport(value)
 			type = new EnumerationType(value.lastSegment)
 		} else {
 			if (primitive !== null) {
-				type = VHDLCastsLibrary::getType(primitive)
+				type = VHDLCastsLibrary.getType(primitive)
 			} else {
 				val HDLType hType = obj.resolveType.get
 				if (hType instanceof HDLEnum) {
@@ -389,9 +389,9 @@ class VHDLStatementExtension {
 			val ranges = new LinkedList<DiscreteRange>
 			for (HDLExpression arrayWidth : hvar.dimensions) {
 				val HDLExpression newWidth = new HDLArithOp().setLeft(arrayWidth).setType(
-					HDLArithOp.HDLArithOpType::MINUS).setRight(HDLLiteral::get(1))
-				val Range range = new HDLRange().setFrom(HDLLiteral::get(0)).setTo(newWidth).copyDeepFrozen(obj).
-					toVHDL(Range.Direction::TO)
+					HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
+				val Range range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(newWidth).copyDeepFrozen(obj).
+					toVHDL(Range.Direction.TO)
 				ranges.add(range)
 			}
 			val boolean external = obj.isExternal
@@ -411,7 +411,7 @@ class VHDLStatementExtension {
 				val sa=new SignalAssignment(s, resetValue.toVHDLArray(otherValue))
 				res.addResetValue(obj.register, sa)				
 			} else {
-				val HDLStatement initLoop = Insulin::createArrayForLoop(Collections::emptyList, hvar.dimensions, 0,
+				val HDLStatement initLoop = Insulin.createArrayForLoop(Collections.emptyList, hvar.dimensions, 0,
 					resetValue, target, synchedArray).copyDeepFrozen(obj)
 				val VHDLContext vhdl = initLoop.toVHDL(pid)
 				res.addResetValue(obj.register, vhdl.statement)
@@ -427,22 +427,22 @@ class VHDLStatementExtension {
 				if (resetValue !== null) {
 					var Expression assign = resetValue.toVHDL
 					for (HDLExpression exp : hvar.dimensions)
-						assign = Aggregate::OTHERS(assign)
+						assign = Aggregate.OTHERS(assign)
 					s.setDefaultValue(assign)
 				}
 			}
 		}
 		switch (obj.direction) {
 			case IN: {
-				s.setMode(VhdlObject.Mode::IN)
+				s.setMode(VhdlObject.Mode.IN)
 				res.addPortDeclaration(s)
 			}
 			case OUT: {
-				s.setMode(VhdlObject.Mode::OUT)
+				s.setMode(VhdlObject.Mode.OUT)
 				res.addPortDeclaration(s)
 			}
 			case INOUT: {
-				s.setMode(VhdlObject.Mode::INOUT)
+				s.setMode(VhdlObject.Mode.INOUT)
 				res.addPortDeclaration(s)
 			}
 			case INTERNAL: {
@@ -464,10 +464,10 @@ class VHDLStatementExtension {
 	def dispatch VHDLContext toVHDL(HDLSwitchStatement obj, int pid) {
 		val VHDLContext context = new VHDLContext
 		val HDLExpression hCaseExp = obj.caseExp
-		var Optional<BigInteger> width = Optional::absent
-		val type = TypeExtension::typeOf(hCaseExp)
+		var Optional<BigInteger> width = Optional.absent
+		val type = TypeExtension.typeOf(hCaseExp)
 		if (type.present && type.get instanceof HDLPrimitive) {
-			width = ConstantEvaluate::valueOf((type.get as HDLPrimitive).width, null)
+			width = ConstantEvaluate.valueOf((type.get as HDLPrimitive).width, null)
 			if (!width.present)
 				throw new IllegalArgumentException("HDLPrimitive switch case needs to have constant width")
 		}
@@ -510,18 +510,18 @@ class VHDLStatementExtension {
 		var Alternative alt
 		val HDLExpression label = e.key.label
 		if (label !== null) {
-			val Optional<BigInteger> eval = ConstantEvaluate::valueOf(label, null)
+			val Optional<BigInteger> eval = ConstantEvaluate.valueOf(label, null)
 			if (eval.present) {
 				if (!bits.present)
 					throw new IllegalArgumentException("The width needs to be known for primitive types!")
-				alt = cs.createAlternative(VHDLUtils::toBinaryLiteral(bits.get.intValue, eval.get))
+				alt = cs.createAlternative(VHDLUtils.toBinaryLiteral(bits.get.intValue, eval.get))
 			} else
 				alt = cs.createAlternative(label.toVHDL); // The only valid
 
 			// reason here is an
 			// Enum
 			} else {
-				alt = cs.createAlternative(Choices::OTHERS)
+				alt = cs.createAlternative(Choices.OTHERS)
 			}
 			return alt
 		}
@@ -540,12 +540,12 @@ class VHDLStatementExtension {
 			val HDLReference ref = obj.left
 			val HDLVariable hvar = ref.resolveVar
 			val ArrayList<HDLExpression> dim = hvar.dimensions
-			if (dim.size != 0 && ref.classType == HDLClass::HDLVariableRef) {
+			if (dim.size != 0 && ref.classType == HDLClass.HDLVariableRef) {
 				val HDLVariableRef varRef = ref as HDLVariableRef
 				for (HDLExpression exp : varRef.array) {
 					dim.remove(0)
 				}
-				if (dim.size != 0 && obj.right.classType != HDLClass::HDLArrayInit) {
+				if (dim.size != 0 && obj.right.classType != HDLClass.HDLArrayInit) {
 
 					//XXX Implement correct array assignment for non full assignments
 					val HDLAnnotation typeAnno = hvar.getAnnotation(VHDLType)
@@ -585,14 +585,14 @@ class VHDLStatementExtension {
 			val VHDLContext res = new VHDLContext
 			res.merge(context, true)
 			for (Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> e : context.clockedStatements.entrySet) {
-				val ForStatement fStmnt = new ForStatement(VHDLUtils::getVHDLName(obj.param.name),
-					obj.range.get(0).toVHDL(Range.Direction::TO))
+				val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
+					obj.range.get(0).toVHDL(Range.Direction.TO))
 				fStmnt.statements.addAll(e.value)
 				res.addClockedStatement(e.key, fStmnt)
 			}
 			if (context.unclockedStatements.get(pid) !== null) {
-				val ForStatement fStmnt = new ForStatement(VHDLUtils::getVHDLName(obj.param.name),
-					obj.range.get(0).toVHDL(Range.Direction::TO))
+				val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
+					obj.range.get(0).toVHDL(Range.Direction.TO))
 				fStmnt.statements.addAll(context.unclockedStatements.get(pid))
 				res.addUnclockedStatement(pid, fStmnt, obj)
 			}
