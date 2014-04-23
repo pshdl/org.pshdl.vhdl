@@ -57,18 +57,36 @@ public class VHDLCastsLibrary {
 	public static final FunctionDeclaration MIN = new FunctionDeclaration("min", Standard.INTEGER, new Constant("left", Standard.INTEGER), new Constant("right", Standard.INTEGER));
 	public static final FunctionDeclaration ABS = new FunctionDeclaration("abs", Standard.INTEGER, new Constant("left", Standard.INTEGER));
 	public static final FunctionDeclaration STR_TO_UNSIGNED = new FunctionDeclaration("strToUnsigned", NumericStd.UNSIGNED, new Constant("s", Standard.STRING));
-	public static final FunctionDeclaration ACCESS_BITS_SLV = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR,
-			new Constant("s", StdLogic1164.STD_LOGIC_VECTOR), new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
-	public static final FunctionDeclaration ACCESS_BITS_SL = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", StdLogic1164.STD_LOGIC),
-			new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
-	public static final FunctionDeclaration ACCESS_BITS_NAT = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", Standard.NATURAL),
-			new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
-	public static final FunctionDeclaration ACCESS_BITS_INT = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", Standard.INTEGER),
-			new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
-	public static final FunctionDeclaration ACCESS_BITS_UNSIGNED = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", NumericStd.UNSIGNED),
-			new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
-	public static final FunctionDeclaration ACCESS_BITS_SIGNED = new FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", NumericStd.SIGNED),
-			new Constant("beginRange", Standard.NATURAL), new Constant("endRange", Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_SLV = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR,
+	// new Constant("s", StdLogic1164.STD_LOGIC_VECTOR), new
+	// Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_SL = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new
+	// Constant("s", StdLogic1164.STD_LOGIC),
+	// new Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_NAT = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new
+	// Constant("s", Standard.NATURAL),
+	// new Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_INT = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new
+	// Constant("s", Standard.INTEGER),
+	// new Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_UNSIGNED = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new
+	// Constant("s", NumericStd.UNSIGNED),
+	// new Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
+	// public static final FunctionDeclaration ACCESS_BITS_SIGNED = new
+	// FunctionDeclaration("accessBits", StdLogic1164.STD_LOGIC_VECTOR, new
+	// Constant("s", NumericStd.SIGNED),
+	// new Constant("beginRange", Standard.NATURAL), new Constant("endRange",
+	// Standard.NATURAL));
 	public static final UseClause USE_CLAUSE = new UseClause("work.Casts.ALL");
 	public static final PackageDeclaration PACKAGE;
 	public static final FunctionDeclaration RESIZE_SLV = new FunctionDeclaration("resizeSLV", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", StdLogic1164.STD_LOGIC_VECTOR),
@@ -104,12 +122,12 @@ public class VHDLCastsLibrary {
 
 		declarations.add(STR_TO_UNSIGNED);
 		// declarations.add(STR_TO_SIGNED);
-		declarations.add(ACCESS_BITS_SLV);
-		declarations.add(ACCESS_BITS_SL);
-		declarations.add(ACCESS_BITS_NAT);
-		declarations.add(ACCESS_BITS_INT);
-		declarations.add(ACCESS_BITS_UNSIGNED);
-		declarations.add(ACCESS_BITS_SIGNED);
+		// declarations.add(ACCESS_BITS_SLV);
+		// declarations.add(ACCESS_BITS_SL);
+		// declarations.add(ACCESS_BITS_NAT);
+		// declarations.add(ACCESS_BITS_INT);
+		// declarations.add(ACCESS_BITS_UNSIGNED);
+		// declarations.add(ACCESS_BITS_SIGNED);
 		declarations.add(RESIZE_SLV);
 		declarations.add(RESIZE_BIT);
 		declarations.add(RESIZE_INT);
