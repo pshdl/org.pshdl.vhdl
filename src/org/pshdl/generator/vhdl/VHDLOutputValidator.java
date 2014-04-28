@@ -26,17 +26,23 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import static org.pshdl.model.extensions.FullNameExtension.*;
-import static org.pshdl.model.validation.Problem.ProblemSeverity.*;
+import static org.pshdl.model.extensions.FullNameExtension.fullNameOf;
+import static org.pshdl.model.validation.Problem.ProblemSeverity.ERROR;
+import static org.pshdl.model.validation.Problem.ProblemSeverity.WARNING;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
-import org.pshdl.model.*;
-import org.pshdl.model.evaluation.*;
-import org.pshdl.model.utils.*;
-import org.pshdl.model.utils.services.*;
+import org.pshdl.model.HDLEnum;
+import org.pshdl.model.HDLInterface;
+import org.pshdl.model.HDLPackage;
+import org.pshdl.model.HDLUnit;
+import org.pshdl.model.HDLVariable;
+import org.pshdl.model.evaluation.HDLEvaluationContext;
+import org.pshdl.model.utils.HDLQualifiedName;
+import org.pshdl.model.utils.services.IHDLValidator;
 import org.pshdl.model.validation.HDLValidator.HDLAdvise;
-import org.pshdl.model.validation.*;
+import org.pshdl.model.validation.Problem;
 import org.pshdl.model.validation.Problem.ProblemSeverity;
 
 public class VHDLOutputValidator implements IHDLValidator {

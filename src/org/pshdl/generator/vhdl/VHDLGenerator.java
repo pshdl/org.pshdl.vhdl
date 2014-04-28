@@ -26,13 +26,13 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import java.io.*;
+import java.io.IOException;
 
-import org.pshdl.model.*;
-import org.pshdl.model.utils.*;
+import org.pshdl.model.HDLPackage;
+import org.pshdl.model.utils.Insulin;
 
-import de.upb.hni.vmagic.*;
-import de.upb.hni.vmagic.output.*;
+import de.upb.hni.vmagic.VhdlFile;
+import de.upb.hni.vmagic.output.VhdlOutput;
 
 public class VHDLGenerator {
 

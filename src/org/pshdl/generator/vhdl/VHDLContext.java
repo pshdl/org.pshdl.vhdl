@@ -26,21 +26,32 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.*;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.pshdl.model.*;
-import org.pshdl.model.utils.*;
+import org.pshdl.model.HDLRegisterConfig;
+import org.pshdl.model.HDLStatement;
+import org.pshdl.model.utils.HDLQualifiedName;
 
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import de.upb.hni.vmagic.*;
-import de.upb.hni.vmagic.concurrent.*;
-import de.upb.hni.vmagic.declaration.*;
-import de.upb.hni.vmagic.object.*;
-import de.upb.hni.vmagic.output.*;
-import de.upb.hni.vmagic.statement.*;
+import de.upb.hni.vmagic.VhdlElement;
+import de.upb.hni.vmagic.concurrent.ConcurrentStatement;
+import de.upb.hni.vmagic.declaration.Component;
+import de.upb.hni.vmagic.declaration.ConstantDeclaration;
+import de.upb.hni.vmagic.declaration.DeclarativeItem;
+import de.upb.hni.vmagic.declaration.DeclarativeItemMarker;
+import de.upb.hni.vmagic.declaration.ObjectDeclaration;
+import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.object.Signal;
+import de.upb.hni.vmagic.output.VhdlOutput;
+import de.upb.hni.vmagic.statement.SequentialStatement;
 
 public class VHDLContext {
 

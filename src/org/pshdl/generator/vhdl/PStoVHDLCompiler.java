@@ -26,19 +26,32 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 
-import org.apache.commons.cli.*;
-import org.pshdl.model.*;
-import org.pshdl.model.utils.*;
-import org.pshdl.model.utils.services.*;
-import org.pshdl.model.validation.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.pshdl.model.HDLClass;
+import org.pshdl.model.HDLInterface;
+import org.pshdl.model.HDLPackage;
+import org.pshdl.model.utils.HDLLibrary;
+import org.pshdl.model.utils.HDLQualifiedName;
+import org.pshdl.model.utils.Insulin;
+import org.pshdl.model.utils.PSAbstractCompiler;
+import org.pshdl.model.utils.services.IOutputProvider;
+import org.pshdl.model.validation.Problem;
 
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
 
-import de.upb.hni.vmagic.output.*;
+import de.upb.hni.vmagic.output.VhdlOutput;
 
 /**
  * This compiler is the central place for generating VHDL output and auxiliary

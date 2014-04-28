@@ -26,25 +26,40 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import java.math.*;
-import java.util.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import org.pshdl.model.*;
+import org.pshdl.model.HDLAssignment;
+import org.pshdl.model.HDLEnumRef;
+import org.pshdl.model.HDLExpression;
+import org.pshdl.model.HDLFunctionCall;
+import org.pshdl.model.HDLLiteral;
+import org.pshdl.model.HDLManip;
 import org.pshdl.model.HDLManip.HDLManipType;
-import org.pshdl.model.evaluation.*;
+import org.pshdl.model.HDLPrimitive;
+import org.pshdl.model.HDLRange;
+import org.pshdl.model.HDLVariableRef;
+import org.pshdl.model.IHDLObject;
+import org.pshdl.model.evaluation.ConstantEvaluate;
 import org.pshdl.model.types.builtIn.HDLBuiltInFunctions.BuiltInFunctions;
 import org.pshdl.model.types.builtIn.TestbenchFunctions.SimulationFunctions;
-import org.pshdl.model.utils.*;
+import org.pshdl.model.utils.HDLCore;
+import org.pshdl.model.utils.HDLQualifiedName;
 
-import com.google.common.base.*;
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
 
-import de.upb.hni.vmagic.*;
+import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.Range.Direction;
-import de.upb.hni.vmagic.declaration.*;
-import de.upb.hni.vmagic.expression.*;
-import de.upb.hni.vmagic.literal.*;
-import de.upb.hni.vmagic.statement.*;
-import de.upb.hni.vmagic.type.*;
+import de.upb.hni.vmagic.declaration.FunctionDeclaration;
+import de.upb.hni.vmagic.expression.Aggregate;
+import de.upb.hni.vmagic.expression.Expression;
+import de.upb.hni.vmagic.expression.FunctionCall;
+import de.upb.hni.vmagic.literal.CharacterLiteral;
+import de.upb.hni.vmagic.literal.PhysicalLiteral;
+import de.upb.hni.vmagic.statement.WaitStatement;
+import de.upb.hni.vmagic.type.UnresolvedType;
 
 public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 

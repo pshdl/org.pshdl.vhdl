@@ -26,13 +26,17 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl.libraries;
 
-import java.util.*;
+import java.util.List;
 
-import de.upb.hni.vmagic.builtin.*;
-import de.upb.hni.vmagic.declaration.*;
-import de.upb.hni.vmagic.libraryunit.*;
-import de.upb.hni.vmagic.object.*;
-import de.upb.hni.vmagic.type.*;
+import de.upb.hni.vmagic.builtin.NumericStd;
+import de.upb.hni.vmagic.builtin.Standard;
+import de.upb.hni.vmagic.builtin.StdLogic1164;
+import de.upb.hni.vmagic.declaration.FunctionDeclaration;
+import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
+import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
+import de.upb.hni.vmagic.libraryunit.UseClause;
+import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.type.SubtypeIndication;
 
 public class VHDLTypesLibrary {
 	public static final UseClause USE_CLAUSE = new UseClause("work.Types.ALL");

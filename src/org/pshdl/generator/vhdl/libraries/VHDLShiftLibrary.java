@@ -26,18 +26,22 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl.libraries;
 
-import java.util.*;
+import java.util.List;
 
 import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
 import org.pshdl.model.HDLShiftOp.HDLShiftOpType;
 
-import de.upb.hni.vmagic.*;
-import de.upb.hni.vmagic.builtin.*;
-import de.upb.hni.vmagic.declaration.*;
-import de.upb.hni.vmagic.expression.*;
-import de.upb.hni.vmagic.libraryunit.*;
-import de.upb.hni.vmagic.object.*;
-import de.upb.hni.vmagic.type.*;
+import de.upb.hni.vmagic.AssociationElement;
+import de.upb.hni.vmagic.builtin.Standard;
+import de.upb.hni.vmagic.declaration.Function;
+import de.upb.hni.vmagic.declaration.FunctionDeclaration;
+import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
+import de.upb.hni.vmagic.expression.Expression;
+import de.upb.hni.vmagic.expression.FunctionCall;
+import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
+import de.upb.hni.vmagic.libraryunit.UseClause;
+import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.type.SubtypeIndication;
 
 public class VHDLShiftLibrary {
 	public static final UseClause USE_CLAUSE = new UseClause("work.ShiftOps.ALL");

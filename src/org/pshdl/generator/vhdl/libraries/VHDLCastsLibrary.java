@@ -26,28 +26,40 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl.libraries;
 
-import java.math.*;
-import java.util.*;
+import java.math.BigInteger;
+import java.util.List;
 
-import org.pshdl.generator.vhdl.*;
-import org.pshdl.model.*;
+import org.pshdl.generator.vhdl.VHDLExpressionExtension;
+import org.pshdl.model.HDLArithOp;
 import org.pshdl.model.HDLArithOp.HDLArithOpType;
+import org.pshdl.model.HDLClass;
+import org.pshdl.model.HDLExpression;
+import org.pshdl.model.HDLLiteral;
 import org.pshdl.model.HDLLiteral.HDLLiteralPresentation;
+import org.pshdl.model.HDLPrimitive;
 import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
-import org.pshdl.model.evaluation.*;
+import org.pshdl.model.HDLRange;
+import org.pshdl.model.IHDLObject;
+import org.pshdl.model.evaluation.ConstantEvaluate;
 
-import com.google.common.base.*;
+import com.google.common.base.Optional;
 
-import de.upb.hni.vmagic.*;
+import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.Range.Direction;
-import de.upb.hni.vmagic.builtin.*;
-import de.upb.hni.vmagic.declaration.*;
+import de.upb.hni.vmagic.builtin.NumericStd;
+import de.upb.hni.vmagic.builtin.Standard;
+import de.upb.hni.vmagic.builtin.StdLogic1164;
 import de.upb.hni.vmagic.declaration.Function;
-import de.upb.hni.vmagic.expression.*;
-import de.upb.hni.vmagic.libraryunit.*;
-import de.upb.hni.vmagic.literal.*;
-import de.upb.hni.vmagic.object.*;
-import de.upb.hni.vmagic.type.*;
+import de.upb.hni.vmagic.declaration.FunctionDeclaration;
+import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
+import de.upb.hni.vmagic.expression.Aggregate;
+import de.upb.hni.vmagic.expression.Expression;
+import de.upb.hni.vmagic.expression.FunctionCall;
+import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
+import de.upb.hni.vmagic.libraryunit.UseClause;
+import de.upb.hni.vmagic.literal.CharacterLiteral;
+import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.type.SubtypeIndication;
 
 public class VHDLCastsLibrary {
 	// public static final FunctionDeclaration STR_TO_SIGNED = new

@@ -26,9 +26,9 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import org.pshdl.model.*;
+import org.pshdl.model.HDLFunctionCall;
 
-import de.upb.hni.vmagic.expression.*;
+import de.upb.hni.vmagic.expression.Expression;
 
 public interface IVHDLCodeFunctionProvider {
 	public VHDLContext toVHDLStatement(HDLFunctionCall call, int i);

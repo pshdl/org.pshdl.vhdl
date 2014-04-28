@@ -26,33 +26,70 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
-import java.io.*;
-import java.math.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.pshdl.model.*;
+import org.pshdl.model.HDLAnnotation;
+import org.pshdl.model.HDLArithOp;
 import org.pshdl.model.HDLArithOp.HDLArithOpType;
+import org.pshdl.model.HDLExpression;
+import org.pshdl.model.HDLInterface;
+import org.pshdl.model.HDLLiteral;
 import org.pshdl.model.HDLObject.GenericMeta;
+import org.pshdl.model.HDLPrimitive;
 import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
+import org.pshdl.model.HDLVariable;
+import org.pshdl.model.HDLVariableDeclaration;
 import org.pshdl.model.HDLVariableDeclaration.HDLDirection;
-import org.pshdl.model.evaluation.*;
+import org.pshdl.model.evaluation.ConstantEvaluate;
 import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations;
-import org.pshdl.model.utils.*;
+import org.pshdl.model.utils.HDLLibrary;
+import org.pshdl.model.utils.HDLQualifiedName;
+import org.pshdl.model.utils.MetaAccess;
 
-import com.google.common.base.*;
-import com.google.common.collect.*;
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 
-import de.upb.hni.vmagic.*;
-import de.upb.hni.vmagic.Range.Direction;
+import de.upb.hni.vmagic.DiscreteRange;
+import de.upb.hni.vmagic.LibraryDeclarativeRegion;
 import de.upb.hni.vmagic.Range;
-import de.upb.hni.vmagic.builtin.*;
-import de.upb.hni.vmagic.declaration.*;
-import de.upb.hni.vmagic.expression.*;
-import de.upb.hni.vmagic.libraryunit.*;
-import de.upb.hni.vmagic.literal.*;
-import de.upb.hni.vmagic.object.*;
-import de.upb.hni.vmagic.parser.*;
-import de.upb.hni.vmagic.type.*;
+import de.upb.hni.vmagic.Range.Direction;
+import de.upb.hni.vmagic.RootDeclarativeRegion;
+import de.upb.hni.vmagic.VhdlFile;
+import de.upb.hni.vmagic.builtin.NumericStd;
+import de.upb.hni.vmagic.builtin.Standard;
+import de.upb.hni.vmagic.builtin.StdLogic1164;
+import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
+import de.upb.hni.vmagic.expression.BinaryExpression;
+import de.upb.hni.vmagic.expression.Expression;
+import de.upb.hni.vmagic.expression.ExpressionKind;
+import de.upb.hni.vmagic.expression.Parentheses;
+import de.upb.hni.vmagic.libraryunit.Entity;
+import de.upb.hni.vmagic.libraryunit.LibraryUnit;
+import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
+import de.upb.hni.vmagic.literal.BinaryLiteral;
+import de.upb.hni.vmagic.literal.CharacterLiteral;
+import de.upb.hni.vmagic.literal.DecimalLiteral;
+import de.upb.hni.vmagic.literal.HexLiteral;
+import de.upb.hni.vmagic.literal.StringLiteral;
+import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.object.Signal;
+import de.upb.hni.vmagic.object.VhdlObjectProvider;
+import de.upb.hni.vmagic.parser.VhdlParser;
+import de.upb.hni.vmagic.parser.VhdlParserException;
+import de.upb.hni.vmagic.parser.VhdlParserSettings;
+import de.upb.hni.vmagic.type.ConstrainedArray;
+import de.upb.hni.vmagic.type.EnumerationType;
+import de.upb.hni.vmagic.type.IndexSubtypeIndication;
+import de.upb.hni.vmagic.type.SubtypeIndication;
+import de.upb.hni.vmagic.type.Type;
+import de.upb.hni.vmagic.type.UnconstrainedArray;
 
 public class VHDLImporter {
 	private static class Scopes {
