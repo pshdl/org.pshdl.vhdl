@@ -116,6 +116,7 @@ import org.pshdl.model.utils.Insulin
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
 import de.upb.hni.vmagic.literal.CharacterLiteral
+import org.pshdl.model.evaluation.HDLEvaluationContext
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -364,7 +365,7 @@ class VHDLStatementExtension {
 					val HDLEnum hEnum = hType as HDLEnum
 					type = new EnumerationType(hEnum.name)
 					var idx=0;
-					val resVal=ConstantEvaluate.valueOf(resetValue, null)
+					val resVal=ConstantEvaluate.valueOf(resetValue, new HDLEvaluationContext=>[enumAsInt=true])
 					if (resVal.present)
 						idx=resVal.get.intValue
 					val enumReset = new HDLEnumRef().setHEnum(hEnum.asRef).setVar(hEnum.enums.get(idx).asRef)

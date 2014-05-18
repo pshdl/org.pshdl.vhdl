@@ -297,6 +297,26 @@ public class VHDLPackageExtension {
   }
   
   private static void addDefaultLibs(final List<LibraryUnit> res, final VHDLContext unit) {
+    final Set<String> usedLibs = VHDLPackageExtension.staticImports(res);
+    for (final HDLQualifiedName i : unit.imports) {
+      {
+        final String lib = i.getSegment(0);
+        boolean _contains = usedLibs.contains(lib);
+        boolean _not = (!_contains);
+        if (_not) {
+          LibraryClause _libraryClause = new LibraryClause(lib);
+          res.add(_libraryClause);
+          usedLibs.add(lib);
+        }
+        HDLQualifiedName _append = i.append("all");
+        String _string = _append.toString();
+        UseClause _useClause = new UseClause(_string);
+        res.add(_useClause);
+      }
+    }
+  }
+  
+  public static Set<String> staticImports(final List<LibraryUnit> res) {
     LibraryClause _libraryClause = new LibraryClause("ieee");
     res.add(_libraryClause);
     res.add(StdLogic1164.USE_CLAUSE);
@@ -307,22 +327,7 @@ public class VHDLPackageExtension {
     final Set<String> usedLibs = new HashSet<String>();
     usedLibs.add("ieee");
     usedLibs.add("work");
-    for (final HDLQualifiedName i : unit.imports) {
-      {
-        final String lib = i.getSegment(0);
-        boolean _contains = usedLibs.contains(lib);
-        boolean _not = (!_contains);
-        if (_not) {
-          LibraryClause _libraryClause_1 = new LibraryClause(lib);
-          res.add(_libraryClause_1);
-          usedLibs.add(lib);
-        }
-        HDLQualifiedName _append = i.append("all");
-        String _string = _append.toString();
-        UseClause _useClause = new UseClause(_string);
-        res.add(_useClause);
-      }
-    }
+    return usedLibs;
   }
   
   private static EnumSet<HDLVariableDeclaration.HDLDirection> notSensitive = EnumSet.<HDLVariableDeclaration.HDLDirection>of(HDLVariableDeclaration.HDLDirection.HIDDEN, HDLVariableDeclaration.HDLDirection.PARAMETER, 
@@ -461,13 +466,15 @@ public class VHDLPackageExtension {
           final HDLVariableDeclaration hvd = ((HDLVariableDeclaration) decl);
           boolean _tripleEquals = (pd == null);
           if (_tripleEquals) {
+            List<LibraryUnit> _elements = res.getElements();
+            VHDLPackageExtension.staticImports(_elements);
             String _pkg = obj.getPkg();
             HDLQualifiedName _hDLQualifiedName = new HDLQualifiedName(_pkg);
             String _packageName = this.getPackageName(_hDLQualifiedName);
             PackageDeclaration _packageDeclaration = new PackageDeclaration(_packageName);
             pd = _packageDeclaration;
-            List<LibraryUnit> _elements = res.getElements();
-            _elements.add(pd);
+            List<LibraryUnit> _elements_1 = res.getElements();
+            _elements_1.add(pd);
           }
           final VHDLContext vhdl = this.vse.toVHDL(hvd, VHDLContext.DEFAULT_CTX);
           ConstantDeclaration _xifexpression = null;
@@ -498,8 +505,8 @@ public class VHDLPackageExtension {
           HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(_hEnum);
           String _packageName_1 = this.getPackageName(_fullNameOf);
           final PackageDeclaration enumPd = new PackageDeclaration(_packageName_1);
-          List<LibraryUnit> _elements_1 = res.getElements();
-          _elements_1.add(enumPd);
+          List<LibraryUnit> _elements_2 = res.getElements();
+          _elements_2.add(enumPd);
           final VHDLContext vhdl_1 = this.vse.toVHDL(hvd_1, VHDLContext.DEFAULT_CTX);
           DeclarativeItemMarker _first_1 = vhdl_1.internalTypes.getFirst();
           final Type first_1 = ((Type) _first_1);

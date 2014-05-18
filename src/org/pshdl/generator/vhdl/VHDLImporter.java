@@ -274,7 +274,7 @@ public class VHDLImporter {
 			final String hex = from.toString();
 			final String hexValue = hex.substring(2, hex.length() - 1);
 			if (hexValue.length() != 0)
-				return HDLLiteral.get(new BigInteger(Integer.toString(Integer.parseInt(hexValue, 16))));
+				return HDLLiteral.get(new BigInteger(hexValue, 16));
 			return HDLLiteral.get(0);
 		}
 		if (from instanceof DecimalLiteral) {

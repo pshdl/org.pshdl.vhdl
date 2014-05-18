@@ -177,6 +177,18 @@ class VHDLPackageExtension {
 	}
 
 	def private static addDefaultLibs(List<LibraryUnit> res, VHDLContext unit) {
+		val usedLibs=staticImports(res)
+		for (HDLQualifiedName i : unit.imports) {
+			val String lib = i.getSegment(0)
+			if (!usedLibs.contains(lib)) {
+				res.add(new LibraryClause(lib))
+				usedLibs.add(lib)
+			}
+			res.add(new UseClause(i.append("all").toString))
+		}
+	}
+	
+	def static staticImports(List<LibraryUnit> res) {
 		res.add(new LibraryClause("ieee"))
 		res.add(StdLogic1164.USE_CLAUSE)
 		res.add(NumericStd.USE_CLAUSE)
@@ -190,14 +202,7 @@ class VHDLPackageExtension {
 		//		usedLibs.add("pshdl")
 		usedLibs.add("ieee")
 		usedLibs.add("work")
-		for (HDLQualifiedName i : unit.imports) {
-			val String lib = i.getSegment(0)
-			if (!usedLibs.contains(lib)) {
-				res.add(new LibraryClause(lib))
-				usedLibs.add(lib)
-			}
-			res.add(new UseClause(i.append("all").toString))
-		}
+		return usedLibs
 	}
 
 	private static EnumSet<HDLDirection> notSensitive = EnumSet.of(HDLDirection.HIDDEN, HDLDirection.PARAMETER,
@@ -280,6 +285,7 @@ class VHDLPackageExtension {
 			if (decl.classType == HDLClass.HDLVariableDeclaration) {
 				val HDLVariableDeclaration hvd = decl as HDLVariableDeclaration
 				if (pd === null) {
+					staticImports(res.elements)
 					pd = new PackageDeclaration(getPackageName(new HDLQualifiedName(obj.pkg)))
 					res.elements.add(pd)
 				}

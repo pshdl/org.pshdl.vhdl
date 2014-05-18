@@ -76,6 +76,8 @@ import org.eclipse.xtext.xbase.lib.CollectionExtensions;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.Extension;
+import org.eclipse.xtext.xbase.lib.ObjectExtensions;
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
 import org.pshdl.generator.vhdl.VHDLContext;
 import org.pshdl.generator.vhdl.VHDLExpressionExtension;
 import org.pshdl.generator.vhdl.VHDLFunctions;
@@ -117,6 +119,7 @@ import org.pshdl.model.HDLVariableDeclaration;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.evaluation.ConstantEvaluate;
+import org.pshdl.model.evaluation.HDLEvaluationContext;
 import org.pshdl.model.extensions.FullNameExtension;
 import org.pshdl.model.extensions.TypeExtension;
 import org.pshdl.model.parser.SourceInfo;
@@ -547,7 +550,14 @@ public class VHDLStatementExtension {
           EnumerationType _enumerationType_1 = new EnumerationType(_name);
           type = _enumerationType_1;
           int idx = 0;
-          final Optional<BigInteger> resVal = ConstantEvaluate.valueOf(resetValue, null);
+          HDLEvaluationContext _hDLEvaluationContext = new HDLEvaluationContext();
+          final Procedure1<HDLEvaluationContext> _function = new Procedure1<HDLEvaluationContext>() {
+            public void apply(final HDLEvaluationContext it) {
+              it.enumAsInt = true;
+            }
+          };
+          HDLEvaluationContext _doubleArrow = ObjectExtensions.<HDLEvaluationContext>operator_doubleArrow(_hDLEvaluationContext, _function);
+          final Optional<BigInteger> resVal = ConstantEvaluate.valueOf(resetValue, _doubleArrow);
           boolean _isPresent = resVal.isPresent();
           if (_isPresent) {
             BigInteger _get = resVal.get();
