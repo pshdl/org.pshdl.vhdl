@@ -30,6 +30,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.pshdl.generator.vhdl.libraries.VHDLTypesLibrary;
 import org.pshdl.model.HDLAssignment;
 import org.pshdl.model.HDLEnumRef;
 import org.pshdl.model.HDLExpression;
@@ -52,12 +53,14 @@ import com.google.common.base.Optional;
 
 import de.upb.hni.vmagic.AssociationElement;
 import de.upb.hni.vmagic.Range.Direction;
+import de.upb.hni.vmagic.builtin.Standard;
 import de.upb.hni.vmagic.declaration.FunctionDeclaration;
 import de.upb.hni.vmagic.expression.Aggregate;
 import de.upb.hni.vmagic.expression.Expression;
 import de.upb.hni.vmagic.expression.FunctionCall;
 import de.upb.hni.vmagic.literal.CharacterLiteral;
 import de.upb.hni.vmagic.literal.PhysicalLiteral;
+import de.upb.hni.vmagic.statement.AssertionStatement;
 import de.upb.hni.vmagic.statement.WaitStatement;
 import de.upb.hni.vmagic.type.UnresolvedType;
 
@@ -79,9 +82,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 			case abs:
 				final FunctionDeclaration fd = new FunctionDeclaration(function.getNameRefName().getLastSegment(), UnresolvedType.NO_NAME);
 				final FunctionCall res = new FunctionCall(fd);
-				for (final HDLExpression exp : function.getParams()) {
-					res.getParameters().add(new AssociationElement(VHDLExpressionExtension.vhdlOf(exp)));
-				}
+				addArguments(function, res);
 				return res;
 			case highZ:
 				if (function.getParams().size() == 0)
@@ -91,10 +92,28 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				final HDLRange range = new HDLRange().setFrom(HDLLiteral.get(1)).setTo(function.getParams().get(0));
 				aggregate.createAssociation(new CharacterLiteral('Z'), VHDLExpressionExtension.INST.toVHDL(range, Direction.TO));
 				return aggregate;
+			case assertThat:
+				return null;
+			case log2ceil: {
+				final FunctionCall fc = new FunctionCall(VHDLTypesLibrary.LOG2CEIL);
+				addArguments(function, fc);
+				return fc;
+			}
+			case log2floor: {
+				final FunctionCall fc = new FunctionCall(VHDLTypesLibrary.LOG2FLOOR);
+				addArguments(function, fc);
+				return fc;
+			}
 			}
 
 		}
 		return null;
+	}
+
+	public void addArguments(HDLFunctionCall function, FunctionCall fc) {
+		for (final HDLExpression exp : function.getParams()) {
+			fc.getParameters().add(new AssociationElement(VHDLExpressionExtension.vhdlOf(exp)));
+		}
 	}
 
 	@Override
@@ -146,6 +165,33 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				res.addUnclockedStatement(pid, ws, function);
 				return res;
 			}
+			}
+		}
+		final Optional<BuiltInFunctions> b = Enums.getIfPresent(BuiltInFunctions.class, refName.getLastSegment());
+		if (b.isPresent()) {
+			if (b.get() == BuiltInFunctions.assertThat) {
+				final ArrayList<HDLExpression> params = function.getParams();
+				final Expression condition = VHDLExpressionExtension.vhdlOf(params.get(0));
+				final Expression report = VHDLExpressionExtension.vhdlOf(params.get(2));
+				final String varRef = ((HDLEnumRef) params.get(1)).getVarRefName().getLastSegment();
+				Expression severity = null;
+				switch (varRef) {
+				case "FATAL":
+					severity = Standard.SEVERITY_LEVEL_FAILURE;
+					break;
+				case "ERROR":
+					severity = Standard.SEVERITY_LEVEL_ERROR;
+					break;
+				case "WARNING":
+					severity = Standard.SEVERITY_LEVEL_WARNING;
+					break;
+				case "INFO":
+					severity = Standard.SEVERITY_LEVEL_NOTE;
+					break;
+				}
+				final VHDLContext res = new VHDLContext();
+				res.addUnclockedStatement(pid, new AssertionStatement(condition, report, severity), function);
+				return res;
 			}
 		}
 		return null;

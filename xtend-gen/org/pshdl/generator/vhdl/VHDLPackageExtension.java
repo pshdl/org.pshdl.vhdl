@@ -54,6 +54,7 @@ import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.IfStatement;
 import de.upb.hni.vmagic.statement.SequentialStatement;
+import de.upb.hni.vmagic.statement.WaitStatement;
 import de.upb.hni.vmagic.type.Type;
 import de.upb.hni.vmagic.type.UnresolvedType;
 import java.util.ArrayList;
@@ -68,6 +69,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.Extension;
+import org.eclipse.xtext.xbase.lib.Functions.Function1;
+import org.eclipse.xtext.xbase.lib.IterableExtensions;
 import org.pshdl.generator.vhdl.VHDLContext;
 import org.pshdl.generator.vhdl.VHDLExpressionExtension;
 import org.pshdl.generator.vhdl.VHDLStatementExtension;
@@ -239,8 +242,32 @@ public class VHDLPackageExtension {
         List<SequentialStatement> _statements_2 = ps.getStatements();
         LinkedList<SequentialStatement> _value = uc.getValue();
         _statements_2.addAll(_value);
-        List<ConcurrentStatement> _statements_3 = a.getStatements();
-        _statements_3.add(ps);
+        boolean _and_1 = false;
+        List<Signal> _sensitivityList_1 = ps.getSensitivityList();
+        boolean _isEmpty = _sensitivityList_1.isEmpty();
+        if (!_isEmpty) {
+          _and_1 = false;
+        } else {
+          Boolean _simulation = obj.getSimulation();
+          boolean _not_3 = (!(_simulation).booleanValue());
+          _and_1 = _not_3;
+        }
+        if (_and_1) {
+          List<SequentialStatement> _statements_3 = ps.getStatements();
+          final Function1<SequentialStatement,Boolean> _function = new Function1<SequentialStatement,Boolean>() {
+            public Boolean apply(final SequentialStatement it) {
+              return Boolean.valueOf((it instanceof WaitStatement));
+            }
+          };
+          final boolean hasWait = IterableExtensions.<SequentialStatement>exists(_statements_3, _function);
+          if ((!hasWait)) {
+            List<SequentialStatement> _statements_4 = ps.getStatements();
+            WaitStatement _waitStatement = new WaitStatement();
+            _statements_4.add(_waitStatement);
+          }
+        }
+        List<ConcurrentStatement> _statements_5 = a.getStatements();
+        _statements_5.add(ps);
       }
     }
     Set<Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();

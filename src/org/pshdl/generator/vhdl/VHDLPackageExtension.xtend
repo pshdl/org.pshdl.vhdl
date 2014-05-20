@@ -81,6 +81,7 @@ import org.pshdl.model.utils.ModificationSet
 import org.pshdl.model.utils.Refactoring
 
 import static org.pshdl.model.extensions.FullNameExtension.*
+import de.upb.hni.vmagic.statement.WaitStatement
 
 class VHDLPackageExtension {
 
@@ -147,6 +148,11 @@ class VHDLPackageExtension {
 			val ProcessStatement ps = new ProcessStatement
 			ps.sensitivityList.addAll(createSensitivyList(unit, uc.key))
 			ps.statements.addAll(uc.value)
+			if (ps.sensitivityList.empty && !obj.simulation){
+				val hasWait=ps.statements.exists[it instanceof WaitStatement]
+				if (!hasWait)
+					ps.statements.add(new WaitStatement)
+			}
 			a.statements.add(ps)
 		}
 		for (Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> pc : unit.clockedStatements.entrySet) {
