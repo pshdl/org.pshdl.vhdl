@@ -229,7 +229,7 @@ public class VHDLCastsLibrary {
 				return VHDLExpressionExtension.vhdlOf(lit);
 		}
 		final BigInteger val = lit.getValueAsBigInt();
-		Optional<BigInteger> width = null;
+		Optional<BigInteger> width = Optional.absent();
 		if (tWidth != null) {
 			width = ConstantEvaluate.valueOf(tWidth, null);
 		}

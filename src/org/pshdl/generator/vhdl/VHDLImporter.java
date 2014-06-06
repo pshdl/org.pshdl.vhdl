@@ -334,11 +334,13 @@ public class VHDLImporter {
 						return arg1.endsWith("vhd");
 					}
 				});
-				for (final File f : files) {
-					try {
-						importFile(f, lib, targetPackage);
-					} catch (final Exception e) {
-						e.printStackTrace();
+				if (files != null) {
+					for (final File f : files) {
+						try {
+							importFile(f, lib, targetPackage);
+						} catch (final Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			} else {
