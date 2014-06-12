@@ -42,6 +42,7 @@ import de.upb.hni.vmagic.expression.Aggregate
 import de.upb.hni.vmagic.expression.Expression
 import de.upb.hni.vmagic.expression.TypeConversion
 import de.upb.hni.vmagic.libraryunit.Entity
+import de.upb.hni.vmagic.literal.CharacterLiteral
 import de.upb.hni.vmagic.object.Constant
 import de.upb.hni.vmagic.object.Signal
 import de.upb.hni.vmagic.object.SignalAssignmentTarget
@@ -79,6 +80,7 @@ import org.pshdl.model.HDLDirectGeneration
 import org.pshdl.model.HDLEnum
 import org.pshdl.model.HDLEnumDeclaration
 import org.pshdl.model.HDLEnumRef
+import org.pshdl.model.HDLExport
 import org.pshdl.model.HDLExpression
 import org.pshdl.model.HDLForLoop
 import org.pshdl.model.HDLFunction
@@ -106,6 +108,7 @@ import org.pshdl.model.HDLVariableDeclaration.HDLDirection
 import org.pshdl.model.HDLVariableRef
 import org.pshdl.model.IHDLObject
 import org.pshdl.model.evaluation.ConstantEvaluate
+import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.FullNameExtension
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.parser.SourceInfo
@@ -115,8 +118,6 @@ import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
-import de.upb.hni.vmagic.literal.CharacterLiteral
-import org.pshdl.model.evaluation.HDLEvaluationContext
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -133,7 +134,11 @@ class VHDLStatementExtension {
 	public static GenericMeta<Boolean> EXPORT = new GenericMeta<Boolean>("EXPORT", true)
 
 	def dispatch VHDLContext toVHDL(IHDLObject obj, int pid) {
-		throw new IllegalArgumentException("Not correctly implemented")
+		throw new IllegalArgumentException("Not correctly implemented:" + obj.classType + " " + obj)
+	}
+
+	def dispatch VHDLContext toVHDL(HDLExport obj, int pid) {
+		return new VHDLContext
 	}
 
 	def dispatch VHDLContext toVHDL(HDLDirectGeneration obj, int pid) {
@@ -198,7 +203,7 @@ class VHDLStatementExtension {
 	def dispatch VHDLContext toVHDL(HDLInterfaceInstantiation obj, int pid) {
 		val VHDLContext res = new VHDLContext
 		val HDLInterface hIf = obj.resolveHIf.get
-		val HDLVariable hVar = obj.^var
+		val HDLVariable interfaceVar = obj.^var
 		val String ifName = obj.^var.name
 		val HDLQualifiedName asRef = hIf.asRef
 		val HDLInterfaceDeclaration hid = hIf.getContainer(typeof(HDLInterfaceDeclaration))
@@ -244,44 +249,7 @@ class VHDLStatementExtension {
 		}
 		for (HDLVariableDeclaration hvd : ports) {
 			if (inAndOut.contains(hvd.direction)) {
-				val Collection<HDLAnnotation> typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(hvd).where(
-					HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
-				for (HDLVariable hvar : hvd.variables) {
-					var HDLVariable sigVar = hvar.setName(VHDLUtils.mapName(ifName, hvar.name))
-					var HDLVariableRef ref = sigVar.asHDLRef
-					var i = 0
-					for (HDLExpression exp : hVar.dimensions) {
-						ref = ref.addArray(new HDLVariableRef().setVar(HDLQualifiedName.create(i.asIndex)))
-						i = i + 1;
-					}
-					for (HDLExpression exp : hVar.dimensions) {
-						sigVar = sigVar.addDimensions(exp)
-					}
-					if (hvar.dimensions.size != 0) {
-
-						//Arrays are always named in VHDL, so the type annotation should be present
-						if (typeAnno.isEmpty) {
-							val HDLQualifiedName name = VHDLPackageExtension.INST.getPackageNameRef(asRef).append(
-								getArrayRefName(hvar, true))
-							res.addImport(name)
-							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
-								setVariables(
-									HDLObject.asList(
-										sigVar.setDimensions(null).addAnnotations(VHDLType.create(name.toString)))).
-								copyDeepFrozen(obj)
-							res.merge(newHVD.toVHDL(pid), false)
-						} else {
-							val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
-								setVariables(HDLObject.asList(sigVar.setDimensions(null))).copyDeepFrozen(obj)
-							res.merge(newHVD.toVHDL(pid), false)
-						}
-					} else {
-						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
-							setVariables(HDLObject.asList(sigVar)).copyDeepFrozen(obj)
-						res.merge(newHVD.toVHDL(pid), false)
-					}
-					portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
-				}
+				generatePortMap(hvd, ifName, interfaceVar, asRef, res, obj, pid, portMap)
 			} else {
 
 				//Parameter get a special treatment because they have been renamed by HDLInterfaceInstantiation resolveIF
@@ -298,12 +266,12 @@ class VHDLStatementExtension {
 			}
 		}
 		var ForGenerateStatement forLoop = null
-		if (hVar.dimensions.size == 0)
+		if (interfaceVar.dimensions.size == 0)
 			res.addConcurrentStatement(instantiation)
 		else {
 			var i = 0;
-			for (HDLExpression exp : hVar.dimensions) {
-				val HDLExpression to = new HDLArithOp().setLeft(hVar.dimensions.get(i)).setType(
+			for (HDLExpression exp : interfaceVar.dimensions) {
+				val HDLExpression to = new HDLArithOp().setLeft(interfaceVar.dimensions.get(i)).setType(
 					HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
 				val HDLRange range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(to).setContainer(obj)
 				val ForGenerateStatement newFor = new ForGenerateStatement("generate_" + ifName, i.asIndex,
@@ -320,6 +288,54 @@ class VHDLStatementExtension {
 			forLoop.statements.add(instantiation)
 		}
 		return res.attachComment(obj)
+	}
+	
+	def generatePortMap(HDLVariableDeclaration hvd, String ifName, HDLVariable interfaceVar, HDLQualifiedName asRef, VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap) {
+		val Collection<HDLAnnotation> typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(hvd).where(
+			HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
+		for (HDLVariable hvar : hvd.variables) {
+			var HDLVariable sigVar
+			if (hvar.hasMeta(Insulin.IS_EXPORT)) {
+				sigVar = new HDLVariable().setName(hvar.name)
+				var HDLVariableRef ref = sigVar.asHDLRef
+				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
+			} else {
+				sigVar = hvar.setName(VHDLUtils.mapName(ifName, hvar.name))
+				var HDLVariableRef ref = sigVar.asHDLRef
+				var i = 0
+				for (HDLExpression exp : interfaceVar.dimensions) {
+					ref = ref.addArray(new HDLVariableRef().setVar(HDLQualifiedName.create(i.asIndex)))
+					i = i + 1;
+				}
+				for (HDLExpression exp : interfaceVar.dimensions) {
+					sigVar = sigVar.addDimensions(exp)
+				}
+				if (hvar.dimensions.size != 0) {
+		
+					//Arrays are always named in VHDL, so the type annotation should be present
+					if (typeAnno.isEmpty) {
+						val HDLQualifiedName name = VHDLPackageExtension.INST.getPackageNameRef(asRef).
+							append(getArrayRefName(hvar, true))
+						res.addImport(name)
+						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
+							setVariables(
+								HDLObject.asList(
+									sigVar.setDimensions(null).addAnnotations(VHDLType.create(name.toString)))).
+							copyDeepFrozen(obj)
+						res.merge(newHVD.toVHDL(pid), false)
+					} else {
+						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
+							setVariables(HDLObject.asList(sigVar.setDimensions(null))).copyDeepFrozen(obj)
+						res.merge(newHVD.toVHDL(pid), false)
+					}
+				} else {
+					val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
+						setVariables(HDLObject.asList(sigVar)).copyDeepFrozen(obj)
+					res.merge(newHVD.toVHDL(pid), false)
+				}
+				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
+			}
+		}
 	}
 
 	def String asIndex(Integer integer) {
@@ -351,7 +367,7 @@ class VHDLStatementExtension {
 		if (obj.register !== null) {
 			resetValue = obj.register.resetValue
 		}
-		var Expression otherValue=Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
+		var Expression otherValue = Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
 		if (typeAnno !== null) {
 			val HDLQualifiedName value = new HDLQualifiedName(typeAnno.value)
 			res.addImport(value)
@@ -364,14 +380,14 @@ class VHDLStatementExtension {
 				if (hType instanceof HDLEnum) {
 					val HDLEnum hEnum = hType as HDLEnum
 					type = new EnumerationType(hEnum.name)
-					var idx=0;
-					val resVal=ConstantEvaluate.valueOf(resetValue, new HDLEvaluationContext=>[enumAsInt=true])
+					var idx = 0;
+					val resVal = ConstantEvaluate.valueOf(resetValue, new HDLEvaluationContext => [enumAsInt = true])
 					if (resVal.present)
-						idx=resVal.get.intValue
+						idx = resVal.get.intValue
 					val enumReset = new HDLEnumRef().setHEnum(hEnum.asRef).setVar(hEnum.enums.get(idx).asRef)
-					otherValue=enumReset.toVHDL
+					otherValue = enumReset.toVHDL
 					if (!(resetValue instanceof HDLArrayInit))
-						resetValue=enumReset
+						resetValue = enumReset
 				}
 			}
 		}
@@ -382,8 +398,9 @@ class VHDLStatementExtension {
 		}
 		return res.attachComment(obj)
 	}
-	
-	def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res, HDLExpression resetValue, Expression otherValue, int pid) {
+
+	def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res,
+		HDLExpression resetValue, Expression otherValue, int pid) {
 		val boolean noExplicitResetVar = hvar.getAnnotation(VHDLNoExplicitReset) !== null
 		var SubtypeIndication varType = type
 		if (hvar.dimensions.size != 0) {
@@ -408,9 +425,9 @@ class VHDLStatementExtension {
 				synchedArray = ref.resolveVar.get.dimensions.size != 0
 			}
 			val target = new HDLVariableRef().setVar(hvar.asRef)
-			if (resetValue instanceof HDLArrayInit){
-				val sa=new SignalAssignment(s, resetValue.toVHDLArray(otherValue))
-				res.addResetValue(obj.register, sa)				
+			if (resetValue instanceof HDLArrayInit) {
+				val sa = new SignalAssignment(s, resetValue.toVHDLArray(otherValue))
+				res.addResetValue(obj.register, sa)
 			} else {
 				val HDLStatement initLoop = Insulin.createArrayForLoop(Collections.emptyList, hvar.dimensions, 0,
 					resetValue, target, synchedArray).copyDeepFrozen(obj)
@@ -519,124 +536,125 @@ class VHDLStatementExtension {
 			} else
 				alt = cs.createAlternative(label.toVHDL); // The only valid
 
-			// reason here is an
-			// Enum
-			} else {
-				alt = cs.createAlternative(Choices.OTHERS)
-			}
-			return alt
+		// reason here is an
+		// Enum
+		} else {
+			alt = cs.createAlternative(Choices.OTHERS)
 		}
-
-		def dispatch VHDLContext toVHDL(HDLSwitchCaseStatement obj, int pid) {
-			val VHDLContext res = new VHDLContext
-			for (HDLStatement stmnt : obj.dos) {
-				res.merge(stmnt.toVHDL(pid), false)
-			}
-			return res.attachComment(obj)
-		}
-
-		def dispatch VHDLContext toVHDL(HDLAssignment obj, int pid) {
-			val VHDLContext context = new VHDLContext
-			var SignalAssignment sa = null
-			val HDLReference ref = obj.left
-			val HDLVariable hvar = ref.resolveVar
-			val ArrayList<HDLExpression> dim = hvar.dimensions
-			if (dim.size != 0 && ref.classType == HDLClass.HDLVariableRef) {
-				val HDLVariableRef varRef = ref as HDLVariableRef
-				for (HDLExpression exp : varRef.array) {
-					dim.remove(0)
-				}
-				if (dim.size != 0 && obj.right.classType != HDLClass.HDLArrayInit) {
-
-					//XXX Implement correct array assignment for non full assignments
-					val HDLAnnotation typeAnno = hvar.getAnnotation(VHDLType)
-					if (typeAnno !== null) {
-						sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget,
-							new TypeConversion(new UnresolvedType(typeAnno.value), obj.right.toVHDL))
-					} else {
-						val HDLVariableDeclaration hvd = hvar.getContainer(typeof(HDLVariableDeclaration))
-						sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget,
-							new TypeConversion(new UnresolvedType(getArrayRefName(hvar, hvd.isExternal)),
-								obj.right.toVHDL))
-					}
-				} else {
-					sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget, obj.right.toVHDL)
-				}
-			} else
-				sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget, obj.right.toVHDL)
-			val HDLRegisterConfig config = hvar.registerConfig
-			if (config !== null)
-				context.addClockedStatement(config, sa)
-			else
-				context.addUnclockedStatement(pid, sa, obj)
-			return context.attachComment(obj)
-		}
-
-		def HDLVariable resolveVar(HDLReference reference) {
-			if (reference instanceof HDLUnresolvedFragment)
-				throw new RuntimeException("Can not use unresolved fragments")
-			return (reference as HDLResolvedRef).resolveVar.get
-		}
-
-		def dispatch VHDLContext toVHDL(HDLForLoop obj, int pid) {
-			val VHDLContext context = new VHDLContext
-			for (HDLStatement stmnt : obj.dos) {
-				context.merge(stmnt.toVHDL(pid), false)
-			}
-			val VHDLContext res = new VHDLContext
-			res.merge(context, true)
-			for (Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> e : context.clockedStatements.entrySet) {
-				val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
-					obj.range.get(0).toVHDL(Range.Direction.TO))
-				fStmnt.statements.addAll(e.value)
-				res.addClockedStatement(e.key, fStmnt)
-			}
-			if (context.unclockedStatements.get(pid) !== null) {
-				val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
-					obj.range.get(0).toVHDL(Range.Direction.TO))
-				fStmnt.statements.addAll(context.unclockedStatements.get(pid))
-				res.addUnclockedStatement(pid, fStmnt, obj)
-			}
-			return res.attachComment(obj)
-		}
-
-		def dispatch VHDLContext toVHDL(HDLIfStatement obj, int pid) {
-			val VHDLContext thenCtx = new VHDLContext
-			for (HDLStatement stmnt : obj.thenDo) {
-				thenCtx.merge(stmnt.toVHDL(pid), false)
-			}
-			val VHDLContext elseCtx = new VHDLContext
-			for (HDLStatement stmnt : obj.elseDo) {
-				elseCtx.merge(stmnt.toVHDL(pid), false)
-			}
-			val Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>
-			configs.addAll(thenCtx.clockedStatements.keySet)
-			configs.addAll(elseCtx.clockedStatements.keySet)
-			val VHDLContext res = new VHDLContext
-			res.merge(thenCtx, true)
-			res.merge(elseCtx, true)
-			val Expression ifExp = obj.ifExp.toVHDL
-			for (HDLRegisterConfig config : configs) {
-				val IfStatement ifs = new IfStatement(ifExp)
-				if (thenCtx.clockedStatements.get(config) !== null)
-					ifs.statements.addAll(thenCtx.clockedStatements.get(config))
-				if (elseCtx.clockedStatements.get(config) !== null)
-					ifs.elseStatements.addAll(elseCtx.clockedStatements.get(config))
-				res.addClockedStatement(config, ifs)
-			}
-			if (thenCtx.unclockedStatements.size != 0 || elseCtx.unclockedStatements.size != 0) {
-				val IfStatement ifs = new IfStatement(ifExp)
-				if (thenCtx.unclockedStatements.get(pid) !== null)
-					ifs.statements.addAll(thenCtx.unclockedStatements.get(pid))
-				if (elseCtx.unclockedStatements.get(pid) !== null)
-					ifs.elseStatements.addAll(elseCtx.unclockedStatements.get(pid))
-				res.addUnclockedStatement(pid, ifs, obj)
-			}
-			return res.attachComment(obj)
-		}
-
-		def dispatch VHDLContext toVHDL(HDLFunction obj, int pid) {
-			throw new IllegalArgumentException("Not supported")
-		}
+		return alt
 	}
-	
+
+	def dispatch VHDLContext toVHDL(HDLSwitchCaseStatement obj, int pid) {
+		val VHDLContext res = new VHDLContext
+		for (HDLStatement stmnt : obj.dos) {
+			res.merge(stmnt.toVHDL(pid), false)
+		}
+		return res.attachComment(obj)
+	}
+
+	def dispatch VHDLContext toVHDL(HDLAssignment obj, int pid) {
+		val VHDLContext context = new VHDLContext
+		var SignalAssignment sa = null
+		val HDLReference ref = obj.left
+		if (ref.toString=="wrapper.T1")
+			println(ref.toString)
+		val HDLVariable hvar = ref.resolveVar
+		val ArrayList<HDLExpression> dim = hvar.dimensions
+		if (dim.size != 0 && ref.classType == HDLClass.HDLVariableRef) {
+			val HDLVariableRef varRef = ref as HDLVariableRef
+			for (HDLExpression exp : varRef.array) {
+				dim.remove(0)
+			}
+			if (dim.size != 0 && obj.right.classType != HDLClass.HDLArrayInit) {
+
+				//XXX Implement correct array assignment for non full assignments
+				val HDLAnnotation typeAnno = hvar.getAnnotation(VHDLType)
+				if (typeAnno !== null) {
+					sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget,
+						new TypeConversion(new UnresolvedType(typeAnno.value), obj.right.toVHDL))
+				} else {
+					val HDLVariableDeclaration hvd = hvar.getContainer(typeof(HDLVariableDeclaration))
+					sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget,
+						new TypeConversion(new UnresolvedType(getArrayRefName(hvar, hvd.isExternal)),
+							obj.right.toVHDL))
+				}
+			} else {
+				sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget, obj.right.toVHDL)
+			}
+		} else
+			sa = new SignalAssignment(ref.toVHDL as SignalAssignmentTarget, obj.right.toVHDL)
+		val HDLRegisterConfig config = hvar.registerConfig
+		if (config !== null)
+			context.addClockedStatement(config, sa)
+		else
+			context.addUnclockedStatement(pid, sa, obj)
+		return context.attachComment(obj)
+	}
+
+	def HDLVariable resolveVar(HDLReference reference) {
+		if (reference instanceof HDLUnresolvedFragment)
+			throw new RuntimeException("Can not use unresolved fragments")
+		return (reference as HDLResolvedRef).resolveVar.get
+	}
+
+	def dispatch VHDLContext toVHDL(HDLForLoop obj, int pid) {
+		val VHDLContext context = new VHDLContext
+		for (HDLStatement stmnt : obj.dos) {
+			context.merge(stmnt.toVHDL(pid), false)
+		}
+		val VHDLContext res = new VHDLContext
+		res.merge(context, true)
+		for (Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> e : context.clockedStatements.entrySet) {
+			val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
+				obj.range.get(0).toVHDL(Range.Direction.TO))
+			fStmnt.statements.addAll(e.value)
+			res.addClockedStatement(e.key, fStmnt)
+		}
+		if (context.unclockedStatements.get(pid) !== null) {
+			val ForStatement fStmnt = new ForStatement(VHDLUtils.getVHDLName(obj.param.name),
+				obj.range.get(0).toVHDL(Range.Direction.TO))
+			fStmnt.statements.addAll(context.unclockedStatements.get(pid))
+			res.addUnclockedStatement(pid, fStmnt, obj)
+		}
+		return res.attachComment(obj)
+	}
+
+	def dispatch VHDLContext toVHDL(HDLIfStatement obj, int pid) {
+		val VHDLContext thenCtx = new VHDLContext
+		for (HDLStatement stmnt : obj.thenDo) {
+			thenCtx.merge(stmnt.toVHDL(pid), false)
+		}
+		val VHDLContext elseCtx = new VHDLContext
+		for (HDLStatement stmnt : obj.elseDo) {
+			elseCtx.merge(stmnt.toVHDL(pid), false)
+		}
+		val Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>
+		configs.addAll(thenCtx.clockedStatements.keySet)
+		configs.addAll(elseCtx.clockedStatements.keySet)
+		val VHDLContext res = new VHDLContext
+		res.merge(thenCtx, true)
+		res.merge(elseCtx, true)
+		val Expression ifExp = obj.ifExp.toVHDL
+		for (HDLRegisterConfig config : configs) {
+			val IfStatement ifs = new IfStatement(ifExp)
+			if (thenCtx.clockedStatements.get(config) !== null)
+				ifs.statements.addAll(thenCtx.clockedStatements.get(config))
+			if (elseCtx.clockedStatements.get(config) !== null)
+				ifs.elseStatements.addAll(elseCtx.clockedStatements.get(config))
+			res.addClockedStatement(config, ifs)
+		}
+		if (thenCtx.unclockedStatements.size != 0 || elseCtx.unclockedStatements.size != 0) {
+			val IfStatement ifs = new IfStatement(ifExp)
+			if (thenCtx.unclockedStatements.get(pid) !== null)
+				ifs.statements.addAll(thenCtx.unclockedStatements.get(pid))
+			if (elseCtx.unclockedStatements.get(pid) !== null)
+				ifs.elseStatements.addAll(elseCtx.unclockedStatements.get(pid))
+			res.addUnclockedStatement(pid, ifs, obj)
+		}
+		return res.attachComment(obj)
+	}
+
+	def dispatch VHDLContext toVHDL(HDLFunction obj, int pid) {
+		throw new IllegalArgumentException("Not supported")
+	}
+}

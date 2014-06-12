@@ -117,10 +117,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 			getUsage().printHelp(System.out);
 			return "Missing file arguments";
 		}
-		final File outDir = new File(cli.getOptionValue('o', "src-gen"));
-		if (!outDir.exists()) {
-			outDir.mkdirs();
-		}
+		final File outDir = getOutputDir(cli);
 		final List<File> pshdlFiles = Lists.newArrayListWithCapacity(argList.size());
 		for (final String string : argList) {
 			final File file = new File(string);
@@ -136,7 +133,8 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 					}
 					ps.close();
 				}
-			} else {
+			}
+			if (string.endsWith(".pshdl")) {
 				pshdlFiles.add(file);
 			}
 		}
@@ -162,12 +160,20 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 		}
 		for (final CompileResult result : results) {
 			if (!result.hasError()) {
-				writeFiles(outDir, result, false);
+				writeFiles(outDir, result);
 			} else {
 				System.out.println("Failed to generate code for:" + result.src);
 			}
 		}
 		return null;
+	}
+
+	public static File getOutputDir(CommandLine cli) {
+		final File outDir = new File(cli.getOptionValue('o', "src-gen"));
+		if (!outDir.exists()) {
+			outDir.mkdirs();
+		}
+		return outDir;
 	}
 
 	/**
@@ -180,11 +186,8 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 * @throws IOException
 	 */
 	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, File file) throws IOException {
-		final FileInputStream fis = new FileInputStream(file);
-		try {
+		try (final FileInputStream fis = new FileInputStream(file)) {
 			return addVHDL(comp, fis, file.getAbsolutePath());
-		} finally {
-			fis.close();
 		}
 	}
 
@@ -204,6 +207,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 		comp.invalidate();
 		final HDLLibrary lib = HDLLibrary.getLibrary(comp.uri);
 		final List<HDLInterface> importFile = VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
+		comp.addSource(asSrc);
 		return importFile;
 	}
 

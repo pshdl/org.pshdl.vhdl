@@ -59,6 +59,7 @@ import java.util.TreeSet
 import org.pshdl.generator.vhdl.libraries.VHDLCastsLibrary
 import org.pshdl.generator.vhdl.libraries.VHDLShiftLibrary
 import org.pshdl.generator.vhdl.libraries.VHDLTypesLibrary
+import org.pshdl.model.HDLObject.GenericMeta
 import org.pshdl.model.HDLAssignment
 import org.pshdl.model.HDLClass
 import org.pshdl.model.HDLDeclaration
@@ -82,6 +83,7 @@ import org.pshdl.model.utils.Refactoring
 
 import static org.pshdl.model.extensions.FullNameExtension.*
 import de.upb.hni.vmagic.statement.WaitStatement
+import org.pshdl.model.HDLExport
 
 class VHDLPackageExtension {
 
@@ -89,7 +91,7 @@ class VHDLPackageExtension {
 	extension VHDLStatementExtension vse = new VHDLStatementExtension
 
 	public static VHDLPackageExtension INST = new VHDLPackageExtension
-
+	
 	def List<LibraryUnit> toVHDL(HDLUnit obj) {
 		val List<LibraryUnit> res = new LinkedList<LibraryUnit>
 		val HDLQualifiedName entityName = fullNameOf(obj)
@@ -120,7 +122,7 @@ class VHDLPackageExtension {
 				}
 			}
 		}
-
+		
 		for (HDLStatement stmnt : obj.inits) {
 			unit.merge(stmnt.toVHDL(VHDLContext.DEFAULT_CTX), false)
 		}

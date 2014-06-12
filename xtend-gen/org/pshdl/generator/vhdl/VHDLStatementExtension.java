@@ -76,6 +76,7 @@ import org.eclipse.xtext.xbase.lib.CollectionExtensions;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Exceptions;
 import org.eclipse.xtext.xbase.lib.Extension;
+import org.eclipse.xtext.xbase.lib.InputOutput;
 import org.eclipse.xtext.xbase.lib.ObjectExtensions;
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
 import org.pshdl.generator.vhdl.VHDLContext;
@@ -94,6 +95,7 @@ import org.pshdl.model.HDLDirectGeneration;
 import org.pshdl.model.HDLEnum;
 import org.pshdl.model.HDLEnumDeclaration;
 import org.pshdl.model.HDLEnumRef;
+import org.pshdl.model.HDLExport;
 import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLForLoop;
 import org.pshdl.model.HDLFunction;
@@ -145,7 +147,15 @@ public class VHDLStatementExtension {
   public static HDLObject.GenericMeta<Boolean> EXPORT = new HDLObject.GenericMeta<Boolean>("EXPORT", true);
   
   protected VHDLContext _toVHDL(final IHDLObject obj, final int pid) {
-    throw new IllegalArgumentException("Not correctly implemented");
+    HDLClass _classType = obj.getClassType();
+    String _plus = ("Not correctly implemented:" + _classType);
+    String _plus_1 = (_plus + " ");
+    String _plus_2 = (_plus_1 + obj);
+    throw new IllegalArgumentException(_plus_2);
+  }
+  
+  protected VHDLContext _toVHDL(final HDLExport obj, final int pid) {
+    return new VHDLContext();
   }
   
   protected VHDLContext _toVHDL(final HDLDirectGeneration obj, final int pid) {
@@ -254,7 +264,7 @@ public class VHDLStatementExtension {
     final VHDLContext res = new VHDLContext();
     Optional<HDLInterface> _resolveHIf = obj.resolveHIf();
     final HDLInterface hIf = _resolveHIf.get();
-    final HDLVariable hVar = obj.getVar();
+    final HDLVariable interfaceVar = obj.getVar();
     HDLVariable _var = obj.getVar();
     final String ifName = _var.getName();
     final HDLQualifiedName asRef = hIf.asRef();
@@ -329,98 +339,23 @@ public class VHDLStatementExtension {
       HDLVariableDeclaration.HDLDirection _direction = hvd.getDirection();
       boolean _contains = VHDLStatementExtension.inAndOut.contains(_direction);
       if (_contains) {
-        HDLQuery.Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
-        HDLQuery.Selector<HDLAnnotation> _from = _select.from(hvd);
-        HDLQuery.FieldSelector<HDLAnnotation,String> _where = _from.<String>where(
-          HDLAnnotation.fName);
-        String _string_3 = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.toString();
-        HDLQuery.Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string_3);
-        final Collection<HDLAnnotation> typeAnno = _isEqualTo.getAll();
-        ArrayList<HDLVariable> _variables = hvd.getVariables();
-        for (final HDLVariable hvar : _variables) {
-          {
-            String _name = hvar.getName();
-            String _mapName = VHDLUtils.mapName(ifName, _name);
-            HDLVariable sigVar = hvar.setName(_mapName);
-            HDLVariableRef ref = sigVar.asHDLRef();
-            int i = 0;
-            ArrayList<HDLExpression> _dimensions = hVar.getDimensions();
-            for (final HDLExpression exp : _dimensions) {
-              {
-                HDLVariableRef _hDLVariableRef = new HDLVariableRef();
-                String _asIndex = this.asIndex(Integer.valueOf(i));
-                HDLQualifiedName _create = HDLQualifiedName.create(_asIndex);
-                HDLVariableRef _setVar = _hDLVariableRef.setVar(_create);
-                HDLVariableRef _addArray = ref.addArray(_setVar);
-                ref = _addArray;
-                i = (i + 1);
-              }
-            }
-            ArrayList<HDLExpression> _dimensions_1 = hVar.getDimensions();
-            for (final HDLExpression exp_1 : _dimensions_1) {
-              HDLVariable _addDimensions = sigVar.addDimensions(exp_1);
-              sigVar = _addDimensions;
-            }
-            ArrayList<HDLExpression> _dimensions_2 = hvar.getDimensions();
-            int _size = _dimensions_2.size();
-            boolean _notEquals = (_size != 0);
-            if (_notEquals) {
-              boolean _isEmpty = typeAnno.isEmpty();
-              if (_isEmpty) {
-                HDLQualifiedName _packageNameRef = VHDLPackageExtension.INST.getPackageNameRef(asRef);
-                String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, true);
-                final HDLQualifiedName name = _packageNameRef.append(_arrayRefName);
-                res.addImport(name);
-                HDLVariableDeclaration _setDirection = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
-                HDLVariable _setDimensions = sigVar.setDimensions(null);
-                String _string_4 = name.toString();
-                HDLAnnotation _create = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.create(_string_4);
-                HDLVariable _addAnnotations = _setDimensions.addAnnotations(_create);
-                Iterable<HDLVariable> _asList = HDLObject.<HDLVariable>asList(_addAnnotations);
-                HDLVariableDeclaration _setVariables = _setDirection.setVariables(_asList);
-                final HDLVariableDeclaration newHVD = _setVariables.copyDeepFrozen(obj);
-                VHDLContext _vHDL_1 = this.toVHDL(newHVD, pid);
-                res.merge(_vHDL_1, false);
-              } else {
-                HDLVariableDeclaration _setDirection_1 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
-                HDLVariable _setDimensions_1 = sigVar.setDimensions(null);
-                Iterable<HDLVariable> _asList_1 = HDLObject.<HDLVariable>asList(_setDimensions_1);
-                HDLVariableDeclaration _setVariables_1 = _setDirection_1.setVariables(_asList_1);
-                final HDLVariableDeclaration newHVD_1 = _setVariables_1.copyDeepFrozen(obj);
-                VHDLContext _vHDL_2 = this.toVHDL(newHVD_1, pid);
-                res.merge(_vHDL_2, false);
-              }
-            } else {
-              HDLVariableDeclaration _setDirection_2 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
-              Iterable<HDLVariable> _asList_2 = HDLObject.<HDLVariable>asList(sigVar);
-              HDLVariableDeclaration _setVariables_2 = _setDirection_2.setVariables(_asList_2);
-              final HDLVariableDeclaration newHVD_2 = _setVariables_2.copyDeepFrozen(obj);
-              VHDLContext _vHDL_3 = this.toVHDL(newHVD_2, pid);
-              res.merge(_vHDL_3, false);
-            }
-            String _name_1 = hvar.getName();
-            String _vHDLName = VHDLUtils.getVHDLName(_name_1);
-            Expression _vHDL_4 = this.vee.toVHDL(ref);
-            AssociationElement _associationElement = new AssociationElement(_vHDLName, _vHDL_4);
-            portMap.add(_associationElement);
-          }
-        }
+        this.generatePortMap(hvd, ifName, interfaceVar, asRef, res, obj, pid, portMap);
       } else {
         HDLVariableDeclaration.HDLDirection _direction_1 = hvd.getDirection();
         boolean _equals_1 = Objects.equal(_direction_1, HDLVariableDeclaration.HDLDirection.PARAMETER);
         if (_equals_1) {
-          ArrayList<HDLVariable> _variables_1 = hvd.getVariables();
-          for (final HDLVariable hvar_1 : _variables_1) {
+          ArrayList<HDLVariable> _variables = hvd.getVariables();
+          for (final HDLVariable hvar : _variables) {
             {
-              HDLVariable sigVar = hvar_1;
-              String _meta = hvar_1.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
+              HDLVariable sigVar = hvar;
+              String _meta = hvar.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
               boolean _tripleNotEquals_2 = (_meta != null);
               if (_tripleNotEquals_2) {
-                String _meta_1 = hvar_1.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
-                HDLVariable _setName = hvar_1.setName(_meta_1);
+                String _meta_1 = hvar.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
+                HDLVariable _setName = hvar.setName(_meta_1);
                 sigVar = _setName;
               }
-              final HDLVariableRef ref = hvar_1.asHDLRef();
+              final HDLVariableRef ref = hvar.asHDLRef();
               String _name = sigVar.getName();
               Expression _vHDL_1 = this.vee.toVHDL(ref);
               AssociationElement _associationElement = new AssociationElement(_name, _vHDL_1);
@@ -431,18 +366,18 @@ public class VHDLStatementExtension {
       }
     }
     ForGenerateStatement forLoop = null;
-    ArrayList<HDLExpression> _dimensions = hVar.getDimensions();
+    ArrayList<HDLExpression> _dimensions = interfaceVar.getDimensions();
     int _size = _dimensions.size();
     boolean _equals_2 = (_size == 0);
     if (_equals_2) {
       res.addConcurrentStatement(instantiation);
     } else {
       int i = 0;
-      ArrayList<HDLExpression> _dimensions_1 = hVar.getDimensions();
+      ArrayList<HDLExpression> _dimensions_1 = interfaceVar.getDimensions();
       for (final HDLExpression exp : _dimensions_1) {
         {
           HDLArithOp _hDLArithOp = new HDLArithOp();
-          ArrayList<HDLExpression> _dimensions_2 = hVar.getDimensions();
+          ArrayList<HDLExpression> _dimensions_2 = interfaceVar.getDimensions();
           HDLExpression _get = _dimensions_2.get(i);
           HDLArithOp _setLeft = _hDLArithOp.setLeft(_get);
           HDLArithOp _setType = _setLeft.setType(
@@ -476,6 +411,101 @@ public class VHDLStatementExtension {
       _statements.add(instantiation);
     }
     return this.attachComment(res, obj);
+  }
+  
+  public void generatePortMap(final HDLVariableDeclaration hvd, final String ifName, final HDLVariable interfaceVar, final HDLQualifiedName asRef, final VHDLContext res, final HDLInterfaceInstantiation obj, final int pid, final List<AssociationElement> portMap) {
+    HDLQuery.Source<HDLAnnotation> _select = HDLQuery.<HDLAnnotation>select(HDLAnnotation.class);
+    HDLQuery.Selector<HDLAnnotation> _from = _select.from(hvd);
+    HDLQuery.FieldSelector<HDLAnnotation,String> _where = _from.<String>where(
+      HDLAnnotation.fName);
+    String _string = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.toString();
+    HDLQuery.Result<HDLAnnotation,String> _isEqualTo = _where.isEqualTo(_string);
+    final Collection<HDLAnnotation> typeAnno = _isEqualTo.getAll();
+    ArrayList<HDLVariable> _variables = hvd.getVariables();
+    for (final HDLVariable hvar : _variables) {
+      {
+        HDLVariable sigVar = null;
+        boolean _hasMeta = hvar.hasMeta(Insulin.IS_EXPORT);
+        if (_hasMeta) {
+          HDLVariable _hDLVariable = new HDLVariable();
+          String _name = hvar.getName();
+          HDLVariable _setName = _hDLVariable.setName(_name);
+          sigVar = _setName;
+          HDLVariableRef ref = sigVar.asHDLRef();
+          String _name_1 = hvar.getName();
+          String _vHDLName = VHDLUtils.getVHDLName(_name_1);
+          Expression _vHDL = this.vee.toVHDL(ref);
+          AssociationElement _associationElement = new AssociationElement(_vHDLName, _vHDL);
+          portMap.add(_associationElement);
+        } else {
+          String _name_2 = hvar.getName();
+          String _mapName = VHDLUtils.mapName(ifName, _name_2);
+          HDLVariable _setName_1 = hvar.setName(_mapName);
+          sigVar = _setName_1;
+          HDLVariableRef ref_1 = sigVar.asHDLRef();
+          int i = 0;
+          ArrayList<HDLExpression> _dimensions = interfaceVar.getDimensions();
+          for (final HDLExpression exp : _dimensions) {
+            {
+              HDLVariableRef _hDLVariableRef = new HDLVariableRef();
+              String _asIndex = this.asIndex(Integer.valueOf(i));
+              HDLQualifiedName _create = HDLQualifiedName.create(_asIndex);
+              HDLVariableRef _setVar = _hDLVariableRef.setVar(_create);
+              HDLVariableRef _addArray = ref_1.addArray(_setVar);
+              ref_1 = _addArray;
+              i = (i + 1);
+            }
+          }
+          ArrayList<HDLExpression> _dimensions_1 = interfaceVar.getDimensions();
+          for (final HDLExpression exp_1 : _dimensions_1) {
+            HDLVariable _addDimensions = sigVar.addDimensions(exp_1);
+            sigVar = _addDimensions;
+          }
+          ArrayList<HDLExpression> _dimensions_2 = hvar.getDimensions();
+          int _size = _dimensions_2.size();
+          boolean _notEquals = (_size != 0);
+          if (_notEquals) {
+            boolean _isEmpty = typeAnno.isEmpty();
+            if (_isEmpty) {
+              HDLQualifiedName _packageNameRef = VHDLPackageExtension.INST.getPackageNameRef(asRef);
+              String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, true);
+              final HDLQualifiedName name = _packageNameRef.append(_arrayRefName);
+              res.addImport(name);
+              HDLVariableDeclaration _setDirection = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
+              HDLVariable _setDimensions = sigVar.setDimensions(null);
+              String _string_1 = name.toString();
+              HDLAnnotation _create = HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLType.create(_string_1);
+              HDLVariable _addAnnotations = _setDimensions.addAnnotations(_create);
+              Iterable<HDLVariable> _asList = HDLObject.<HDLVariable>asList(_addAnnotations);
+              HDLVariableDeclaration _setVariables = _setDirection.setVariables(_asList);
+              final HDLVariableDeclaration newHVD = _setVariables.copyDeepFrozen(obj);
+              VHDLContext _vHDL_1 = this.toVHDL(newHVD, pid);
+              res.merge(_vHDL_1, false);
+            } else {
+              HDLVariableDeclaration _setDirection_1 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
+              HDLVariable _setDimensions_1 = sigVar.setDimensions(null);
+              Iterable<HDLVariable> _asList_1 = HDLObject.<HDLVariable>asList(_setDimensions_1);
+              HDLVariableDeclaration _setVariables_1 = _setDirection_1.setVariables(_asList_1);
+              final HDLVariableDeclaration newHVD_1 = _setVariables_1.copyDeepFrozen(obj);
+              VHDLContext _vHDL_2 = this.toVHDL(newHVD_1, pid);
+              res.merge(_vHDL_2, false);
+            }
+          } else {
+            HDLVariableDeclaration _setDirection_2 = hvd.setDirection(HDLVariableDeclaration.HDLDirection.INTERNAL);
+            Iterable<HDLVariable> _asList_2 = HDLObject.<HDLVariable>asList(sigVar);
+            HDLVariableDeclaration _setVariables_2 = _setDirection_2.setVariables(_asList_2);
+            final HDLVariableDeclaration newHVD_2 = _setVariables_2.copyDeepFrozen(obj);
+            VHDLContext _vHDL_3 = this.toVHDL(newHVD_2, pid);
+            res.merge(_vHDL_3, false);
+          }
+          String _name_3 = hvar.getName();
+          String _vHDLName_1 = VHDLUtils.getVHDLName(_name_3);
+          Expression _vHDL_4 = this.vee.toVHDL(ref_1);
+          AssociationElement _associationElement_1 = new AssociationElement(_vHDLName_1, _vHDL_4);
+          portMap.add(_associationElement_1);
+        }
+      }
+    }
   }
   
   public String asIndex(final Integer integer) {
@@ -884,6 +914,12 @@ public class VHDLStatementExtension {
     final VHDLContext context = new VHDLContext();
     SignalAssignment sa = null;
     final HDLReference ref = obj.getLeft();
+    String _string = ref.toString();
+    boolean _equals = Objects.equal(_string, "wrapper.T1");
+    if (_equals) {
+      String _string_1 = ref.toString();
+      InputOutput.<String>println(_string_1);
+    }
     final HDLVariable hvar = this.resolveVar(ref);
     final ArrayList<HDLExpression> dim = hvar.getDimensions();
     boolean _and = false;
@@ -893,8 +929,8 @@ public class VHDLStatementExtension {
       _and = false;
     } else {
       HDLClass _classType = ref.getClassType();
-      boolean _equals = Objects.equal(_classType, HDLClass.HDLVariableRef);
-      _and = _equals;
+      boolean _equals_1 = Objects.equal(_classType, HDLClass.HDLVariableRef);
+      _and = _equals_1;
     }
     if (_and) {
       final HDLVariableRef varRef = ((HDLVariableRef) ref);
@@ -1092,7 +1128,9 @@ public class VHDLStatementExtension {
   }
   
   public VHDLContext toVHDL(final IHDLObject obj, final int pid) {
-    if (obj instanceof HDLDirectGeneration) {
+    if (obj instanceof HDLBlock) {
+      return _toVHDL((HDLBlock)obj, pid);
+    } else if (obj instanceof HDLDirectGeneration) {
       return _toVHDL((HDLDirectGeneration)obj, pid);
     } else if (obj instanceof HDLEnumDeclaration) {
       return _toVHDL((HDLEnumDeclaration)obj, pid);
@@ -1114,8 +1152,8 @@ public class VHDLStatementExtension {
       return _toVHDL((HDLVariableDeclaration)obj, pid);
     } else if (obj instanceof HDLAssignment) {
       return _toVHDL((HDLAssignment)obj, pid);
-    } else if (obj instanceof HDLBlock) {
-      return _toVHDL((HDLBlock)obj, pid);
+    } else if (obj instanceof HDLExport) {
+      return _toVHDL((HDLExport)obj, pid);
     } else if (obj instanceof HDLFunctionCall) {
       return _toVHDL((HDLFunctionCall)obj, pid);
     } else if (obj != null) {
