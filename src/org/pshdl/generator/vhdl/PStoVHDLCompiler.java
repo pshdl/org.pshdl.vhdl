@@ -70,7 +70,7 @@ import de.upb.hni.vmagic.output.VhdlOutput;
  */
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
-	private final class SimpleListener implements ICompilationListener {
+	private static final class SimpleListener implements ICompilationListener {
 		@Override
 		public boolean startModule(String src, HDLPackage parse) {
 			System.out.println("Compiling:" + new File(src).getName());
@@ -127,7 +127,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 				final List<HDLInterface> vhdl = addVHDL(this, file);
 				if (cli.hasOption('i')) {
 					final File ifFile = new File(outDir, file.getName() + ".pshdl");
-					final PrintStream ps = new PrintStream(ifFile);
+					final PrintStream ps = new PrintStream(ifFile, "UTF-8");
 					for (final HDLInterface hdlInterface : vhdl) {
 						ps.println(hdlInterface);
 					}
@@ -170,9 +170,8 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 
 	public static File getOutputDir(CommandLine cli) {
 		final File outDir = new File(cli.getOptionValue('o', "src-gen"));
-		if (!outDir.exists()) {
-			outDir.mkdirs();
-		}
+		if (!outDir.exists() && !outDir.mkdirs())
+			throw new IllegalArgumentException("Failed to create directory:" + outDir);
 		return outDir;
 	}
 
