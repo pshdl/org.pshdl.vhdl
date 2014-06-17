@@ -70,6 +70,8 @@ import de.upb.hni.vmagic.output.VhdlOutput;
  */
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
+	private static final String HOOK_NAME = "vhdl";
+
 	private static final class SimpleListener implements ICompilationListener {
 		@Override
 		public boolean startModule(String src, HDLPackage parse) {
@@ -212,15 +214,19 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 
 	@Override
 	public String getHookName() {
-		return "vhdl";
+		return HOOK_NAME;
 	}
 
 	@Override
 	public MultiOption getUsage() {
+		return getMultiOptions();
+	}
+
+	public static MultiOption getMultiOptions() {
 		final Options options = new Options();
 		options.addOption(new Option("o", "outputDir", true, "Specify the directory to which the files will be written, default is: src-gen"));
 		options.addOption(new Option("i", "interface", false, "Generate pshdl interface declarations for vhdl file arguments"));
-		return new MultiOption(getHookName() + " usage: [OPTIONS] <files>", null, options);
+		return new MultiOption(HOOK_NAME + " usage: [OPTIONS] <files>", null, options);
 	}
 
 	public static PStoVHDLCompiler setup(String uri) {
