@@ -35,6 +35,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.antlr.runtime.RecognitionException;
+import org.pshdl.generator.vhdl.VHDLOutputValidator.VHDLErrorCode;
 import org.pshdl.model.HDLAnnotation;
 import org.pshdl.model.HDLArithOp;
 import org.pshdl.model.HDLArithOp.HDLArithOpType;
@@ -50,8 +52,10 @@ import org.pshdl.model.HDLVariableDeclaration.HDLDirection;
 import org.pshdl.model.evaluation.ConstantEvaluate;
 import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations;
 import org.pshdl.model.utils.HDLLibrary;
+import org.pshdl.model.utils.HDLProblemException;
 import org.pshdl.model.utils.HDLQualifiedName;
 import org.pshdl.model.utils.MetaAccess;
+import org.pshdl.model.validation.Problem;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -81,9 +85,12 @@ import de.upb.hni.vmagic.literal.StringLiteral;
 import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.VhdlObjectProvider;
-import de.upb.hni.vmagic.parser.VhdlParser;
+import de.upb.hni.vmagic.parser.ParseError;
 import de.upb.hni.vmagic.parser.VhdlParserException;
+import de.upb.hni.vmagic.parser.VhdlParserExceptionThrower;
 import de.upb.hni.vmagic.parser.VhdlParserSettings;
+import de.upb.hni.vmagic.parser.annotation.PositionInformation;
+import de.upb.hni.vmagic.parser.annotation.SourcePosition;
 import de.upb.hni.vmagic.type.ConstrainedArray;
 import de.upb.hni.vmagic.type.EnumerationType;
 import de.upb.hni.vmagic.type.IndexSubtypeIndication;
@@ -103,49 +110,60 @@ public class VHDLImporter {
 		}
 	}
 
-	public static List<HDLInterface> importFile(HDLQualifiedName pkg, InputStream is, HDLLibrary lib, String src) {
+	public static List<HDLInterface> importFile(HDLQualifiedName pkg, InputStream is, HDLLibrary lib, String src) throws IOException, HDLProblemException {
 		final Scopes scopes = getScopes(lib);
 		final List<HDLInterface> res = Lists.newLinkedList();
+		final VhdlParserSettings vhdlParserSettings = new VhdlParserSettings();
+		vhdlParserSettings.setPrintErrors(false);
+		VhdlFile file;
 		try {
-			final VhdlFile file = VhdlParser.parseStream(is, new VhdlParserSettings(), scopes.rootScope, scopes.workScope);
-			final List<LibraryUnit> list = file.getElements();
-			for (final LibraryUnit unit : list) {
-				if (unit instanceof Entity) {
-					final Entity entity = (Entity) unit;
-					final String id = entity.getIdentifier();
-					HDLInterface vInterface = new HDLInterface().setName(pkg.append(id).toString());
-					final List<VhdlObjectProvider<Signal>> ports = entity.getPort();
-					for (final VhdlObjectProvider port : ports) {
-						final List<Signal> signals = port.getVhdlObjects();
-						for (final Signal signal : signals) {
-							final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
-							final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
-							final HDLVariableDeclaration var = getVariable(null, signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
-							vInterface = vInterface.addPorts(var);
-						}
-					}
-					final List<VhdlObjectProvider<Constant>> param = entity.getGeneric();
-					for (final VhdlObjectProvider port : param) {
-						final List<Constant> signals = port.getVhdlObjects();
-						for (final Constant signal : signals) {
-							final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
-							final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
-							HDLVariableDeclaration var = getVariable(signal.getDefaultValue(), signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
-							var = var.setDirection(HDLDirection.PARAMETER);
-							vInterface = vInterface.addPorts(var);
-						}
-					}
-					vInterface.freeze(null);
-					res.add(vInterface);
-					lib.addInterface(vInterface, src);
+			file = VhdlParserExceptionThrower.parseStream(is, vhdlParserSettings, scopes.rootScope, scopes.workScope);
+			final List<ParseError> parseErrors = VhdlParserExceptionThrower.getParseErrors(file);
+			if (!parseErrors.isEmpty()) {
+				final List<Problem> problems = Lists.newArrayList();
+				for (final ParseError parseError : parseErrors) {
+					final PositionInformation pos = parseError.getPosition();
+					final SourcePosition begin = pos.getBegin();
+					final int length = pos.getEnd().getIndex() - begin.getIndex();
+					problems.add(new Problem(VHDLErrorCode.PARSE_ERROR, parseError.getMessage(), begin.getLine(), begin.getColumn(), length, begin.getIndex()));
 				}
-				getScopes(lib).workScope.getFiles().add(file);
-				// System.out.println("VHDLImporter.importFile()" + unit);
+				throw new HDLProblemException(problems.toArray(new Problem[problems.size()]));
 			}
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} catch (final VhdlParserException e) {
-			e.printStackTrace();
+		} catch (final RecognitionException e) {
+			throw new HDLProblemException(new Problem(VHDLErrorCode.PARSE_ERROR, e.getMessage(), e.line, e.charPositionInLine, e.token.getText().length(), -1));
+		}
+		final List<LibraryUnit> list = file.getElements();
+		for (final LibraryUnit unit : list) {
+			if (unit instanceof Entity) {
+				final Entity entity = (Entity) unit;
+				final String id = entity.getIdentifier();
+				HDLInterface vInterface = new HDLInterface().setName(pkg.append(id).toString());
+				final List<VhdlObjectProvider<Signal>> ports = entity.getPort();
+				for (final VhdlObjectProvider port : ports) {
+					final List<Signal> signals = port.getVhdlObjects();
+					for (final Signal signal : signals) {
+						final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
+						final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
+						final HDLVariableDeclaration var = getVariable(null, signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
+						vInterface = vInterface.addPorts(var);
+					}
+				}
+				final List<VhdlObjectProvider<Constant>> param = entity.getGeneric();
+				for (final VhdlObjectProvider port : param) {
+					final List<Constant> signals = port.getVhdlObjects();
+					for (final Constant signal : signals) {
+						final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
+						final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
+						HDLVariableDeclaration var = getVariable(signal.getDefaultValue(), signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
+						var = var.setDirection(HDLDirection.PARAMETER);
+						vInterface = vInterface.addPorts(var);
+					}
+				}
+				vInterface.freeze(null);
+				res.add(vInterface);
+				lib.addInterface(vInterface, src);
+			}
+			getScopes(lib).workScope.getFiles().add(file);
 		}
 		return res;
 	}
@@ -353,7 +371,7 @@ public class VHDLImporter {
 		}
 	}
 
-	private static void importFile(File f, HDLLibrary lib, String targetPackage) throws IOException {
+	private static void importFile(File f, HDLLibrary lib, String targetPackage) throws IOException, VhdlParserException {
 		final FileInputStream fis = new FileInputStream(f);
 		final List<HDLInterface> hifs = importFile(new HDLQualifiedName(targetPackage), fis, lib, f.getAbsolutePath());
 		for (final HDLInterface hdi : hifs) {

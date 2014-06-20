@@ -36,13 +36,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+import org.antlr.runtime.tree.RewriteCardinalityException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.pshdl.generator.vhdl.VHDLOutputValidator.VHDLErrorCode;
 import org.pshdl.model.HDLClass;
 import org.pshdl.model.HDLInterface;
 import org.pshdl.model.HDLPackage;
 import org.pshdl.model.utils.HDLLibrary;
+import org.pshdl.model.utils.HDLProblemException;
 import org.pshdl.model.utils.HDLQualifiedName;
 import org.pshdl.model.utils.Insulin;
 import org.pshdl.model.utils.PSAbstractCompiler;
@@ -207,8 +210,17 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, InputStream contents, String asSrc) {
 		comp.invalidate();
 		final HDLLibrary lib = HDLLibrary.getLibrary(comp.uri);
-		final List<HDLInterface> importFile = VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
-		comp.addSource(asSrc);
+		List<HDLInterface> importFile = null;
+		try {
+			importFile = VHDLImporter.importFile(HDLQualifiedName.create("VHDL", "work"), contents, lib, asSrc);
+			comp.clearError(asSrc);
+		} catch (final IOException | RewriteCardinalityException e) {
+			comp.addError(asSrc, new Problem(VHDLErrorCode.PARSE_ERROR, e.getMessage(), 0, 0, 1, 0));
+		} catch (final HDLProblemException e) {
+			for (final Problem p : e.problems) {
+				comp.addError(asSrc, p);
+			}
+		}
 		return importFile;
 	}
 

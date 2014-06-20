@@ -48,7 +48,7 @@ import org.pshdl.model.validation.Problem.ProblemSeverity;
 public class VHDLOutputValidator implements IHDLValidator {
 
 	public static enum VHDLErrorCode implements IErrorCode {
-		KEYWORD_NAME(WARNING), KEYWORD_TYPE(ERROR);
+		KEYWORD_NAME(WARNING), KEYWORD_TYPE(ERROR), PARSE_ERROR(ERROR);
 
 		public final ProblemSeverity severity;
 
