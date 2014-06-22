@@ -214,7 +214,7 @@ public class VHDLExpressionExtension {
     }
     final Aggregate aggr = new Aggregate();
     ArrayList<HDLExpression> _exp_2 = obj.getExp();
-    final Procedure2<HDLExpression,Integer> _function = new Procedure2<HDLExpression,Integer>() {
+    final Procedure2<HDLExpression, Integer> _function = new Procedure2<HDLExpression, Integer>() {
       public void apply(final HDLExpression e, final Integer i) {
         Expression _vHDLArray = VHDLExpressionExtension.this.toVHDLArray(e, otherValue);
         DecimalLiteral _decimalLiteral = new DecimalLiteral((i).intValue());
@@ -235,7 +235,7 @@ public class VHDLExpressionExtension {
     if (_notEquals) {
       ArrayList<HDLExpression> _ifArray_1 = obj.getIfArray();
       LinkedList<Expression> _linkedList = new LinkedList<Expression>();
-      final Function2<LinkedList<Expression>,HDLExpression,LinkedList<Expression>> _function = new Function2<LinkedList<Expression>,HDLExpression,LinkedList<Expression>>() {
+      final Function2<LinkedList<Expression>, HDLExpression, LinkedList<Expression>> _function = new Function2<LinkedList<Expression>, HDLExpression, LinkedList<Expression>>() {
         public LinkedList<Expression> apply(final LinkedList<Expression> l, final HDLExpression e) {
           LinkedList<Expression> _xblockexpression = null;
           {
@@ -281,7 +281,7 @@ public class VHDLExpressionExtension {
     final HDLManip.HDLManipType type = _type;
     boolean _matched = false;
     if (!_matched) {
-      if (Objects.equal(type,HDLManip.HDLManipType.ARITH_NEG)) {
+      if (Objects.equal(type, HDLManip.HDLManipType.ARITH_NEG)) {
         _matched=true;
         HDLExpression _target = obj.getTarget();
         Expression _vHDL = this.toVHDL(_target);
@@ -305,7 +305,7 @@ public class VHDLExpressionExtension {
       }
     }
     if (!_matched) {
-      if (Objects.equal(type,HDLManip.HDLManipType.CAST)) {
+      if (Objects.equal(type, HDLManip.HDLManipType.CAST)) {
         _matched=true;
         HDLType _castTo = obj.getCastTo();
         final HDLPrimitive targetType = ((HDLPrimitive) _castTo);
@@ -553,7 +553,7 @@ public class VHDLExpressionExtension {
       }
     }
     if (!_matched) {
-      if (Objects.equal(type,HDLBitOp.HDLBitOpType.XOR)) {
+      if (Objects.equal(type, HDLBitOp.HDLBitOpType.XOR)) {
         _matched=true;
         HDLExpression _left_2 = obj.getLeft();
         Expression _vHDL_4 = this.toVHDL(_left_2);

@@ -231,8 +231,8 @@ public class VHDLPackageExtension {
     _declarations_3.addAll(((List) unit.internals));
     List<ConcurrentStatement> _statements_1 = a.getStatements();
     _statements_1.addAll(unit.concurrentStatements);
-    Set<Map.Entry<Integer,LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
-    for (final Map.Entry<Integer,LinkedList<SequentialStatement>> uc : _entrySet) {
+    Set<Map.Entry<Integer, LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
+    for (final Map.Entry<Integer, LinkedList<SequentialStatement>> uc : _entrySet) {
       {
         final ProcessStatement ps = new ProcessStatement();
         List<Signal> _sensitivityList = ps.getSensitivityList();
@@ -254,7 +254,7 @@ public class VHDLPackageExtension {
         }
         if (_and_1) {
           List<SequentialStatement> _statements_3 = ps.getStatements();
-          final Function1<SequentialStatement,Boolean> _function = new Function1<SequentialStatement,Boolean>() {
+          final Function1<SequentialStatement, Boolean> _function = new Function1<SequentialStatement, Boolean>() {
             public Boolean apply(final SequentialStatement it) {
               return Boolean.valueOf((it instanceof WaitStatement));
             }
@@ -270,8 +270,8 @@ public class VHDLPackageExtension {
         _statements_5.add(ps);
       }
     }
-    Set<Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
-    for (final Map.Entry<HDLRegisterConfig,LinkedList<SequentialStatement>> pc : _entrySet_1) {
+    Set<Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
+    for (final Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> pc : _entrySet_1) {
       {
         final ProcessStatement ps = new ProcessStatement();
         List<SequentialStatement> _statements_2 = ps.getStatements();
