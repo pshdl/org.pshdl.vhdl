@@ -111,12 +111,12 @@
 		<dependency>
 			<groupId>de.upb.hni.vmagic</groupId>
 			<artifactId>vmagic</artifactId>
-			<version>0.4-SNAPSHOT</version>
+			<version>0.4.1</version>
 		</dependency>
 		<dependency>
 			<groupId>de.upb.hni.vmagic</groupId>
 			<artifactId>vmagic-parser</artifactId>
-			<version>0.4-SNAPSHOT</version>
+			<version>0.4.1</version>
 		</dependency>
 	</dependencies>
 </project>
