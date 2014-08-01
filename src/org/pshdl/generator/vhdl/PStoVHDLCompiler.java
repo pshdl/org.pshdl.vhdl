@@ -130,7 +130,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 				return "File: " + file + " does not exist";
 			if (string.endsWith(".vhdl") || string.endsWith(".vhd")) {
 				final List<HDLInterface> vhdl = addVHDL(this, file);
-				if (cli.hasOption('i')) {
+				if (cli.hasOption('i') && (vhdl != null)) {
 					final File ifFile = new File(outDir, file.getName() + ".pshdl");
 					final PrintStream ps = new PrintStream(ifFile, "UTF-8");
 					for (final HDLInterface hdlInterface : vhdl) {

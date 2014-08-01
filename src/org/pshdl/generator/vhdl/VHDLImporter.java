@@ -372,11 +372,11 @@ public class VHDLImporter {
 	}
 
 	private static void importFile(File f, HDLLibrary lib, String targetPackage) throws IOException, VhdlParserException {
-		final FileInputStream fis = new FileInputStream(f);
-		final List<HDLInterface> hifs = importFile(new HDLQualifiedName(targetPackage), fis, lib, f.getAbsolutePath());
-		for (final HDLInterface hdi : hifs) {
-			System.out.println(hdi);
+		try (final FileInputStream fis = new FileInputStream(f)) {
+			final List<HDLInterface> hifs = importFile(new HDLQualifiedName(targetPackage), fis, lib, f.getAbsolutePath());
+			for (final HDLInterface hdi : hifs) {
+				System.out.println(hdi);
+			}
 		}
-		fis.close();
 	}
 }
