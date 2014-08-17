@@ -84,6 +84,7 @@ import org.pshdl.model.utils.Refactoring
 import static org.pshdl.model.extensions.FullNameExtension.*
 import de.upb.hni.vmagic.statement.WaitStatement
 import org.pshdl.model.HDLExport
+import java.util.LinkedHashSet
 
 class VHDLPackageExtension {
 
@@ -205,7 +206,7 @@ class VHDLPackageExtension {
 		res.add(VHDLCastsLibrary.USE_CLAUSE)
 		res.add(VHDLShiftLibrary.USE_CLAUSE)
 		res.add(VHDLTypesLibrary.USE_CLAUSE)
-		val Set<String> usedLibs = new HashSet<String>
+		val Set<String> usedLibs = new LinkedHashSet<String>
 
 		//		usedLibs.add("pshdl")
 		usedLibs.add("ieee")

@@ -61,7 +61,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -351,7 +351,7 @@ public class VHDLPackageExtension {
     res.add(VHDLCastsLibrary.USE_CLAUSE);
     res.add(VHDLShiftLibrary.USE_CLAUSE);
     res.add(VHDLTypesLibrary.USE_CLAUSE);
-    final Set<String> usedLibs = new HashSet<String>();
+    final Set<String> usedLibs = new LinkedHashSet<String>();
     usedLibs.add("ieee");
     usedLibs.add("work");
     return usedLibs;

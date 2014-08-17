@@ -118,6 +118,7 @@ import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
+import java.util.LinkedHashSet
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -491,7 +492,7 @@ class VHDLStatementExtension {
 		}
 		val Expression caseExp = hCaseExp.toVHDL
 		val Map<HDLSwitchCaseStatement, VHDLContext> ctxs = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>
-		val Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>
+		val Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>
 		var boolean hasUnclocked = false
 		for (HDLSwitchCaseStatement cs : obj.cases) {
 			val VHDLContext vhdl = cs.toVHDL(pid)
@@ -628,7 +629,7 @@ class VHDLStatementExtension {
 		for (HDLStatement stmnt : obj.elseDo) {
 			elseCtx.merge(stmnt.toVHDL(pid), false)
 		}
-		val Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>
+		val Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>
 		configs.addAll(thenCtx.clockedStatements.keySet)
 		configs.addAll(elseCtx.clockedStatements.keySet)
 		val VHDLContext res = new VHDLContext

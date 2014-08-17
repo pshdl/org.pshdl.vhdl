@@ -66,8 +66,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -811,7 +811,7 @@ public class VHDLStatementExtension {
     }
     final Expression caseExp = this.vee.toVHDL(hCaseExp);
     final Map<HDLSwitchCaseStatement, VHDLContext> ctxs = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>();
-    final Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>();
+    final Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>();
     boolean hasUnclocked = false;
     ArrayList<HDLSwitchCaseStatement> _cases = obj.getCases();
     for (final HDLSwitchCaseStatement cs : _cases) {
@@ -1062,7 +1062,7 @@ public class VHDLStatementExtension {
       VHDLContext _vHDL_1 = this.toVHDL(stmnt_1, pid);
       elseCtx.merge(_vHDL_1, false);
     }
-    final Set<HDLRegisterConfig> configs = new HashSet<HDLRegisterConfig>();
+    final Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>();
     Set<HDLRegisterConfig> _keySet = thenCtx.clockedStatements.keySet();
     configs.addAll(_keySet);
     Set<HDLRegisterConfig> _keySet_1 = elseCtx.clockedStatements.keySet();
