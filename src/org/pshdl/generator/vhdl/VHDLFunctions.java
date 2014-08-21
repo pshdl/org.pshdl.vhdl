@@ -73,14 +73,14 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 
 	@Override
 	public Expression toVHDLExpression(HDLFunctionCall function) {
-		final HDLQualifiedName refName = function.getNameRefName();
+		final HDLQualifiedName refName = function.getFunctionRefName();
 		final Optional<BuiltInFunctions> e = Enums.getIfPresent(BuiltInFunctions.class, refName.getLastSegment());
 		if (e.isPresent()) {
 			switch (e.get()) {
 			case max:
 			case min:
 			case abs:
-				final FunctionDeclaration fd = new FunctionDeclaration(function.getNameRefName().getLastSegment(), UnresolvedType.NO_NAME);
+				final FunctionDeclaration fd = new FunctionDeclaration(function.getFunctionRefName().getLastSegment(), UnresolvedType.NO_NAME);
 				final FunctionCall res = new FunctionCall(fd);
 				addArguments(function, res);
 				return res;
@@ -118,7 +118,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 
 	@Override
 	public VHDLContext toVHDLStatement(HDLFunctionCall function, int pid) {
-		final HDLQualifiedName refName = function.getNameRefName();
+		final HDLQualifiedName refName = function.getFunctionRefName();
 		final Optional<SimulationFunctions> e = Enums.getIfPresent(SimulationFunctions.class, refName.getLastSegment());
 		if (e.isPresent()) {
 			final SimulationFunctions func = e.get();
@@ -149,12 +149,12 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				final IHDLObject container = function.getContainer();
 				HDLAssignment ass = setValue(ref, 0, container);
 				res.addUnclockedStatement(pid, VHDLStatementExtension.vhdlOf(ass, pid).getStatement(), ass);
-				HDLFunctionCall wait = new HDLFunctionCall().setName(SimulationFunctions.waitFor.getName()).addParams(params.get(1)).addParams(params.get(2))
+				HDLFunctionCall wait = new HDLFunctionCall().setFunction(SimulationFunctions.waitFor.getName()).addParams(params.get(1)).addParams(params.get(2))
 						.copyDeepFrozen(container);
 				res.addUnclockedStatement(pid, VHDLStatementExtension.vhdlOf(wait, pid).getStatement(), wait);
 				ass = setValue(ref, 1, container);
 				res.addUnclockedStatement(pid, VHDLStatementExtension.vhdlOf(ass, pid).getStatement(), ass);
-				wait = new HDLFunctionCall().setName(SimulationFunctions.waitFor.getName()).addParams(params.get(1)).addParams(params.get(2)).copyDeepFrozen(container);
+				wait = new HDLFunctionCall().setFunction(SimulationFunctions.waitFor.getName()).addParams(params.get(1)).addParams(params.get(2)).copyDeepFrozen(container);
 				res.addUnclockedStatement(pid, VHDLStatementExtension.vhdlOf(wait, pid).getStatement(), wait);
 				return res;
 			}
