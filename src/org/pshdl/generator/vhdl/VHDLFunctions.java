@@ -60,6 +60,7 @@ import de.upb.hni.vmagic.expression.Expression;
 import de.upb.hni.vmagic.expression.FunctionCall;
 import de.upb.hni.vmagic.literal.CharacterLiteral;
 import de.upb.hni.vmagic.literal.PhysicalLiteral;
+import de.upb.hni.vmagic.output.VhdlOutput;
 import de.upb.hni.vmagic.statement.AssertionStatement;
 import de.upb.hni.vmagic.statement.WaitStatement;
 import de.upb.hni.vmagic.type.UnresolvedType;
@@ -137,7 +138,8 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				final Optional<BigInteger> hdlExpression = ConstantEvaluate.valueOf(function.getParams().get(0));
 				if (!hdlExpression.isPresent())
 					throw new IllegalArgumentException(function.getParams().get(0) + " is not constant");
-				final WaitStatement ws = new WaitStatement(new PhysicalLiteral(hdlExpression.get().toString(), ref.getVarRefName().getLastSegment()));
+				final Expression hdlLiteral = VHDLExpressionExtension.vhdlOf(HDLLiteral.get(hdlExpression.get()));
+				final WaitStatement ws = new WaitStatement(new PhysicalLiteral(VhdlOutput.toVhdlString(hdlLiteral), ref.getVarRefName().getLastSegment()));
 				res.addUnclockedStatement(pid, ws, function);
 				return res;
 			}

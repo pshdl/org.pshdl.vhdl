@@ -284,7 +284,10 @@ public class VHDLStatementExtension {
     }
     if (_and) {
       final HDLAnnotation anno = hid.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLComponent);
-      String _value = anno.getValue();
+      String _value = null;
+      if (anno!=null) {
+        _value=anno.getValue();
+      }
       boolean _equals = "declare".equals(_value);
       if (_equals) {
         String _lastSegment = asRef.getLastSegment();

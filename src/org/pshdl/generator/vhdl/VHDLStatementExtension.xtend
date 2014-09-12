@@ -217,7 +217,7 @@ class VHDLStatementExtension {
 		val ArrayList<HDLVariableDeclaration> ports = hIf.ports
 		if (hid !== null && hid.getAnnotation(VHDLComponent) !== null) {
 			val HDLAnnotation anno = hid.getAnnotation(VHDLComponent)
-			if ("declare".equals(anno.value)) {
+			if ("declare".equals(anno?.value)) {
 				val Component c = new Component(asRef.lastSegment.toString)
 				val VHDLContext cContext = new VHDLContext
 				for (HDLVariableDeclaration port : ports) {
