@@ -260,12 +260,12 @@ public class VHDLStatementExtension {
   
   private static EnumSet<HDLVariableDeclaration.HDLDirection> inAndOut = EnumSet.<HDLVariableDeclaration.HDLDirection>of(HDLVariableDeclaration.HDLDirection.IN, HDLVariableDeclaration.HDLDirection.INOUT, HDLVariableDeclaration.HDLDirection.OUT);
   
-  protected VHDLContext _toVHDL(final HDLInterfaceInstantiation obj, final int pid) {
+  protected VHDLContext _toVHDL(final HDLInterfaceInstantiation hii, final int pid) {
     final VHDLContext res = new VHDLContext();
-    Optional<HDLInterface> _resolveHIf = obj.resolveHIf();
+    Optional<HDLInterface> _resolveHIf = hii.resolveHIf();
     final HDLInterface hIf = _resolveHIf.get();
-    final HDLVariable interfaceVar = obj.getVar();
-    HDLVariable _var = obj.getVar();
+    final HDLVariable interfaceVar = hii.getVar();
+    HDLVariable _var = hii.getVar();
     final String ifName = _var.getName();
     final HDLQualifiedName asRef = hIf.asRef();
     final HDLInterfaceDeclaration hid = hIf.<HDLInterfaceDeclaration>getContainer(HDLInterfaceDeclaration.class);
@@ -342,7 +342,7 @@ public class VHDLStatementExtension {
       HDLVariableDeclaration.HDLDirection _direction = hvd.getDirection();
       boolean _contains = VHDLStatementExtension.inAndOut.contains(_direction);
       if (_contains) {
-        this.generatePortMap(hvd, ifName, interfaceVar, asRef, res, obj, pid, portMap);
+        this.generatePortMap(hvd, ifName, interfaceVar, asRef, res, hii, pid, portMap);
       } else {
         HDLVariableDeclaration.HDLDirection _direction_1 = hvd.getDirection();
         boolean _equals_1 = Objects.equal(_direction_1, HDLVariableDeclaration.HDLDirection.PARAMETER);
@@ -391,7 +391,7 @@ public class VHDLStatementExtension {
           HDLLiteral _get_2 = HDLLiteral.get(0);
           HDLRange _setFrom = _hDLRange.setFrom(_get_2);
           HDLRange _setTo = _setFrom.setTo(to);
-          final HDLRange range = _setTo.setContainer(obj);
+          final HDLRange range = _setTo.setContainer(hii);
           String _asIndex = this.asIndex(Integer.valueOf(i));
           Range _vHDL_1 = this.vee.toVHDL(range, Range.Direction.TO);
           final ForGenerateStatement newFor = new ForGenerateStatement(("generate_" + ifName), _asIndex, _vHDL_1);
@@ -413,7 +413,7 @@ public class VHDLStatementExtension {
       List<ConcurrentStatement> _statements = forLoop.getStatements();
       _statements.add(instantiation);
     }
-    return this.attachComment(res, obj);
+    return this.attachComment(res, hii);
   }
   
   public void generatePortMap(final HDLVariableDeclaration hvd, final String ifName, final HDLVariable interfaceVar, final HDLQualifiedName asRef, final VHDLContext res, final HDLInterfaceInstantiation obj, final int pid, final List<AssociationElement> portMap) {
@@ -428,8 +428,9 @@ public class VHDLStatementExtension {
     for (final HDLVariable hvar : _variables) {
       {
         HDLVariable sigVar = null;
-        boolean _hasMeta = hvar.hasMeta(Insulin.IS_EXPORT);
-        if (_hasMeta) {
+        HDLAnnotation _annotation = hvar.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.exportedSignal);
+        boolean _tripleNotEquals = (_annotation != null);
+        if (_tripleNotEquals) {
           HDLVariable _hDLVariable = new HDLVariable();
           String _name = hvar.getName();
           HDLVariable _setName = _hDLVariable.setName(_name);

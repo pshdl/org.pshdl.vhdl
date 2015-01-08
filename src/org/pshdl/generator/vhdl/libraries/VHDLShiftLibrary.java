@@ -28,6 +28,7 @@ package org.pshdl.generator.vhdl.libraries;
 
 import java.util.List;
 
+import org.pshdl.model.HDLPrimitive;
 import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
 import org.pshdl.model.HDLShiftOp.HDLShiftOpType;
 
@@ -53,6 +54,9 @@ public class VHDLShiftLibrary {
 		for (final HDLShiftOpType op : HDLShiftOpType.values()) {
 			for (final HDLPrimitiveType left : values) {
 				final String name = getFunctionName(op, left);
+				if (HDLPrimitive.isAny(left)) {
+					continue;
+				}
 				final SubtypeIndication lt = VHDLCastsLibrary.getType(left);
 				if (lt != null) {
 					final FunctionDeclaration fd = new FunctionDeclaration(name, VHDLCastsLibrary.getType(left), new Constant("arg", VHDLCastsLibrary.getType(left)), new Constant(

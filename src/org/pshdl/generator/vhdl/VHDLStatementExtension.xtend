@@ -119,6 +119,7 @@ import org.pshdl.model.utils.Insulin
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
 import java.util.LinkedHashSet
+import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -201,11 +202,11 @@ class VHDLStatementExtension {
 
 	private static EnumSet<HDLDirection> inAndOut = EnumSet.of(HDLDirection.IN, HDLDirection.INOUT, HDLDirection.OUT)
 
-	def dispatch VHDLContext toVHDL(HDLInterfaceInstantiation obj, int pid) {
+	def dispatch VHDLContext toVHDL(HDLInterfaceInstantiation hii, int pid) {
 		val VHDLContext res = new VHDLContext
-		val HDLInterface hIf = obj.resolveHIf.get
-		val HDLVariable interfaceVar = obj.^var
-		val String ifName = obj.^var.name
+		val HDLInterface hIf = hii.resolveHIf.get
+		val HDLVariable interfaceVar = hii.^var
+		val String ifName = hii.^var.name
 		val HDLQualifiedName asRef = hIf.asRef
 		val HDLInterfaceDeclaration hid = hIf.getContainer(typeof(HDLInterfaceDeclaration))
 		var List<AssociationElement> portMap
@@ -250,7 +251,7 @@ class VHDLStatementExtension {
 		}
 		for (HDLVariableDeclaration hvd : ports) {
 			if (inAndOut.contains(hvd.direction)) {
-				generatePortMap(hvd, ifName, interfaceVar, asRef, res, obj, pid, portMap)
+				generatePortMap(hvd, ifName, interfaceVar, asRef, res, hii, pid, portMap)
 			} else {
 
 				//Parameter get a special treatment because they have been renamed by HDLInterfaceInstantiation resolveIF
@@ -274,7 +275,7 @@ class VHDLStatementExtension {
 			for (HDLExpression exp : interfaceVar.dimensions) {
 				val HDLExpression to = new HDLArithOp().setLeft(interfaceVar.dimensions.get(i)).setType(
 					HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
-				val HDLRange range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(to).setContainer(obj)
+				val HDLRange range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(to).setContainer(hii)
 				val ForGenerateStatement newFor = new ForGenerateStatement("generate_" + ifName, i.asIndex,
 					range.toVHDL(Range.Direction.TO))
 				if (forLoop !== null)
@@ -288,7 +289,7 @@ class VHDLStatementExtension {
 				throw new IllegalArgumentException("Should not get here")
 			forLoop.statements.add(instantiation)
 		}
-		return res.attachComment(obj)
+		return res.attachComment(hii)
 	}
 	
 	def generatePortMap(HDLVariableDeclaration hvd, String ifName, HDLVariable interfaceVar, HDLQualifiedName asRef, VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap) {
@@ -296,7 +297,7 @@ class VHDLStatementExtension {
 			HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
 		for (HDLVariable hvar : hvd.variables) {
 			var HDLVariable sigVar
-			if (hvar.hasMeta(Insulin.IS_EXPORT)) {
+			if (hvar.getAnnotation(HDLBuiltInAnnotations.exportedSignal)!==null) {
 				sigVar = new HDLVariable().setName(hvar.name)
 				var HDLVariableRef ref = sigVar.asHDLRef
 				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))

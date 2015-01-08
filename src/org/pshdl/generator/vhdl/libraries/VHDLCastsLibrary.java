@@ -90,6 +90,9 @@ public class VHDLCastsLibrary {
 				if (right == left) {
 					continue;
 				}
+				if (HDLPrimitive.isAny(left) || HDLPrimitive.isAny(right)) {
+					continue;
+				}
 				final String name = getCastName(left, right);
 				final SubtypeIndication rt = getType(right);
 				final SubtypeIndication lt = getType(left);
@@ -238,6 +241,10 @@ public class VHDLCastsLibrary {
 			if (BigInteger.ZERO.equals(val))
 				return new CharacterLiteral('0');
 			return new CharacterLiteral('1');
+		case ANY_INT:
+		case ANY_UINT:
+		case ANY_BIT:
+			throw new IllegalArgumentException("Should cast literal to any type");
 		case NATURAL:
 		case INTEGER:
 			return VHDLExpressionExtension.vhdlOf(lit);
@@ -292,7 +299,22 @@ public class VHDLCastsLibrary {
 	public static Expression cast(Expression vhdlExpr, HDLPrimitiveType from, HDLPrimitiveType to) {
 		if (from.equals(to))
 			return vhdlExpr;
-		final String name = getCastName(from, to);
+		if (HDLPrimitive.isAny(to))
+			throw new IllegalArgumentException("Can not cast to Any Type");
+		HDLPrimitiveType fromType = from;
+		switch (from) {
+		case ANY_BIT:
+			fromType = HDLPrimitiveType.BITVECTOR;
+			break;
+		case ANY_INT:
+			fromType = HDLPrimitiveType.INT;
+			break;
+		case ANY_UINT:
+			fromType = HDLPrimitiveType.UINT;
+			break;
+		default:
+		}
+		final String name = getCastName(fromType, to);
 		final Function resolve = PACKAGE.getScope().resolve(name, Function.class);
 		final FunctionCall call = new FunctionCall(resolve);
 		call.getParameters().add(new AssociationElement(vhdlExpr));
