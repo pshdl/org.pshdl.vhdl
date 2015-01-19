@@ -26,7 +26,9 @@
  ******************************************************************************/
 package org.pshdl.generator.vhdl;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -52,6 +54,7 @@ import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.output.VhdlOutput;
 import de.upb.hni.vmagic.statement.SequentialStatement;
+import de.upb.hni.vmagic.util.Comments;
 
 public class VHDLContext {
 
@@ -72,13 +75,13 @@ public class VHDLContext {
 	public Set<HDLQualifiedName> imports = Sets.newTreeSet();
 
 	public void addClockedStatement(HDLRegisterConfig config, SequentialStatement sa) {
-		config = config.normalize();
-		LinkedList<SequentialStatement> list = clockedStatements.get(config);
+		final HDLRegisterConfig normalizedConfig = config.normalize();
+		LinkedList<SequentialStatement> list = clockedStatements.get(normalizedConfig);
 		if (list == null) {
 			list = Lists.newLinkedList();
 		}
 		list.add(sa);
-		clockedStatements.put(config, list);
+		clockedStatements.put(normalizedConfig, list);
 	}
 
 	public void addUnclockedStatement(int pid, SequentialStatement sa, HDLStatement stmnt) {
@@ -175,13 +178,13 @@ public class VHDLContext {
 	}
 
 	public void addResetValue(HDLRegisterConfig config, SequentialStatement sa) {
-		config = config.normalize();
-		LinkedList<SequentialStatement> list = resetStatements.get(config);
+		final HDLRegisterConfig normalizedConfig = config.normalize();
+		LinkedList<SequentialStatement> list = resetStatements.get(normalizedConfig);
 		if (list == null) {
 			list = Lists.newLinkedList();
 		}
 		list.add(sa);
-		resetStatements.put(config, list);
+		resetStatements.put(normalizedConfig, list);
 	}
 
 	public SequentialStatement getStatement() {
@@ -254,6 +257,38 @@ public class VHDLContext {
 
 	public void addComponent(Component c) {
 		internals.add(c);
+	}
+
+	public void attachComments(List<String> comments, List<String> docComments) {
+		attach(comments, concurrentStatements);
+		attach(docComments, concurrentStatements);
+		attach(docComments, constants);
+		attach(docComments, constantsPkg);
+		attach(docComments, generics);
+		attach(docComments, ports);
+		attachComments(comments, docComments, clockedStatements);
+		attachComments(comments, docComments, unclockedStatements);
+	}
+
+	private void attach(List<String> comments, Iterable<? extends VhdlElement> list) {
+		for (final VhdlElement concurrentStatement : list) {
+			final List<String> existingComments = Comments.getComments(concurrentStatement);
+			if ((existingComments != null) && !existingComments.isEmpty()) {
+				final List<String> mergedComments = new ArrayList<>();
+				mergedComments.addAll(existingComments);
+				mergedComments.addAll(comments);
+				Comments.setComments(concurrentStatement, mergedComments);
+			} else {
+				Comments.setComments(concurrentStatement, comments);
+			}
+		}
+	}
+
+	private void attachComments(List<String> comments, List<String> docComments, Map<?, ? extends Iterable<? extends VhdlElement>> clockedStatements2) {
+		for (final Iterable<? extends VhdlElement> resetStatements : clockedStatements2.values()) {
+			attach(comments, resetStatements);
+			attach(docComments, resetStatements);
+		}
 	}
 
 }

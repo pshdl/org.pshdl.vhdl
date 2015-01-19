@@ -89,6 +89,7 @@ import org.pshdl.model.HDLReference
 import org.pshdl.model.HDLShiftOp
 import org.pshdl.model.HDLTernary
 import org.pshdl.model.HDLVariableRef
+import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.types.builtIn.HDLPrimitives
 
@@ -224,10 +225,11 @@ class VHDLExpressionExtension {
 	}
 
 	def Range toVHDL(HDLRange obj, Range.Direction dir) {
-		val Expression to = HDLPrimitives.simplifyWidth(obj, obj.to).toVHDL
+		val context = new HDLEvaluationContext()=>[ignoreConstantRefs=true;ignoreParameterRefs=true]
+		val Expression to = HDLPrimitives.simplifyWidth(obj, obj.to, context).toVHDL
 		if (obj.from === null)
 			return new Range(to, dir, to)
-		return new Range(HDLPrimitives.simplifyWidth(obj, obj.from).toVHDL, dir, to)
+		return new Range(HDLPrimitives.simplifyWidth(obj, obj.from, context).toVHDL, dir, to)
 	}
 
 	def dispatch Literal toVHDL(HDLLiteral obj) {

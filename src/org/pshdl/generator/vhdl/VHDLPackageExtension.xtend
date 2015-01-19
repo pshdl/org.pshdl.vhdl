@@ -85,6 +85,10 @@ import static org.pshdl.model.extensions.FullNameExtension.*
 import de.upb.hni.vmagic.statement.WaitStatement
 import org.pshdl.model.HDLExport
 import java.util.LinkedHashSet
+import de.upb.hni.vmagic.util.Comments
+import de.upb.hni.vmagic.object.SignalGroup
+import de.upb.hni.vmagic.object.Constant
+import de.upb.hni.vmagic.object.ConstantGroup
 
 class VHDLPackageExtension {
 
@@ -140,8 +144,18 @@ class VHDLPackageExtension {
 			res.add(new UseClause('''work.«libName».all'''))
 			addDefaultLibs(res, unit)
 		}
-		e.port.addAll(unit.ports)
-		e.generic.addAll(unit.generics)
+		for (Signal sig:unit.ports){
+			val comments=Comments.getComments(sig)
+			val sg=new SignalGroup(sig)
+			Comments.setComments(sg, comments)		
+			e.port.add(sg)
+		}
+		for (Constant sig:unit.generics){
+			val comments=Comments.getComments(sig)
+			val sg=new ConstantGroup(sig)
+			Comments.setComments(sg, comments)		
+			e.generic.add(sg)
+		}
 		e.declarations.addAll(unit.internalTypesConstants as List)
 		res.add(e)
 		val Architecture a = new Architecture("pshdlGenerated", e)

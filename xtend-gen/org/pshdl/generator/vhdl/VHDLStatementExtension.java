@@ -59,7 +59,6 @@ import de.upb.hni.vmagic.type.ConstrainedArray;
 import de.upb.hni.vmagic.type.EnumerationType;
 import de.upb.hni.vmagic.type.SubtypeIndication;
 import de.upb.hni.vmagic.type.UnresolvedType;
-import de.upb.hni.vmagic.util.Comments;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,34 +198,64 @@ public class VHDLStatementExtension {
   public VHDLContext attachComment(final VHDLContext context, final IHDLObject block) {
     try {
       final SourceInfo srcInfo = block.<SourceInfo>getMeta(SourceInfo.INFO);
-      boolean _and = false;
       boolean _tripleNotEquals = (srcInfo != null);
-      if (!_tripleNotEquals) {
-        _and = false;
-      } else {
-        SequentialStatement _statement = context.getStatement();
-        boolean _tripleNotEquals_1 = (_statement != null);
-        _and = _tripleNotEquals_1;
-      }
-      if (_and) {
+      if (_tripleNotEquals) {
         final ArrayList<String> newComments = new ArrayList<String>();
+        final ArrayList<String> docComments = new ArrayList<String>();
         for (final String comment : srcInfo.comments) {
           boolean _startsWith = comment.startsWith("//");
           if (_startsWith) {
             int _length = comment.length();
             int _minus = (_length - 1);
-            String _substring = comment.substring(2, _minus);
-            newComments.add(_substring);
+            final String newComment = comment.substring(2, _minus);
+            boolean _startsWith_1 = newComment.startsWith("/");
+            if (_startsWith_1) {
+              boolean _startsWith_2 = newComment.startsWith("/<");
+              if (_startsWith_2) {
+                String _substring = newComment.substring(2);
+                docComments.add(_substring);
+              } else {
+                String _substring_1 = newComment.substring(1);
+                docComments.add(_substring_1);
+              }
+            } else {
+              newComments.add(newComment);
+            }
           } else {
             int _length_1 = comment.length();
             int _minus_1 = (_length_1 - 2);
-            final String newComment = comment.substring(2, _minus_1);
-            String[] _split = newComment.split("\n");
-            CollectionExtensions.<String>addAll(newComments, _split);
+            final String newComment_1 = comment.substring(2, _minus_1);
+            boolean _startsWith_3 = newComment_1.startsWith("*");
+            if (_startsWith_3) {
+              boolean _startsWith_4 = newComment_1.startsWith("*<");
+              if (_startsWith_4) {
+                String _substring_2 = newComment_1.substring(2);
+                String[] _split = _substring_2.split("\n");
+                CollectionExtensions.<String>addAll(docComments, _split);
+              } else {
+                String _substring_3 = newComment_1.substring(1);
+                String[] _split_1 = _substring_3.split("\n");
+                CollectionExtensions.<String>addAll(docComments, _split_1);
+              }
+            } else {
+              String[] _split_2 = newComment_1.split("\n");
+              CollectionExtensions.<String>addAll(newComments, _split_2);
+            }
           }
         }
-        SequentialStatement _statement_1 = context.getStatement();
-        Comments.setComments(_statement_1, newComments);
+        boolean _or = false;
+        boolean _isEmpty = newComments.isEmpty();
+        boolean _not = (!_isEmpty);
+        if (_not) {
+          _or = true;
+        } else {
+          boolean _isEmpty_1 = docComments.isEmpty();
+          boolean _not_1 = (!_isEmpty_1);
+          _or = _not_1;
+        }
+        if (_or) {
+          context.attachComments(newComments, docComments);
+        }
       }
     } catch (final Throwable _t) {
       if (_t instanceof Exception) {

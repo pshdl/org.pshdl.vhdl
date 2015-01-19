@@ -65,6 +65,7 @@ import java.util.Collections
 import java.util.EnumSet
 import java.util.HashSet
 import java.util.LinkedHashMap
+import java.util.LinkedHashSet
 import java.util.LinkedList
 import java.util.List
 import java.util.Map
@@ -112,14 +113,13 @@ import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.FullNameExtension
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.parser.SourceInfo
+import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
 import org.pshdl.model.utils.HDLQualifiedName
 import org.pshdl.model.utils.HDLQuery
 import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
-import java.util.LinkedHashSet
-import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -167,17 +167,32 @@ class VHDLStatementExtension {
 	def VHDLContext attachComment(VHDLContext context, IHDLObject block) {
 		try {
 			val srcInfo = block.getMeta(SourceInfo.INFO)
-			if (srcInfo !== null && context.statement !== null) {
+			if (srcInfo !== null) {
 				val newComments = new ArrayList<String>
+				val docComments = new ArrayList<String>
 				for (String comment : srcInfo.comments) {
-					if (comment.startsWith("//"))
-						newComments.add(comment.substring(2, comment.length - 1))
-					else {
+					if (comment.startsWith("//")) {
+						val newComment = comment.substring(2, comment.length - 1)
+						if (newComment.startsWith("/")) {
+							if (newComment.startsWith("/<"))
+								docComments.add(newComment.substring(2))
+							else
+								docComments.add(newComment.substring(1))
+						} else
+							newComments.add(newComment)
+					} else {
 						val newComment = comment.substring(2, comment.length - 2)
-						newComments.addAll(newComment.split("\n"))
+						if (newComment.startsWith("*")) {
+							if (newComment.startsWith("*<"))
+								docComments.addAll(newComment.substring(2).split("\n"))
+							else
+								docComments.addAll(newComment.substring(1).split("\n"))
+						} else
+							newComments.addAll(newComment.split("\n"))
 					}
 				}
-				Comments.setComments(context.statement, newComments)
+				if (!newComments.empty || !docComments.empty)
+					context.attachComments(newComments, docComments)
 			}
 		} catch (Exception e) {
 		}
@@ -291,13 +306,14 @@ class VHDLStatementExtension {
 		}
 		return res.attachComment(hii)
 	}
-	
-	def generatePortMap(HDLVariableDeclaration hvd, String ifName, HDLVariable interfaceVar, HDLQualifiedName asRef, VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap) {
+
+	def generatePortMap(HDLVariableDeclaration hvd, String ifName, HDLVariable interfaceVar, HDLQualifiedName asRef,
+		VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap) {
 		val Collection<HDLAnnotation> typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(hvd).where(
 			HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
 		for (HDLVariable hvar : hvd.variables) {
 			var HDLVariable sigVar
-			if (hvar.getAnnotation(HDLBuiltInAnnotations.exportedSignal)!==null) {
+			if (hvar.getAnnotation(HDLBuiltInAnnotations.exportedSignal) !== null) {
 				sigVar = new HDLVariable().setName(hvar.name)
 				var HDLVariableRef ref = sigVar.asHDLRef
 				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
@@ -313,11 +329,11 @@ class VHDLStatementExtension {
 					sigVar = sigVar.addDimensions(exp)
 				}
 				if (hvar.dimensions.size != 0) {
-		
+
 					//Arrays are always named in VHDL, so the type annotation should be present
 					if (typeAnno.isEmpty) {
-						val HDLQualifiedName name = VHDLPackageExtension.INST.getPackageNameRef(asRef).
-							append(getArrayRefName(hvar, true))
+						val HDLQualifiedName name = VHDLPackageExtension.INST.getPackageNameRef(asRef).append(
+							getArrayRefName(hvar, true))
 						res.addImport(name)
 						val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
 							setVariables(
@@ -331,8 +347,8 @@ class VHDLStatementExtension {
 						res.merge(newHVD.toVHDL(pid), false)
 					}
 				} else {
-					val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).
-						setVariables(HDLObject.asList(sigVar)).copyDeepFrozen(obj)
+					val HDLVariableDeclaration newHVD = hvd.setDirection(HDLDirection.INTERNAL).setVariables(
+						HDLObject.asList(sigVar)).copyDeepFrozen(obj)
 					res.merge(newHVD.toVHDL(pid), false)
 				}
 				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
@@ -558,7 +574,7 @@ class VHDLStatementExtension {
 		val VHDLContext context = new VHDLContext
 		var SignalAssignment sa = null
 		val HDLReference ref = obj.left
-		if (ref.toString=="wrapper.T1")
+		if (ref.toString == "wrapper.T1")
 			println(ref.toString)
 		val HDLVariable hvar = ref.resolveVar
 		val ArrayList<HDLExpression> dim = hvar.dimensions

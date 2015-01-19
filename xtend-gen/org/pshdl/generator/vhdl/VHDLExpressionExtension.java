@@ -72,6 +72,8 @@ import java.util.List;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.Functions.Function2;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
+import org.eclipse.xtext.xbase.lib.ObjectExtensions;
+import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure2;
 import org.pshdl.generator.vhdl.VHDLFunctions;
 import org.pshdl.generator.vhdl.VHDLUtils;
@@ -99,6 +101,7 @@ import org.pshdl.model.HDLTernary;
 import org.pshdl.model.HDLType;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
+import org.pshdl.model.evaluation.HDLEvaluationContext;
 import org.pshdl.model.extensions.TypeExtension;
 import org.pshdl.model.types.builtIn.HDLPrimitives;
 import org.pshdl.model.utils.HDLQualifiedName;
@@ -345,8 +348,16 @@ public class VHDLExpressionExtension {
   }
   
   public Range toVHDL(final HDLRange obj, final Range.Direction dir) {
+    HDLEvaluationContext _hDLEvaluationContext = new HDLEvaluationContext();
+    final Procedure1<HDLEvaluationContext> _function = new Procedure1<HDLEvaluationContext>() {
+      public void apply(final HDLEvaluationContext it) {
+        it.ignoreConstantRefs = true;
+        it.ignoreParameterRefs = true;
+      }
+    };
+    final HDLEvaluationContext context = ObjectExtensions.<HDLEvaluationContext>operator_doubleArrow(_hDLEvaluationContext, _function);
     HDLExpression _to = obj.getTo();
-    HDLExpression _simplifyWidth = HDLPrimitives.simplifyWidth(obj, _to);
+    HDLExpression _simplifyWidth = HDLPrimitives.simplifyWidth(obj, _to, context);
     final Expression to = this.toVHDL(_simplifyWidth);
     HDLExpression _from = obj.getFrom();
     boolean _tripleEquals = (_from == null);
@@ -354,7 +365,7 @@ public class VHDLExpressionExtension {
       return new Range(to, dir, to);
     }
     HDLExpression _from_1 = obj.getFrom();
-    HDLExpression _simplifyWidth_1 = HDLPrimitives.simplifyWidth(obj, _from_1);
+    HDLExpression _simplifyWidth_1 = HDLPrimitives.simplifyWidth(obj, _from_1, context);
     Expression _vHDL = this.toVHDL(_simplifyWidth_1);
     return new Range(_vHDL, dir, to);
   }

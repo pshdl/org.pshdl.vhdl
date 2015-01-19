@@ -50,13 +50,16 @@ import de.upb.hni.vmagic.libraryunit.PackageDeclaration;
 import de.upb.hni.vmagic.libraryunit.UseClause;
 import de.upb.hni.vmagic.literal.EnumerationLiteral;
 import de.upb.hni.vmagic.object.Constant;
+import de.upb.hni.vmagic.object.ConstantGroup;
 import de.upb.hni.vmagic.object.Signal;
+import de.upb.hni.vmagic.object.SignalGroup;
 import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.IfStatement;
 import de.upb.hni.vmagic.statement.SequentialStatement;
 import de.upb.hni.vmagic.statement.WaitStatement;
 import de.upb.hni.vmagic.type.Type;
 import de.upb.hni.vmagic.type.UnresolvedType;
+import de.upb.hni.vmagic.util.Comments;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -219,10 +222,24 @@ public class VHDLPackageExtension {
       res.add(_useClause);
       VHDLPackageExtension.addDefaultLibs(res, unit);
     }
-    List<VhdlObjectProvider<Signal>> _port = e.getPort();
-    _port.addAll(unit.ports);
-    List<VhdlObjectProvider<Constant>> _generic = e.getGeneric();
-    _generic.addAll(unit.generics);
+    for (final Signal sig : unit.ports) {
+      {
+        final List<String> comments = Comments.getComments(sig);
+        final SignalGroup sg = new SignalGroup(sig);
+        Comments.setComments(sg, comments);
+        List<VhdlObjectProvider<Signal>> _port = e.getPort();
+        _port.add(sg);
+      }
+    }
+    for (final Constant sig_1 : unit.generics) {
+      {
+        final List<String> comments = Comments.getComments(sig_1);
+        final ConstantGroup sg = new ConstantGroup(sig_1);
+        Comments.setComments(sg, comments);
+        List<VhdlObjectProvider<Constant>> _generic = e.getGeneric();
+        _generic.add(sg);
+      }
+    }
     List<EntityDeclarativeItem> _declarations_2 = e.getDeclarations();
     _declarations_2.addAll(((List) unit.internalTypesConstants));
     res.add(e);
