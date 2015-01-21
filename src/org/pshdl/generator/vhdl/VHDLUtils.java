@@ -100,7 +100,7 @@ public class VHDLUtils {
 	public static String getVHDLName(String name) {
 		if ((name.charAt(0) == '\\') && (name.charAt(name.length() - 1) == '\\'))
 			return name;
-		if (keywordSet.contains(name))
+		if (keywordSet.contains(name) || name.matches("[_]+"))
 			return "\\" + name + "\\";
 		if (vhdlName.matcher(name).matches())
 			return name;
