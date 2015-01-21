@@ -63,9 +63,9 @@ import de.upb.hni.vmagic.output.VhdlOutput;
  * <ol>
  * <li>{@link #setup(String)}</li>
  * <li>{@link #add(File)} Add as many files as you want. You can also add VHDL
- * files with {@link #addVHDL(File)}</li>
- * <li>{@link #doCompile(ICompilationListener)} generates all VHDL code and
- * auxiliary files</li>
+ * files with {@link #addVHDL(PSAbstractCompiler, File)}</li>
+ * <li>{@link PSAbstractCompiler#compile(ICompilationListener)} generates all
+ * VHDL code and auxiliary files</li>
  * </ol>
  *
  * @author Karsten Becker
@@ -111,7 +111,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	/**
 	 * This is the command line version of the compiler
 	 *
-	 * @param args
+	 * @param cli
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
@@ -186,7 +186,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 *
 	 * @param file
 	 *            the VHDL file
-	 * @return
+	 * @return the generated interfaces of the VHDL file
 	 * @throws IOException
 	 */
 	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, File file) throws IOException {
@@ -205,7 +205,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	 *            the contents of the VHDL file
 	 * @param asSrc
 	 *            a src id under which to register the {@link HDLInterface}
-	 * @return
+	 * @return the generated interfaces of the VHDL file
 	 */
 	public static List<HDLInterface> addVHDL(PSAbstractCompiler comp, InputStream contents, String asSrc) {
 		comp.invalidate();
