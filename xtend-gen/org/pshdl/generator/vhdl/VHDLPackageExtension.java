@@ -28,7 +28,9 @@ package org.pshdl.generator.vhdl;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
 import de.upb.hni.vmagic.AssociationElement;
+import de.upb.hni.vmagic.VhdlElement;
 import de.upb.hni.vmagic.VhdlFile;
 import de.upb.hni.vmagic.builtin.NumericStd;
 import de.upb.hni.vmagic.builtin.StdLogic1164;
@@ -71,6 +73,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import org.eclipse.xtend2.lib.StringConcatenation;
+import org.eclipse.xtext.xbase.lib.CollectionExtensions;
+import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.Functions.Function1;
 import org.eclipse.xtext.xbase.lib.IterableExtensions;
@@ -100,6 +104,7 @@ import org.pshdl.model.HDLVariableDeclaration;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.extensions.FullNameExtension;
+import org.pshdl.model.parser.SourceInfo;
 import org.pshdl.model.utils.HDLQualifiedName;
 import org.pshdl.model.utils.ModificationSet;
 import org.pshdl.model.utils.Refactoring;
@@ -244,6 +249,8 @@ public class VHDLPackageExtension {
     _declarations_2.addAll(((List) unit.internalTypesConstants));
     res.add(e);
     final Architecture a = new Architecture("pshdlGenerated", e);
+    this.attachComments(e, obj, true, false);
+    this.attachComments(a, obj, false, true);
     List<BlockDeclarativeItem> _declarations_3 = a.getDeclarations();
     _declarations_3.addAll(((List) unit.internals));
     List<ConcurrentStatement> _statements_1 = a.getStatements();
@@ -302,6 +309,74 @@ public class VHDLPackageExtension {
     }
     res.add(a);
     return res;
+  }
+  
+  public void attachComments(final VhdlElement e, final IHDLObject obj, final boolean doc, final boolean normal) {
+    final SourceInfo srcInfo = obj.<SourceInfo>getMeta(SourceInfo.INFO);
+    boolean _tripleNotEquals = (srcInfo != null);
+    if (_tripleNotEquals) {
+      final ArrayList<String> newComments = new ArrayList<String>();
+      final ArrayList<String> docComments = new ArrayList<String>();
+      for (final String comment : srcInfo.comments) {
+        boolean _startsWith = comment.startsWith("//");
+        if (_startsWith) {
+          int _length = comment.length();
+          int _minus = (_length - 1);
+          final String newComment = comment.substring(2, _minus);
+          boolean _startsWith_1 = newComment.startsWith("/");
+          if (_startsWith_1) {
+            boolean _startsWith_2 = newComment.startsWith("/<");
+            if (_startsWith_2) {
+              String _substring = newComment.substring(2);
+              docComments.add(_substring);
+            } else {
+              String _substring_1 = newComment.substring(1);
+              docComments.add(_substring_1);
+            }
+          } else {
+            newComments.add(newComment);
+          }
+        } else {
+          int _length_1 = comment.length();
+          int _minus_1 = (_length_1 - 2);
+          final String newComment_1 = comment.substring(2, _minus_1);
+          boolean _startsWith_3 = newComment_1.startsWith("*");
+          if (_startsWith_3) {
+            boolean _startsWith_4 = newComment_1.startsWith("*<");
+            if (_startsWith_4) {
+              String _substring_2 = newComment_1.substring(2);
+              String[] _split = _substring_2.split("\n");
+              CollectionExtensions.<String>addAll(docComments, _split);
+            } else {
+              String _substring_3 = newComment_1.substring(1);
+              String[] _split_1 = _substring_3.split("\n");
+              CollectionExtensions.<String>addAll(docComments, _split_1);
+            }
+          } else {
+            String[] _split_2 = newComment_1.split("\n");
+            CollectionExtensions.<String>addAll(newComments, _split_2);
+          }
+        }
+      }
+      boolean _and = false;
+      if (!doc) {
+        _and = false;
+      } else {
+        _and = normal;
+      }
+      if (_and) {
+        Iterable<String> _plus = Iterables.<String>concat(newComments, docComments);
+        Comments.setComments(e, ((String[])Conversions.unwrapArray(_plus, String.class)));
+      } else {
+        if (doc) {
+          Comments.setComments(e, docComments);
+        } else {
+          if (normal) {
+            Comments.setComments(e, newComments);
+          }
+        }
+      }
+    }
   }
   
   public String getPackageName(final HDLQualifiedName entityName) {

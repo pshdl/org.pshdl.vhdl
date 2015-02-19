@@ -89,6 +89,9 @@ import de.upb.hni.vmagic.util.Comments
 import de.upb.hni.vmagic.object.SignalGroup
 import de.upb.hni.vmagic.object.Constant
 import de.upb.hni.vmagic.object.ConstantGroup
+import org.pshdl.model.parser.SourceInfo
+import java.util.ArrayList
+import de.upb.hni.vmagic.VhdlElement
 
 class VHDLPackageExtension {
 
@@ -101,6 +104,7 @@ class VHDLPackageExtension {
 		val List<LibraryUnit> res = new LinkedList<LibraryUnit>
 		val HDLQualifiedName entityName = fullNameOf(obj)
 		val Entity e = new Entity(entityName.dashString)
+		
 		val VHDLContext unit = new VHDLContext
 
 		val HDLEnumRef[] hRefs = obj.getAllObjectsOf(typeof(HDLEnumRef), true)
@@ -159,6 +163,8 @@ class VHDLPackageExtension {
 		e.declarations.addAll(unit.internalTypesConstants as List)
 		res.add(e)
 		val Architecture a = new Architecture("pshdlGenerated", e)
+		e.attachComments(obj, true, false)
+		a.attachComments(obj, false, true)
 		a.declarations.addAll(unit.internals as List)
 		a.statements.addAll(unit.concurrentStatements)
 		for (Map.Entry<Integer,LinkedList<SequentialStatement>> uc : unit.unclockedStatements.entrySet) {
@@ -179,6 +185,41 @@ class VHDLPackageExtension {
 		}
 		res.add(a)
 		return res
+	}
+	
+	def attachComments(VhdlElement e, IHDLObject obj, boolean doc, boolean normal) {
+		val srcInfo=obj.getMeta(SourceInfo.INFO)
+		if ( srcInfo !== null ){
+			val newComments = new ArrayList<String>
+			val docComments = new ArrayList<String>
+			for (String comment : srcInfo.comments) {
+				if (comment.startsWith("//")) {
+					val newComment = comment.substring(2, comment.length - 1)
+					if (newComment.startsWith("/")) {
+						if (newComment.startsWith("/<"))
+							docComments.add(newComment.substring(2))
+						else
+							docComments.add(newComment.substring(1))
+					} else
+						newComments.add(newComment)
+				} else {
+					val newComment = comment.substring(2, comment.length - 2)
+					if (newComment.startsWith("*")) {
+						if (newComment.startsWith("*<"))
+							docComments.addAll(newComment.substring(2).split("\n"))
+						else
+							docComments.addAll(newComment.substring(1).split("\n"))
+					} else
+						newComments.addAll(newComment.split("\n"))
+				}
+			}
+			if (doc && normal)
+				Comments.setComments(e, newComments + docComments)
+			else if (doc)
+				Comments.setComments(e, docComments)
+			else if (normal)
+				Comments.setComments(e, newComments)
+		}
 	}
 
 	def public String getPackageName(HDLQualifiedName entityName) '''«entityName.dashString»Pkg'''

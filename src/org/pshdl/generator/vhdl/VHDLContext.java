@@ -266,6 +266,8 @@ public class VHDLContext {
 		attach(docComments, constantsPkg);
 		attach(docComments, generics);
 		attach(docComments, ports);
+		attach(comments, internals);
+		attach(docComments, internals);
 		attachComments(comments, docComments, clockedStatements);
 		attachComments(comments, docComments, unclockedStatements);
 	}
