@@ -41,6 +41,7 @@ import org.pshdl.model.HDLPrimitive.HDLPrimitiveType;
 import org.pshdl.model.HDLRange;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.evaluation.ConstantEvaluate;
+import org.pshdl.model.utils.HDLCodeGenerationException;
 
 import com.google.common.base.Optional;
 
@@ -71,16 +72,17 @@ public class VHDLCastsLibrary {
 	public static final PackageDeclaration PACKAGE;
 	public static final FunctionDeclaration RESIZE_SLV = new FunctionDeclaration("resizeSLV", StdLogic1164.STD_LOGIC_VECTOR, new Constant("s", StdLogic1164.STD_LOGIC_VECTOR),
 			new Constant("newSize", Standard.NATURAL));
-	public static final FunctionDeclaration RESIZE_BIT = new FunctionDeclaration("resizeBit", StdLogic1164.STD_LOGIC, new Constant("s", StdLogic1164.STD_LOGIC), new Constant(
-			"newSize", Standard.NATURAL));
-	public static final FunctionDeclaration RESIZE_INT = new FunctionDeclaration("resizeInt", NumericStd.SIGNED, new Constant("s", NumericStd.SIGNED), new Constant("newSize",
-			Standard.NATURAL));
-	public static final FunctionDeclaration RESIZE_UINT = new FunctionDeclaration("resizeUint", NumericStd.UNSIGNED, new Constant("s", NumericStd.UNSIGNED), new Constant(
-			"newSize", Standard.NATURAL));
-	public static final FunctionDeclaration RESIZE_INTEGER = new FunctionDeclaration("resizeInteger", NumericStd.SIGNED, new Constant("s", Standard.INTEGER), new Constant(
-			"newSize", Standard.NATURAL));
-	public static final FunctionDeclaration RESIZE_NATURAL = new FunctionDeclaration("resizeNatural", NumericStd.UNSIGNED, new Constant("s", Standard.NATURAL), new Constant(
-			"newSize", Standard.NATURAL));
+	public static final FunctionDeclaration RESIZE_BIT = new FunctionDeclaration("resizeBit", StdLogic1164.STD_LOGIC, new Constant("s", StdLogic1164.STD_LOGIC),
+			new Constant("newSize", Standard.NATURAL));
+	public static final FunctionDeclaration RESIZE_INT = new FunctionDeclaration("resizeInt", NumericStd.SIGNED, new Constant("s", NumericStd.SIGNED),
+			new Constant("newSize", Standard.NATURAL));
+	public static final FunctionDeclaration RESIZE_UINT = new FunctionDeclaration("resizeUint", NumericStd.UNSIGNED, new Constant("s", NumericStd.UNSIGNED),
+			new Constant("newSize", Standard.NATURAL));
+	public static final FunctionDeclaration RESIZE_INTEGER = new FunctionDeclaration("resizeInteger", NumericStd.SIGNED, new Constant("s", Standard.INTEGER),
+			new Constant("newSize", Standard.NATURAL));
+	public static final FunctionDeclaration RESIZE_NATURAL = new FunctionDeclaration("resizeNatural", NumericStd.UNSIGNED, new Constant("s", Standard.NATURAL),
+			new Constant("newSize", Standard.NATURAL));
+
 	static {
 		PACKAGE = new PackageDeclaration("pshdl.Casts");
 		final List<PackageDeclarativeItem> declarations = PACKAGE.getDeclarations();
@@ -232,6 +234,8 @@ public class VHDLCastsLibrary {
 				return VHDLExpressionExtension.vhdlOf(lit);
 		}
 		final BigInteger val = lit.getValueAsBigInt();
+		if (val == null)
+			throw new HDLCodeGenerationException(lit, "Literal could not be evaluated to constant", "VHDL");
 		Optional<BigInteger> width = Optional.absent();
 		if (tWidth != null) {
 			width = ConstantEvaluate.valueOf(tWidth, null);
@@ -285,8 +289,8 @@ public class VHDLCastsLibrary {
 			if (width.isPresent())
 				return VHDLCastsLibrary.cast(VHDLExpressionExtension.INST.toVHDL(lit, width.get().intValue(), true), HDLPrimitiveType.BITVECTOR, to);
 			final FunctionCall functionCall = new FunctionCall(resize);
-			functionCall.getParameters().add(
-					new AssociationElement(VHDLCastsLibrary.cast(VHDLExpressionExtension.INST.toVHDL(lit, val.bitLength(), true), HDLPrimitiveType.BITVECTOR, to)));
+			functionCall.getParameters()
+					.add(new AssociationElement(VHDLCastsLibrary.cast(VHDLExpressionExtension.INST.toVHDL(lit, val.bitLength(), true), HDLPrimitiveType.BITVECTOR, to)));
 			functionCall.getParameters().add(new AssociationElement(VHDLExpressionExtension.vhdlOf(tWidth)));
 			return functionCall;
 		}

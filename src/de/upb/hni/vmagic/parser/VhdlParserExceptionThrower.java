@@ -87,7 +87,12 @@ public class VhdlParserExceptionThrower {
 
 	private static VhdlFile parse(VhdlParserSettings settings, CharStream stream, RootDeclarativeRegion rootScope, LibraryDeclarativeRegion libraryScope)
 			throws RecognitionException {
-		final VhdlAntlrLexer lexer = new VhdlAntlrLexer(stream);
+		final VhdlAntlrLexer lexer = new VhdlAntlrLexer(stream) {
+			@Override
+			public void emitErrorMessage(String msg) {
+				// super.emitErrorMessage(msg);
+			}
+		};
 		final CommonTokenStream ts = new CommonTokenStream(lexer);
 
 		final VhdlAntlrParser parser = new VhdlAntlrParser(ts);

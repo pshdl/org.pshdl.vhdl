@@ -32,7 +32,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -61,7 +60,7 @@ import de.upb.hni.vmagic.output.VhdlOutput;
  * files for PSHDL. The basic operation is like this:
  *
  * <ol>
- * <li>{@link #setup(String)}</li>
+ * <li>{@link #setup(String, ExecutorService)}</li>
  * <li>{@link #add(File)} Add as many files as you want. You can also add VHDL
  * files with {@link #addVHDL(PSAbstractCompiler, File)}</li>
  * <li>{@link PSAbstractCompiler#compile(ICompilationListener)} generates all
@@ -74,22 +73,6 @@ import de.upb.hni.vmagic.output.VhdlOutput;
 public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvider {
 
 	private static final String HOOK_NAME = "vhdl";
-
-	private static final class SimpleListener implements ICompilationListener {
-		@Override
-		public boolean startModule(String src, HDLPackage parse) {
-			System.out.println("Compiling:" + new File(src).getName());
-			return true;
-		}
-
-		@Override
-		public boolean useSource(String src, Collection<Problem> collection, boolean hasError) {
-			if (hasError) {
-				System.out.println("Skipping " + src + " because it has errors");
-			}
-			return !hasError;
-		}
-	}
 
 	public PStoVHDLCompiler() {
 		this(null, null);
@@ -241,8 +224,8 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 		return new MultiOption(HOOK_NAME + " usage: [OPTIONS] <files>", null, options);
 	}
 
-	public static PStoVHDLCompiler setup(String uri) {
-		return new PStoVHDLCompiler(uri, null);
+	public static PStoVHDLCompiler setup(String uri, ExecutorService service) {
+		return new PStoVHDLCompiler(uri, service);
 	}
 
 }

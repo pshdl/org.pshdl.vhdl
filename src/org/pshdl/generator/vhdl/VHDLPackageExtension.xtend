@@ -99,12 +99,12 @@ class VHDLPackageExtension {
 	extension VHDLStatementExtension vse = new VHDLStatementExtension
 
 	public static VHDLPackageExtension INST = new VHDLPackageExtension
-	
+
 	def List<LibraryUnit> toVHDL(HDLUnit obj) {
 		val List<LibraryUnit> res = new LinkedList<LibraryUnit>
 		val HDLQualifiedName entityName = fullNameOf(obj)
 		val Entity e = new Entity(entityName.dashString)
-		
+
 		val VHDLContext unit = new VHDLContext
 
 		val HDLEnumRef[] hRefs = obj.getAllObjectsOf(typeof(HDLEnumRef), true)
@@ -131,12 +131,20 @@ class VHDLPackageExtension {
 				}
 			}
 		}
-		
+
 		for (HDLStatement stmnt : obj.inits) {
-			unit.merge(stmnt.toVHDL(VHDLContext.DEFAULT_CTX), false)
+			val vhdl = stmnt.toVHDL(VHDLContext.DEFAULT_CTX)
+			if (vhdl !== null)
+				unit.merge(vhdl, false)
+			else
+				print("Failed to translate: "+stmnt)
 		}
 		for (HDLStatement stmnt : obj.statements) {
-			unit.merge(stmnt.toVHDL(VHDLContext.DEFAULT_CTX), false)
+			val vhdl = stmnt.toVHDL(VHDLContext.DEFAULT_CTX)
+			if (vhdl !== null)
+				unit.merge(vhdl, false)
+			else
+				print("Failed to translate: "+stmnt)
 		}
 		addDefaultLibs(res, unit)
 		if (unit.hasPkgDeclarations) {
@@ -148,16 +156,16 @@ class VHDLPackageExtension {
 			res.add(new UseClause('''work.«libName».all'''))
 			addDefaultLibs(res, unit)
 		}
-		for (Signal sig:unit.ports){
-			val comments=Comments.getComments(sig)
-			val sg=new SignalGroup(sig)
-			Comments.setComments(sg, comments)		
+		for (Signal sig : unit.ports) {
+			val comments = Comments.getComments(sig)
+			val sg = new SignalGroup(sig)
+			Comments.setComments(sg, comments)
 			e.port.add(sg)
 		}
-		for (Constant sig:unit.generics){
-			val comments=Comments.getComments(sig)
-			val sg=new ConstantGroup(sig)
-			Comments.setComments(sg, comments)		
+		for (Constant sig : unit.generics) {
+			val comments = Comments.getComments(sig)
+			val sg = new ConstantGroup(sig)
+			Comments.setComments(sg, comments)
 			e.generic.add(sg)
 		}
 		e.declarations.addAll(unit.internalTypesConstants as List)
@@ -171,8 +179,8 @@ class VHDLPackageExtension {
 			val ProcessStatement ps = new ProcessStatement
 			ps.sensitivityList.addAll(createSensitivyList(unit, uc.key))
 			ps.statements.addAll(uc.value)
-			if (ps.sensitivityList.empty && !obj.simulation){
-				val hasWait=ps.statements.exists[it instanceof WaitStatement]
+			if (ps.sensitivityList.empty && !obj.simulation) {
+				val hasWait = ps.statements.exists[it instanceof WaitStatement]
 				if (!hasWait)
 					ps.statements.add(new WaitStatement)
 			}
@@ -186,10 +194,10 @@ class VHDLPackageExtension {
 		res.add(a)
 		return res
 	}
-	
+
 	def attachComments(VhdlElement e, IHDLObject obj, boolean doc, boolean normal) {
-		val srcInfo=obj.getMeta(SourceInfo.INFO)
-		if ( srcInfo !== null ){
+		val srcInfo = obj.getMeta(SourceInfo.INFO)
+		if (srcInfo !== null) {
 			val newComments = new ArrayList<String>
 			val docComments = new ArrayList<String>
 			for (String comment : srcInfo.comments) {
@@ -241,7 +249,7 @@ class VHDLPackageExtension {
 	}
 
 	def private static addDefaultLibs(List<LibraryUnit> res, VHDLContext unit) {
-		val usedLibs=staticImports(res)
+		val usedLibs = staticImports(res)
 		for (HDLQualifiedName i : unit.imports) {
 			val String lib = i.getSegment(0)
 			if (!usedLibs.contains(lib)) {
@@ -251,19 +259,19 @@ class VHDLPackageExtension {
 			res.add(new UseClause(i.append("all").toString))
 		}
 	}
-	
+
 	def static staticImports(List<LibraryUnit> res) {
 		res.add(new LibraryClause("ieee"))
 		res.add(StdLogic1164.USE_CLAUSE)
 		res.add(NumericStd.USE_CLAUSE)
 
-		//res.add(new LibraryClause("pshdl"))
+		// res.add(new LibraryClause("pshdl"))
 		res.add(VHDLCastsLibrary.USE_CLAUSE)
 		res.add(VHDLShiftLibrary.USE_CLAUSE)
 		res.add(VHDLTypesLibrary.USE_CLAUSE)
 		val Set<String> usedLibs = new LinkedHashSet<String>
 
-		//		usedLibs.add("pshdl")
+		// usedLibs.add("pshdl")
 		usedLibs.add("ieee")
 		usedLibs.add("work")
 		return usedLibs
@@ -354,7 +362,7 @@ class VHDLPackageExtension {
 					res.elements.add(pd)
 				}
 				val VHDLContext vhdl = hvd.toVHDL(VHDLContext.DEFAULT_CTX)
-				var ConstantDeclaration first = if (vhdl.constants.empty) null else vhdl.constants.first
+				var ConstantDeclaration first = if(vhdl.constants.empty) null else vhdl.constants.first
 				if (first === null) {
 					first = vhdl.constantsPkg.first
 					if (first === null)
@@ -381,15 +389,15 @@ class VHDLPackageExtension {
 					val HDLVariableRef[] refs = hvar.getAllObjectsOf(typeof(HDLVariableRef), true)
 					for (HDLVariableRef ref : refs) {
 
-						//Check which variable declaration contains references and mark those references as the ones that should be declared in a package
+						// Check which variable declaration contains references and mark those references as the ones that should be declared in a package
 						val resolvedRef = ref.resolveVar
-						//References for types imported from other modules might not be visible in the HDL Model
+						// References for types imported from other modules might not be visible in the HDL Model
 						if (resolvedRef.present)
 							resolvedRef.get.setMeta(VHDLStatementExtension.EXPORT)
 					}
 					val String origName = hvar.name
 					val String name = VHDLUtils.getVHDLName(origName)
-					if (name!=origName)
+					if (name != origName)
 						Refactoring.renameVariable(hvar, hvar.asRef().skipLast(1).append(name), unit, ms)
 				}
 			}

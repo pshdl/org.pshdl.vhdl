@@ -70,7 +70,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	public VHDLFunctions() {
 	}
 
-	private static Collection<IVHDLCodeFunctionProvider> codeProvider = HDLCore.getAllImplementations(IVHDLCodeFunctionProvider.class);
+	private static Collection<IVHDLCodeFunctionProvider> codeProvider;
 
 	@Override
 	public Expression toVHDLExpression(HDLFunctionCall function) {
@@ -217,7 +217,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	}
 
 	public static VHDLContext toOutputStatement(HDLFunctionCall call, int pid) {
-		for (final IVHDLCodeFunctionProvider provider : codeProvider) {
+		for (final IVHDLCodeFunctionProvider provider : getCodeProvider()) {
 			final VHDLContext vhdlContext = provider.toVHDLStatement(call, pid);
 			if (vhdlContext != null)
 				return vhdlContext;
@@ -225,8 +225,15 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 		return null;
 	}
 
+	private static Collection<IVHDLCodeFunctionProvider> getCodeProvider() {
+		if (codeProvider == null) {
+			codeProvider = HDLCore.getAllImplementations(IVHDLCodeFunctionProvider.class);
+		}
+		return codeProvider;
+	}
+
 	public static Expression toOutputExpression(HDLFunctionCall call) {
-		for (final IVHDLCodeFunctionProvider provider : codeProvider) {
+		for (final IVHDLCodeFunctionProvider provider : getCodeProvider()) {
 			final Expression vhdlContext = provider.toVHDLExpression(call);
 			if (vhdlContext != null)
 				return vhdlContext;

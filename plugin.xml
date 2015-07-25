@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.pshdl.serviceProvider">
+      <ServiceClass
+            class="org.pshdl.generator.vhdl.IVHDLCodeFunctionProvider"
+            implementation="org.pshdl.generator.vhdl.VHDLFunctions">
+      </ServiceClass>
+      <ServiceClass
+            class="org.pshdl.model.utils.services.IOutputProvider"
+            implementation="org.pshdl.generator.vhdl.PStoVHDLCompiler">
+      </ServiceClass>
+      <ServiceClass
+            class="org.pshdl.model.utils.services.IHDLValidator"
+            implementation="org.pshdl.generator.vhdl.VHDLOutputValidator">
+      </ServiceClass>
+   </extension>
+
+</plugin>
