@@ -149,7 +149,7 @@ class VHDLStatementExtension {
 	}
 
 	def dispatch VHDLContext toVHDL(HDLFunctionCall obj, int pid) {
-		return VHDLFunctions.toOutputStatement(obj, pid)
+		return VHDLFunctions.toOutputStatement(obj, pid, null)
 	}
 
 	def dispatch VHDLContext toVHDL(HDLBlock obj, int pid) {
@@ -223,7 +223,7 @@ class VHDLStatementExtension {
 
 	def dispatch VHDLContext toVHDL(HDLInterfaceInstantiation hii, int pid) {
 		val VHDLContext res = new VHDLContext
-		val HDLInterface hIf = hii.resolveHIf.get
+		val HDLInterface hIf = hii.resolveHIfForced("VHDL")
 		val HDLVariable interfaceVar = hii.^var
 		val String ifName = hii.^var.name
 		val HDLQualifiedName asRef = hIf.asRef
@@ -397,9 +397,9 @@ class VHDLStatementExtension {
 				if (primitive !== null) {
 					type = VHDLCastsLibrary.getType(primitive)
 				} else {
-					val HDLType hType = obj.resolveType.get
-					if (hType instanceof HDLEnum) {
-						val HDLEnum hEnum = hType as HDLEnum
+					val resolved=obj.resolveTypeForced("VHDL")
+					if (resolved instanceof HDLEnum) {
+						val HDLEnum hEnum = resolved as HDLEnum
 						type = new EnumerationType(hEnum.name)
 						var idx = 0;
 						val resVal = ConstantEvaluate.valueOf(resetValue,

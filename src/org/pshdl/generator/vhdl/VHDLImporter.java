@@ -165,13 +165,18 @@ public class VHDLImporter {
 				for (final VhdlObjectProvider port : ports) {
 					final List<Signal> signals = port.getVhdlObjects();
 					for (final Signal signal : signals) {
-						final HDLDirection direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
-						final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
-						final Optional<HDLVariableDeclaration> var = getVariable(null, signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
-						if (var.isPresent()) {
-							vInterface = vInterface.addPorts(var.get());
-						} else {
-							comments.add("WARNING: Failed to properly import:" + VhdlOutput.toVhdlString(signal));
+						HDLDirection direction;
+						try {
+							direction = HDLDirection.valueOf(signal.getMode().getUpperCase());
+							final HDLQualifiedName qfn = pkg.append(id).append(signal.getIdentifier());
+							final Optional<HDLVariableDeclaration> var = getVariable(null, signal.getType(), direction, qfn, null, new ArrayList<HDLExpression>(), scopes);
+							if (var.isPresent()) {
+								vInterface = vInterface.addPorts(var.get());
+							} else {
+								comments.add("WARNING: Failed to properly import:" + VhdlOutput.toVhdlString(signal));
+							}
+						} catch (final Exception e) {
+							comments.add("WARNING: Failed to properly import:" + VhdlOutput.toVhdlString(signal) + " " + e.getMessage());
 						}
 					}
 				}
@@ -251,8 +256,8 @@ public class VHDLImporter {
 			}
 			final Optional<HDLVariableDeclaration> var = getVariable(defaultValue, ca.getElementType(), direction, qfn, null, dimensions, scopes);
 			if (var.isPresent())
-				return Optional.of(var.get().addAnnotations(
-						new HDLAnnotation().setName(HDLBuiltInAnnotations.VHDLType.toString()).setValue(getFullName(ca.getIdentifier(), scopes))));
+				return Optional
+						.of(var.get().addAnnotations(new HDLAnnotation().setName(HDLBuiltInAnnotations.VHDLType.toString()).setValue(getFullName(ca.getIdentifier(), scopes))));
 		}
 		if (left instanceof UnconstrainedArray) {
 			final UnconstrainedArray ca = (UnconstrainedArray) left;
@@ -260,8 +265,8 @@ public class VHDLImporter {
 			dimensions.add(HDLLiteral.get(-20));
 			final Optional<HDLVariableDeclaration> var = getVariable(defaultValue, ca.getElementType(), direction, qfn, null, dimensions, scopes);
 			if (var.isPresent())
-				return Optional.of(var.get().addAnnotations(
-						new HDLAnnotation().setName(HDLBuiltInAnnotations.VHDLType.toString()).setValue(getFullName(ca.getIdentifier(), scopes))));
+				return Optional
+						.of(var.get().addAnnotations(new HDLAnnotation().setName(HDLBuiltInAnnotations.VHDLType.toString()).setValue(getFullName(ca.getIdentifier(), scopes))));
 		}
 		if (left instanceof EnumerationType) {
 			System.out.println("VHDLImporter.getVariable()" + ((EnumerationType) left).getIdentifier());

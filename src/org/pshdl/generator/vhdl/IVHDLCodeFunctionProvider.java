@@ -27,11 +27,12 @@
 package org.pshdl.generator.vhdl;
 
 import org.pshdl.model.HDLFunctionCall;
+import org.pshdl.model.evaluation.HDLEvaluationContext;
 
 import de.upb.hni.vmagic.expression.Expression;
 
 public interface IVHDLCodeFunctionProvider {
-	public VHDLContext toVHDLStatement(HDLFunctionCall call, int i);
+	public VHDLContext toVHDLStatement(HDLFunctionCall call, int i, HDLEvaluationContext context);
 
 	public Expression toVHDLExpression(HDLFunctionCall call);
 }

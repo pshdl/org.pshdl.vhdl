@@ -43,6 +43,7 @@ import org.pshdl.model.HDLRange;
 import org.pshdl.model.HDLVariableRef;
 import org.pshdl.model.IHDLObject;
 import org.pshdl.model.evaluation.ConstantEvaluate;
+import org.pshdl.model.evaluation.HDLEvaluationContext;
 import org.pshdl.model.types.builtIn.HDLBuiltInFunctions.BuiltInFunctions;
 import org.pshdl.model.types.builtIn.TestbenchFunctions.SimulationFunctions;
 import org.pshdl.model.utils.HDLCore;
@@ -118,7 +119,7 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	}
 
 	@Override
-	public VHDLContext toVHDLStatement(HDLFunctionCall function, int pid) {
+	public VHDLContext toVHDLStatement(HDLFunctionCall function, int pid, HDLEvaluationContext context) {
 		final HDLQualifiedName refName = function.getFunctionRefName();
 		final Optional<SimulationFunctions> e = Enums.getIfPresent(SimulationFunctions.class, refName.getLastSegment());
 		if (e.isPresent()) {
@@ -135,10 +136,8 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				final VHDLContext res = new VHDLContext();
 				res.setNoSensitivity(pid);
 				final HDLEnumRef ref = (HDLEnumRef) function.getParams().get(1);
-				final Optional<BigInteger> hdlExpression = ConstantEvaluate.valueOf(function.getParams().get(0));
-				if (!hdlExpression.isPresent())
-					throw new IllegalArgumentException(function.getParams().get(0) + " is not constant");
-				final Expression hdlLiteral = VHDLExpressionExtension.vhdlOf(HDLLiteral.get(hdlExpression.get()));
+				final BigInteger hdlExpression = ConstantEvaluate.valueOfForced(function.getParams().get(0), context, "VHDL");
+				final Expression hdlLiteral = VHDLExpressionExtension.vhdlOf(HDLLiteral.get(hdlExpression));
 				final WaitStatement ws = new WaitStatement(new PhysicalLiteral(VhdlOutput.toVhdlString(hdlLiteral), ref.getVarRefName().getLastSegment()));
 				res.addUnclockedStatement(pid, ws, function);
 				return res;
@@ -216,9 +215,9 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 		return null;
 	}
 
-	public static VHDLContext toOutputStatement(HDLFunctionCall call, int pid) {
+	public static VHDLContext toOutputStatement(HDLFunctionCall call, int pid, HDLEvaluationContext context) {
 		for (final IVHDLCodeFunctionProvider provider : getCodeProvider()) {
-			final VHDLContext vhdlContext = provider.toVHDLStatement(call, pid);
+			final VHDLContext vhdlContext = provider.toVHDLStatement(call, pid, context);
 			if (vhdlContext != null)
 				return vhdlContext;
 		}

@@ -210,7 +210,7 @@ class VHDLExpressionExtension {
 				if (obj.target.classType === HDLClass.HDLLiteral) {
 					return VHDLCastsLibrary.handleLiteral(obj.container, obj.target as HDLLiteral, targetType, tWidth)
 				}
-				val HDLPrimitive t = TypeExtension.typeOf(obj.target).get as HDLPrimitive
+				val HDLPrimitive t = TypeExtension.typeOfForced(obj.target, "VHDL") as HDLPrimitive
 				var Expression exp = obj.target.toVHDL
 				var HDLPrimitiveType actualType = t.type
 				if (tWidth !== null) {
@@ -270,7 +270,7 @@ class VHDLExpressionExtension {
 	}
 
 	def dispatch Expression toVHDL(HDLShiftOp obj) {
-		val HDLPrimitive type = TypeExtension.typeOf(obj.left).get as HDLPrimitive
+		val HDLPrimitive type = TypeExtension.typeOfForced(obj.left, "VHDL") as HDLPrimitive
 		return VHDLShiftLibrary.shift(obj.left.toVHDL, obj.right.toVHDL, type.type, obj.type)
 	}
 
