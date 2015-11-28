@@ -120,12 +120,10 @@ class VHDLPackageExtension {
 		val HDLVariableRef[] vRefs = obj.getAllObjectsOf(typeof(HDLVariableRef), true)
 		for (HDLVariableRef variableRef : vRefs) {
 			if (variableRef.classType != HDLClass.HDLInterfaceRef) {
-				val variable = variableRef.resolveVar
-				if (!variable.present)
-					throw new IllegalArgumentException("Can not resolve:" + variableRef)
-				val HDLUnit enumContainer = variable.get.getContainer(typeof(HDLUnit))
+				val variable = variableRef.resolveVarForced("VHDL")
+				val HDLUnit enumContainer = variable.getContainer(typeof(HDLUnit))
 				if (enumContainer === null || !enumContainer.equals(variableRef.getContainer(typeof(HDLUnit)))) {
-					val HDLQualifiedName type = fullNameOf(variable.get).skipLast(1)
+					val HDLQualifiedName type = fullNameOf(variable).skipLast(1)
 					if (type.length > 0 && !type.getSegment(0).equals("pshdl"))
 						unit.addImport(HDLQualifiedName.create("work", getPackageName(type), "all"))
 				}

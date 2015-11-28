@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.antlr.runtime.RecognitionException;
@@ -209,7 +210,10 @@ public class VHDLImporter {
 		if (left instanceof IndexSubtypeIndication) {
 			final IndexSubtypeIndication isi = (IndexSubtypeIndication) left;
 			final Range dr = (Range) isi.getRanges().get(0);
-			return getVariable(defaultValue, isi.getBaseType(), direction, qfn, convertRange(dr), dimensions, scopes);
+			final Optional<? extends HDLExpression> convertRange = convertRange(dr);
+			if (!convertRange.isPresent())
+				return Optional.absent();
+			return getVariable(defaultValue, isi.getBaseType(), direction, qfn, convertRange.get(), dimensions, scopes);
 		}
 		if (StdLogic1164.STD_LOGIC.equals(left) || StdLogic1164.STD_ULOGIC.equals(left) || Standard.BIT.equals(left))
 			return createVar(defaultValue, direction, HDLPrimitiveType.BIT, qfn, width, dimensions);
@@ -252,7 +256,10 @@ public class VHDLImporter {
 			final List<DiscreteRange> ranges = ca.getIndexRanges();
 			scopes.workScope.getScope().resolve(ca.getIdentifier());
 			for (final DiscreteRange discreteRange : ranges) {
-				dimensions.add(convertRange((Range) discreteRange));
+				final Optional<? extends HDLExpression> convertRange = convertRange((Range) discreteRange);
+				if (!convertRange.isPresent())
+					return Optional.absent();
+				dimensions.add(convertRange.get());
 			}
 			final Optional<HDLVariableDeclaration> var = getVariable(defaultValue, ca.getElementType(), direction, qfn, null, dimensions, scopes);
 			if (var.isPresent())
@@ -295,16 +302,20 @@ public class VHDLImporter {
 		return null;
 	}
 
-	private static HDLExpression convertRange(Range dr) {
-		final HDLExpression from = getExpression(dr.getFrom(), false);
-		final HDLExpression to = getExpression(dr.getTo(), false);
+	private static Optional<? extends HDLExpression> convertRange(Range dr) {
+		final Optional<? extends HDLExpression> from = getExpression(dr.getFrom(), false);
+		if (!from.isPresent())
+			return Optional.absent();
+		final Optional<? extends HDLExpression> to = getExpression(dr.getTo(), false);
+		if (!to.isPresent())
+			return Optional.absent();
 		HDLExpression width;
 		if (dr.getDirection() == Direction.DOWNTO) {
-			width = subThenPlus1(from, to);
+			width = subThenPlus1(from.get(), to.get());
 		} else {
-			width = subThenPlus1(to, from);
+			width = subThenPlus1(to.get(), from.get());
 		}
-		return width;
+		return Optional.of(width);
 	}
 
 	private static Optional<HDLVariableDeclaration> createVar(Expression defaultValue, HDLDirection direction, HDLPrimitiveType pt, HDLQualifiedName name, HDLExpression width,
@@ -312,7 +323,11 @@ public class VHDLImporter {
 		final HDLPrimitive p = new HDLPrimitive().setType(pt).setWidth(width);
 		HDLExpression hDefault = null;
 		if (defaultValue != null) {
-			hDefault = getExpression(defaultValue, pt == HDLPrimitiveType.STRING);
+			final Optional<? extends HDLExpression> optional = getExpression(defaultValue, pt == HDLPrimitiveType.STRING);
+			if (optional.isPresent()) {
+				hDefault = optional.get();
+				hDefault.addMeta(SourceInfo.COMMENT, Arrays.asList("Failed to convert default value of:" + VhdlOutput.toVhdlString(defaultValue)));
+			}
 		}
 		return Optional.of(new HDLVariableDeclaration().setDirection(direction).setType(p)
 				.addVariables(new HDLVariable().setName(name.getLastSegment()).setDimensions(dimensions).setDefaultValue(hDefault)));
@@ -328,41 +343,45 @@ public class VHDLImporter {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	private static HDLExpression getExpression(Expression from, boolean canBeString) {
+	private static Optional<? extends HDLExpression> getExpression(Expression from, boolean canBeString) {
 		// TODO Support references to Generics
 		if ((from instanceof HexLiteral) || (from instanceof BinaryLiteral) || (from instanceof CharacterLiteral)) {
 			final String hex = from.toString();
 			final String hexValue = hex.substring(2, hex.length() - 1);
 			if (hexValue.length() != 0)
-				return HDLLiteral.get(new BigInteger(hexValue, 16));
-			return HDLLiteral.get(0);
+				return Optional.of(HDLLiteral.get(new BigInteger(hexValue, 16)));
+			return Optional.of(HDLLiteral.get(0));
 		}
 		if (from instanceof DecimalLiteral) {
 			final DecimalLiteral dl = (DecimalLiteral) from;
-			return HDLLiteral.get(new BigInteger(dl.getValue()));
+			return Optional.of(HDLLiteral.get(new BigInteger(dl.getValue())));
 		}
 		if (from instanceof StringLiteral) {
 			final StringLiteral sl = (StringLiteral) from;
-			return new HDLLiteral().setStr(canBeString).setVal(sl.getString());
+			return Optional.of(new HDLLiteral().setStr(canBeString).setVal(sl.getString()));
 		}
 		if (from instanceof BinaryExpression) {
 			final BinaryExpression bin = (BinaryExpression) from;
-			final HDLExpression left = getExpression(bin.getLeft(), false);
-			final HDLExpression right = getExpression(bin.getRight(), false);
+			final Optional<? extends HDLExpression> left = getExpression(bin.getLeft(), false);
+			if (!left.isPresent())
+				return Optional.absent();
+			final Optional<? extends HDLExpression> right = getExpression(bin.getRight(), false);
+			if (right.isPresent())
+				return Optional.absent();
 			final ExpressionKind kind = bin.getExpressionKind();
 			switch (kind) {
 			case PLUS:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.PLUS).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.PLUS).setRight(right.get()));
 			case MINUS:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MINUS).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.MINUS).setRight(right.get()));
 			case MULTIPLY:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MUL).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.MUL).setRight(right.get()));
 			case DIVIDE:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.DIV).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.DIV).setRight(right.get()));
 			case MOD:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.MOD).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.MOD).setRight(right.get()));
 			case POW:
-				return new HDLArithOp().setLeft(left).setType(HDLArithOpType.POW).setRight(right);
+				return Optional.of(new HDLArithOp().setLeft(left.get()).setType(HDLArithOpType.POW).setRight(right.get()));
 			}
 		}
 		if (from instanceof Constant) {
@@ -370,18 +389,18 @@ public class VHDLImporter {
 			return getExpression(c.getDefaultValue(), true);
 		}
 		if (Standard.BOOLEAN_FALSE.equals(from))
-			return new HDLLiteral().setVal("false");
+			return Optional.of(HDLLiteral.getFalse());
 		if (Standard.BOOLEAN_TRUE.equals(from))
-			return new HDLLiteral().setVal("true");
+			return Optional.of(HDLLiteral.getTrue());
 		if (from instanceof Parentheses) {
 			final Parentheses p = (Parentheses) from;
 			return getExpression(p.getExpression(), canBeString);
 		}
 		if (from instanceof Signal) {
 			final Signal signal = (Signal) from;
-			return new HDLUnresolvedFragment().setIsStatement(false).setFrag(signal.getIdentifier());
+			return Optional.of(new HDLUnresolvedFragment().setIsStatement(false).setFrag(signal.getIdentifier()));
 		}
-		throw new IllegalArgumentException("Expression not yet supported:" + from);
+		return Optional.absent();
 	}
 
 	public static void main(String[] args) throws IOException {

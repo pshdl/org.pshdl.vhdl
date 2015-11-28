@@ -43,6 +43,8 @@ import org.pshdl.generator.vhdl.VHDLOutputValidator.VHDLErrorCode;
 import org.pshdl.model.HDLClass;
 import org.pshdl.model.HDLInterface;
 import org.pshdl.model.HDLPackage;
+import org.pshdl.model.HDLUnresolvedFragment;
+import org.pshdl.model.utils.HDLCodeGenerationException;
 import org.pshdl.model.utils.HDLLibrary;
 import org.pshdl.model.utils.HDLProblemException;
 import org.pshdl.model.utils.HDLQualifiedName;
@@ -85,8 +87,9 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	@Override
 	public CompileResult doCompile(final String src, final HDLPackage parse) {
 		final HDLPackage transform = Insulin.transform(parse, src);
-		if (transform.getAllObjectsOf(HDLClass.HDLUnresolvedFragment.clazz, true).length != 0)
-			throw new IllegalArgumentException("Introduced unresolved fragments!");
+		final HDLUnresolvedFragment[] allObjectsOf = (HDLUnresolvedFragment[]) transform.getAllObjectsOf(HDLClass.HDLUnresolvedFragment.clazz, true);
+		if (allObjectsOf.length != 0)
+			throw new HDLCodeGenerationException(allObjectsOf[0], "Some elements failed to resolve in the preparation", "VHDL");
 		final String vhdlCode = VhdlOutput.toVhdlString(VHDLPackageExtension.INST.toVHDL(transform));
 		return createResult(src, vhdlCode, getHookName(), false);
 	}
