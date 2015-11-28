@@ -57,13 +57,11 @@ import de.upb.hni.vmagic.type.ConstrainedArray
 import de.upb.hni.vmagic.type.EnumerationType
 import de.upb.hni.vmagic.type.SubtypeIndication
 import de.upb.hni.vmagic.type.UnresolvedType
-import de.upb.hni.vmagic.util.Comments
 import java.math.BigInteger
 import java.util.ArrayList
 import java.util.Collection
 import java.util.Collections
 import java.util.EnumSet
-import java.util.HashSet
 import java.util.LinkedHashMap
 import java.util.LinkedHashSet
 import java.util.LinkedList
@@ -101,7 +99,6 @@ import org.pshdl.model.HDLResolvedRef
 import org.pshdl.model.HDLStatement
 import org.pshdl.model.HDLSwitchCaseStatement
 import org.pshdl.model.HDLSwitchStatement
-import org.pshdl.model.HDLType
 import org.pshdl.model.HDLUnresolvedFragment
 import org.pshdl.model.HDLVariable
 import org.pshdl.model.HDLVariableDeclaration
@@ -114,13 +111,12 @@ import org.pshdl.model.extensions.FullNameExtension
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.parser.SourceInfo
 import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
+import org.pshdl.model.utils.HDLCodeGenerationException
 import org.pshdl.model.utils.HDLQualifiedName
 import org.pshdl.model.utils.HDLQuery
 import org.pshdl.model.utils.Insulin
 
-import static org.pshdl.model.HDLVariableDeclaration.HDLDirection.*
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
-import org.pshdl.model.utils.HDLCodeGenerationException
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension

@@ -27,6 +27,7 @@
 package org.pshdl.generator.vhdl
 
 import de.upb.hni.vmagic.AssociationElement
+import de.upb.hni.vmagic.VhdlElement
 import de.upb.hni.vmagic.VhdlFile
 import de.upb.hni.vmagic.builtin.NumericStd
 import de.upb.hni.vmagic.builtin.StdLogic1164
@@ -41,16 +42,22 @@ import de.upb.hni.vmagic.libraryunit.LibraryUnit
 import de.upb.hni.vmagic.libraryunit.PackageDeclaration
 import de.upb.hni.vmagic.libraryunit.UseClause
 import de.upb.hni.vmagic.literal.EnumerationLiteral
+import de.upb.hni.vmagic.object.Constant
+import de.upb.hni.vmagic.object.ConstantGroup
 import de.upb.hni.vmagic.object.Signal
+import de.upb.hni.vmagic.object.SignalGroup
 import de.upb.hni.vmagic.statement.IfStatement
 import de.upb.hni.vmagic.statement.IfStatement.ElsifPart
 import de.upb.hni.vmagic.statement.SequentialStatement
+import de.upb.hni.vmagic.statement.WaitStatement
 import de.upb.hni.vmagic.type.Type
 import de.upb.hni.vmagic.type.UnresolvedType
+import de.upb.hni.vmagic.util.Comments
+import java.util.ArrayList
 import java.util.Collection
 import java.util.Collections
 import java.util.EnumSet
-import java.util.HashSet
+import java.util.LinkedHashSet
 import java.util.LinkedList
 import java.util.List
 import java.util.Map
@@ -59,7 +66,6 @@ import java.util.TreeSet
 import org.pshdl.generator.vhdl.libraries.VHDLCastsLibrary
 import org.pshdl.generator.vhdl.libraries.VHDLShiftLibrary
 import org.pshdl.generator.vhdl.libraries.VHDLTypesLibrary
-import org.pshdl.model.HDLObject.GenericMeta
 import org.pshdl.model.HDLAssignment
 import org.pshdl.model.HDLClass
 import org.pshdl.model.HDLDeclaration
@@ -77,21 +83,12 @@ import org.pshdl.model.HDLVariableDeclaration
 import org.pshdl.model.HDLVariableDeclaration.HDLDirection
 import org.pshdl.model.HDLVariableRef
 import org.pshdl.model.IHDLObject
+import org.pshdl.model.parser.SourceInfo
 import org.pshdl.model.utils.HDLQualifiedName
 import org.pshdl.model.utils.ModificationSet
 import org.pshdl.model.utils.Refactoring
 
 import static org.pshdl.model.extensions.FullNameExtension.*
-import de.upb.hni.vmagic.statement.WaitStatement
-import org.pshdl.model.HDLExport
-import java.util.LinkedHashSet
-import de.upb.hni.vmagic.util.Comments
-import de.upb.hni.vmagic.object.SignalGroup
-import de.upb.hni.vmagic.object.Constant
-import de.upb.hni.vmagic.object.ConstantGroup
-import org.pshdl.model.parser.SourceInfo
-import java.util.ArrayList
-import de.upb.hni.vmagic.VhdlElement
 
 class VHDLPackageExtension {
 

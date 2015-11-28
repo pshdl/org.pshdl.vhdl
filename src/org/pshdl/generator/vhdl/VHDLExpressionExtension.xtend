@@ -93,12 +93,6 @@ import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.types.builtIn.HDLPrimitives
 
-import static org.pshdl.model.HDLArithOp.HDLArithOpType.*
-import static org.pshdl.model.HDLBitOp.HDLBitOpType.*
-import static org.pshdl.model.HDLEqualityOp.HDLEqualityOpType.*
-import static org.pshdl.model.HDLLiteral.HDLLiteralPresentation.*
-import static org.pshdl.model.HDLManip.HDLManipType.*
-
 class VHDLExpressionExtension {
 
 	public static VHDLExpressionExtension INST = new VHDLExpressionExtension
