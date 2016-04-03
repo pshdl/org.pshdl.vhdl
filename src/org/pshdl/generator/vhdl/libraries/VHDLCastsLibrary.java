@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.pshdl.generator.vhdl.VHDLExpressionExtension;
 import org.pshdl.model.HDLArithOp;
-import org.pshdl.model.HDLArithOp.HDLArithOpType;
 import org.pshdl.model.HDLClass;
 import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLLiteral;
@@ -142,7 +141,7 @@ public class VHDLCastsLibrary {
 		final HDLExpression width = left.getWidth();
 		HDLRange range = null;
 		if (width != null) {
-			range = new HDLRange().setFrom(new HDLArithOp().setLeft(width).setType(HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))).setTo(HDLLiteral.get(0));
+			range = new HDLRange().setFrom(HDLArithOp.subtract(width, 1)).setTo(HDLLiteral.get(0));
 			range = range.copyDeepFrozen(left);
 		}
 		switch (left.getType()) {

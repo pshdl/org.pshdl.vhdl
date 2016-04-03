@@ -117,6 +117,12 @@ import org.pshdl.model.utils.HDLQuery
 import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
+import org.pshdl.model.HDLUnit
+import de.upb.hni.vmagic.type.RangeSubtypeIndication
+import org.pshdl.model.HDLArithOp.HDLArithOpType
+import de.upb.hni.vmagic.Range.Direction
+import de.upb.hni.vmagic.type.UnconstrainedArray
+import de.upb.hni.vmagic.type.IndexSubtypeIndication
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -137,7 +143,10 @@ class VHDLStatementExtension {
 	}
 
 	def dispatch VHDLContext toVHDL(HDLExport obj, int pid) {
-		return new VHDLContext
+		var res= new VHDLContext
+		var hVar=obj.toInterfaceRef.get.resolveVarForced("VHDL")
+		res.merge(hVar.getContainer(HDLVariableDeclaration).toVHDL(pid), false)
+		return res
 	}
 
 	def dispatch VHDLContext toVHDL(HDLDirectGeneration obj, int pid) {
@@ -223,7 +232,7 @@ class VHDLStatementExtension {
 		val HDLVariable interfaceVar = hii.^var
 		val String ifName = hii.^var.name
 		val HDLQualifiedName asRef = hIf.asRef
-		val HDLInterfaceDeclaration hid = hIf.getContainer(typeof(HDLInterfaceDeclaration))
+		val HDLInterfaceDeclaration hid = hIf.getContainer(HDLInterfaceDeclaration)
 		var List<AssociationElement> portMap
 		var List<AssociationElement> genericMap
 		var ConcurrentStatement instantiation
@@ -264,9 +273,12 @@ class VHDLStatementExtension {
 			genericMap = inst.genericMap
 			instantiation = inst
 		}
+		var unit=hii.getContainer(HDLUnit)
+		var exportStmnts=unit.getAllObjectsOf(HDLExport, true)
+		var exportedSignals=exportStmnts.filter[it.varRefName!==null].map[e|e.varRefName.lastSegment].toSet
 		for (HDLVariableDeclaration hvd : ports) {
 			if (inAndOut.contains(hvd.direction)) {
-				generatePortMap(hvd, ifName, interfaceVar, asRef, res, hii, pid, portMap)
+				generatePortMap(hvd, ifName, interfaceVar, asRef, res, hii, pid, portMap, exportedSignals)
 			} else {
 
 				// Parameter get a special treatment because they have been renamed by HDLInterfaceInstantiation resolveIF
@@ -288,8 +300,7 @@ class VHDLStatementExtension {
 		else {
 			var i = 0;
 			for (HDLExpression exp : interfaceVar.dimensions) {
-				val HDLExpression to = new HDLArithOp().setLeft(interfaceVar.dimensions.get(i)).setType(
-					HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
+				val HDLExpression to = HDLArithOp.subtract(interfaceVar.dimensions.get(i), 1)
 				val HDLRange range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(to).setContainer(hii)
 				val ForGenerateStatement newFor = new ForGenerateStatement("generate_" + ifName, i.asIndex,
 					range.toVHDL(Range.Direction.TO))
@@ -308,12 +319,12 @@ class VHDLStatementExtension {
 	}
 
 	def generatePortMap(HDLVariableDeclaration hvd, String ifName, HDLVariable interfaceVar, HDLQualifiedName asRef,
-		VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap) {
+		VHDLContext res, HDLInterfaceInstantiation obj, int pid, List<AssociationElement> portMap, Set<String> exportedSignals) {
 		val Collection<HDLAnnotation> typeAnno = HDLQuery.select(typeof(HDLAnnotation)).from(hvd).where(
 			HDLAnnotation.fName).isEqualTo(VHDLType.toString).all
 		for (HDLVariable hvar : hvd.variables) {
 			var HDLVariable sigVar
-			if (hvar.getAnnotation(HDLBuiltInAnnotations.exportedSignal) !== null) {
+			if (exportedSignals.contains(hvar.name)) {
 				sigVar = new HDLVariable().setName(hvar.name)
 				var HDLVariableRef ref = sigVar.asHDLRef
 				portMap.add(new AssociationElement(VHDLUtils.getVHDLName(hvar.name), ref.toVHDL))
@@ -386,9 +397,23 @@ class VHDLStatementExtension {
 			}
 			var Expression otherValue = Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
 			if (typeAnno !== null) {
-				val HDLQualifiedName value = new HDLQualifiedName(typeAnno.value)
-				res.addImport(value)
-				type = new EnumerationType(value.lastSegment)
+				val typeValue = typeAnno.value
+				if (typeValue.endsWith("<>")){
+					val HDLQualifiedName value = new HDLQualifiedName(typeValue.substring(0, typeValue.length-2))
+					res.addImport(value)
+					type = new EnumerationType(value.lastSegment)
+					var HDLRange range = null;
+					val width=primitive.width
+					if (width != null) {
+						range = new HDLRange().setFrom(HDLArithOp.subtract(width, 1)).setTo(HDLLiteral.get(0));
+						range = range.copyDeepFrozen(obj);
+						type = new IndexSubtypeIndication(type, range.toVHDL(Direction.DOWNTO))
+					}
+				} else  {
+					val HDLQualifiedName value = new HDLQualifiedName(typeValue)
+					res.addImport(value)
+					type = new EnumerationType(value.lastSegment)
+				}
 			} else {
 				if (primitive !== null) {
 					type = VHDLCastsLibrary.getType(primitive)
@@ -424,8 +449,7 @@ class VHDLStatementExtension {
 			if (hvar.dimensions.size != 0) {
 				val ranges = new LinkedList<DiscreteRange>
 				for (HDLExpression arrayWidth : hvar.dimensions) {
-					val HDLExpression newWidth = new HDLArithOp().setLeft(arrayWidth).setType(
-						HDLArithOp.HDLArithOpType.MINUS).setRight(HDLLiteral.get(1))
+					val HDLExpression newWidth = HDLArithOp.subtract(arrayWidth,1)
 					val Range range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(newWidth).copyDeepFrozen(obj).
 						toVHDL(Range.Direction.TO)
 					ranges.add(range)

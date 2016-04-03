@@ -236,13 +236,14 @@ public class VHDLImporter {
 				final RangeProvider rangeProvider = it.getRange();
 				if (rangeProvider instanceof Range) {
 					final Range range = (Range) rangeProvider;
-					final String from = getExpression(range.getFrom(), false).toString();
-					final String to = getExpression(range.getTo(), false).toString();
-					if (range.getDirection() == Direction.DOWNTO) {
-						subVar = subVar.addAnnotations(HDLBuiltInAnnotations.range.create(to + ";" + from));
-					} else {
-						subVar = subVar.addAnnotations(HDLBuiltInAnnotations.range.create(from + ";" + to));
-					}
+					final Optional<? extends HDLExpression> from = getExpression(range.getFrom(), false);
+					final Optional<? extends HDLExpression> to = getExpression(range.getTo(), false);
+					if (from.isPresent() && to.isPresent())
+						if (range.getDirection() == Direction.DOWNTO) {
+							subVar = subVar.addAnnotations(HDLBuiltInAnnotations.range.create(to.get() + ";" + from.get()));
+						} else {
+							subVar = subVar.addAnnotations(HDLBuiltInAnnotations.range.create(from.get() + ";" + to.get()));
+						}
 				}
 				return Optional.of(subVar);
 			}
@@ -322,20 +323,21 @@ public class VHDLImporter {
 			ArrayList<HDLExpression> dimensions) {
 		final HDLPrimitive p = new HDLPrimitive().setType(pt).setWidth(width);
 		HDLExpression hDefault = null;
+		final HDLVariable variable = new HDLVariable().setName(name.getLastSegment()).setDimensions(dimensions);
 		if (defaultValue != null) {
 			final Optional<? extends HDLExpression> optional = getExpression(defaultValue, pt == HDLPrimitiveType.STRING);
 			if (optional.isPresent()) {
 				hDefault = optional.get();
-				hDefault.addMeta(SourceInfo.COMMENT, Arrays.asList("Failed to convert default value of:" + VhdlOutput.toVhdlString(defaultValue)));
+			} else {
+				variable.addMeta(SourceInfo.COMMENT, Arrays.asList("Failed to convert default value of:" + VhdlOutput.toVhdlString(defaultValue)));
 			}
 		}
-		return Optional.of(new HDLVariableDeclaration().setDirection(direction).setType(p)
-				.addVariables(new HDLVariable().setName(name.getLastSegment()).setDimensions(dimensions).setDefaultValue(hDefault)));
+		return Optional.of(new HDLVariableDeclaration().setDirection(direction).setType(p).addVariables(variable.setDefaultValue(hDefault)));
 	}
 
 	private static HDLExpression subThenPlus1(HDLExpression from, HDLExpression to) {
-		final HDLArithOp left = new HDLArithOp().setLeft(from).setType(HDLArithOpType.MINUS).setRight(to);
-		final HDLArithOp op = new HDLArithOp().setLeft(left).setType(HDLArithOpType.PLUS).setRight(HDLLiteral.get(1)).copyDeepFrozen(null);
+		final HDLArithOp left = HDLArithOp.subtract(from, to);
+		final HDLArithOp op = HDLArithOp.add(left, 1).copyDeepFrozen(null);
 		final Optional<BigInteger> constant = ConstantEvaluate.valueOf(op);
 		if (constant.isPresent())
 			return HDLLiteral.get(constant.get());
@@ -366,7 +368,7 @@ public class VHDLImporter {
 			if (!left.isPresent())
 				return Optional.absent();
 			final Optional<? extends HDLExpression> right = getExpression(bin.getRight(), false);
-			if (right.isPresent())
+			if (!right.isPresent())
 				return Optional.absent();
 			final ExpressionKind kind = bin.getExpressionKind();
 			switch (kind) {
