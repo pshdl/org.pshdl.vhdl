@@ -38,6 +38,7 @@ import de.upb.hni.vmagic.concurrent.ConcurrentStatement;
 import de.upb.hni.vmagic.concurrent.ProcessStatement;
 import de.upb.hni.vmagic.declaration.BlockDeclarativeItem;
 import de.upb.hni.vmagic.declaration.ConstantDeclaration;
+import de.upb.hni.vmagic.declaration.DeclarativeItem;
 import de.upb.hni.vmagic.declaration.DeclarativeItemMarker;
 import de.upb.hni.vmagic.declaration.EntityDeclarativeItem;
 import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
@@ -132,22 +133,13 @@ public class VHDLPackageExtension {
         final Optional<HDLEnum> resolveHEnum = hdlEnumRef.resolveHEnum();
         HDLEnum _get = resolveHEnum.get();
         final HDLUnit enumContainer = _get.<HDLUnit>getContainer(HDLUnit.class);
-        boolean _or = false;
-        if ((enumContainer == null)) {
-          _or = true;
-        } else {
-          HDLUnit _container = hdlEnumRef.<HDLUnit>getContainer(HDLUnit.class);
-          boolean _equals = enumContainer.equals(_container);
-          boolean _not = (!_equals);
-          _or = _not;
-        }
-        if (_or) {
+        if (((enumContainer == null) || (!enumContainer.equals(hdlEnumRef.<HDLUnit>getContainer(HDLUnit.class))))) {
           HDLEnum _get_1 = resolveHEnum.get();
           final HDLQualifiedName type = FullNameExtension.fullNameOf(_get_1);
           String _segment = type.getSegment(0);
-          boolean _equals_1 = _segment.equals("pshdl");
-          boolean _not_1 = (!_equals_1);
-          if (_not_1) {
+          boolean _equals = _segment.equals("pshdl");
+          boolean _not = (!_equals);
+          if (_not) {
             String _packageName = this.getPackageName(type);
             HDLQualifiedName _create = HDLQualifiedName.create("work", _packageName, "all");
             unit.addImport(_create);
@@ -162,28 +154,10 @@ public class VHDLPackageExtension {
       if (_notEquals) {
         final HDLVariable variable = variableRef.resolveVarForced("VHDL");
         final HDLUnit enumContainer = variable.<HDLUnit>getContainer(HDLUnit.class);
-        boolean _or = false;
-        if ((enumContainer == null)) {
-          _or = true;
-        } else {
-          HDLUnit _container = variableRef.<HDLUnit>getContainer(HDLUnit.class);
-          boolean _equals = enumContainer.equals(_container);
-          boolean _not = (!_equals);
-          _or = _not;
-        }
-        if (_or) {
+        if (((enumContainer == null) || (!enumContainer.equals(variableRef.<HDLUnit>getContainer(HDLUnit.class))))) {
           HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(variable);
           final HDLQualifiedName type = _fullNameOf.skipLast(1);
-          boolean _and = false;
-          if (!(type.length > 0)) {
-            _and = false;
-          } else {
-            String _segment = type.getSegment(0);
-            boolean _equals_1 = _segment.equals("pshdl");
-            boolean _not_1 = (!_equals_1);
-            _and = _not_1;
-          }
-          if (_and) {
+          if (((type.length > 0) && (!type.getSegment(0).equals("pshdl")))) {
             String _packageName = this.getPackageName(type);
             HDLQualifiedName _create = HDLQualifiedName.create("work", _packageName, "all");
             unit.addImport(_create);
@@ -256,7 +230,10 @@ public class VHDLPackageExtension {
     this.attachComments(e, obj, true, false);
     this.attachComments(a, obj, false, true);
     List<BlockDeclarativeItem> _declarations_3 = a.getDeclarations();
-    _declarations_3.addAll(((List) unit.internals));
+    Collection<DeclarativeItem> _values = unit.components.values();
+    _declarations_3.addAll(((Collection) _values));
+    List<BlockDeclarativeItem> _declarations_4 = a.getDeclarations();
+    _declarations_4.addAll(((List) unit.internals));
     List<ConcurrentStatement> _statements_1 = a.getStatements();
     _statements_1.addAll(unit.concurrentStatements);
     Set<Map.Entry<Integer, LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
@@ -270,17 +247,7 @@ public class VHDLPackageExtension {
         List<SequentialStatement> _statements_2 = ps.getStatements();
         LinkedList<SequentialStatement> _value = uc.getValue();
         _statements_2.addAll(_value);
-        boolean _and_1 = false;
-        List<Signal> _sensitivityList_1 = ps.getSensitivityList();
-        boolean _isEmpty = _sensitivityList_1.isEmpty();
-        if (!_isEmpty) {
-          _and_1 = false;
-        } else {
-          Boolean _simulation = obj.getSimulation();
-          boolean _not_2 = (!(_simulation).booleanValue());
-          _and_1 = _not_2;
-        }
-        if (_and_1) {
+        if ((ps.getSensitivityList().isEmpty() && (!(obj.getSimulation()).booleanValue()))) {
           List<SequentialStatement> _statements_3 = ps.getStatements();
           final Function1<SequentialStatement, Boolean> _function = new Function1<SequentialStatement, Boolean>() {
             @Override
@@ -362,13 +329,7 @@ public class VHDLPackageExtension {
           }
         }
       }
-      boolean _and = false;
-      if (!doc) {
-        _and = false;
-      } else {
-        _and = normal;
-      }
-      if (_and) {
+      if ((doc && normal)) {
         Iterable<String> _plus = Iterables.<String>concat(newComments, docComments);
         Comments.setComments(e, ((String[])Conversions.unwrapArray(_plus, String.class)));
       } else {

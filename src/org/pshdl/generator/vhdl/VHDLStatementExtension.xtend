@@ -459,6 +459,10 @@ class VHDLStatementExtension {
 				res.addTypeDeclaration(arrType, external)
 				varType = arrType
 			}
+			var name=hvar.name
+			if (hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME)!=null){
+				name=hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME)
+			}
 			val Signal s = new Signal(hvar.name, varType)
 			if (resetValue !== null && !noExplicitResetVar && obj.register !== null) {
 				var boolean synchedArray = false
@@ -477,7 +481,7 @@ class VHDLStatementExtension {
 					res.addResetValue(obj.register, vhdl.statement)
 				}
 			}
-			val Constant constant = new Constant(hvar.name, varType)
+			val Constant constant = new Constant(name, varType)
 			if (hvar.defaultValue !== null)
 				constant.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
 			if (noExplicitResetVar) {

@@ -92,6 +92,7 @@ import org.pshdl.model.HDLVariableRef
 import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.types.builtIn.HDLPrimitives
+import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
 
 class VHDLExpressionExtension {
 
@@ -117,14 +118,13 @@ class VHDLExpressionExtension {
 		return VHDLUtils.mapName(obj)
 	}
 
-	def dispatch Name toVHDL(HDLVariableRef obj) {
-		var Name result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
-		result = getRef(result, obj)
-		return result
+	def dispatch Expression toVHDL(HDLVariableRef obj) {
+		var result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
+		return getRef(result, obj)
 	}
 
-	def private Name getRef(Name name, HDLVariableRef ref) {
-		var result = name
+	def private Expression getRef(Name name, HDLVariableRef ref) {
+		var Name result = name
 		if (ref.array.size != 0) {
 			val List<Expression> indices = new LinkedList
 			for (HDLExpression arr : ref.array) {
@@ -163,7 +163,7 @@ class VHDLExpressionExtension {
 		return aggr
 	}
 
-	def dispatch Name toVHDL(HDLInterfaceRef obj) {
+	def dispatch Expression toVHDL(HDLInterfaceRef obj) {
 		var Name result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
 		if (obj.ifArray.size != 0) {
 			result = new ArrayElement(result,

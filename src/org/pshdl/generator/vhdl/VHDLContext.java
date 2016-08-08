@@ -27,6 +27,7 @@
 package org.pshdl.generator.vhdl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ public class VHDLContext {
 	public LinkedList<ConstantDeclaration> constants = Lists.newLinkedList();
 	public LinkedList<ConstantDeclaration> constantsPkg = Lists.newLinkedList();
 	public LinkedList<Constant> generics = Lists.newLinkedList();
+	public Map<String, DeclarativeItem> components = Maps.newLinkedHashMap();
 	public LinkedList<DeclarativeItem> internals = Lists.newLinkedList();
 	public LinkedList<DeclarativeItemMarker> internalTypes = Lists.newLinkedList();
 	public LinkedList<DeclarativeItemMarker> externalTypes = Lists.newLinkedList();
@@ -115,6 +117,7 @@ public class VHDLContext {
 		internalTypesConstants.addAll(vhdl.internalTypesConstants);
 		constantsPkg.addAll(vhdl.constantsPkg);
 		internals.addAll(vhdl.internals);
+		components.putAll(vhdl.components);
 		internalTypes.addAll(vhdl.internalTypes);
 		externalTypes.addAll(vhdl.externalTypes);
 		imports.addAll(vhdl.imports);
@@ -152,11 +155,12 @@ public class VHDLContext {
 		printList(sb, constants, "Entity constants:");
 		printList(sb, constantsPkg, "Pkg constants:");
 		printList(sb, internals, "Internal signals:");
+		printList(sb, components.values(), "Components:");
 		// printList(sb, internalTypes, "Internal types:");
 		return sb.toString();
 	}
 
-	private void printList(StringBuilder sb, LinkedList<?> list, String label) {
+	private void printList(StringBuilder sb, Collection<?> list, String label) {
 		if (list.size() > 0) {
 			sb.append(label).append("\n");
 			for (final Object decl : list) {
@@ -256,7 +260,7 @@ public class VHDLContext {
 	}
 
 	public void addComponent(Component c) {
-		internals.add(c);
+		components.put(c.getIdentifier(), c);
 	}
 
 	public void attachComments(List<String> comments, List<String> docComments) {
