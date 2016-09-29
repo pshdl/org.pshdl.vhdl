@@ -309,13 +309,11 @@ public class VHDLExpressionExtension {
     HDLManip.HDLManipType _type = obj.getType();
     final HDLManip.HDLManipType type = _type;
     boolean _matched = false;
-    if (!_matched) {
-      if (Objects.equal(type, HDLManip.HDLManipType.ARITH_NEG)) {
-        _matched=true;
-        HDLExpression _target = obj.getTarget();
-        Expression _vHDL = this.toVHDL(_target);
-        return new Minus(_vHDL);
-      }
+    if (Objects.equal(type, HDLManip.HDLManipType.ARITH_NEG)) {
+      _matched=true;
+      HDLExpression _target = obj.getTarget();
+      Expression _vHDL = this.toVHDL(_target);
+      return new Minus(_vHDL);
     }
     if (!_matched) {
       if (((type == HDLManip.HDLManipType.LOGIC_NEG) || (type == HDLManip.HDLManipType.BIT_NEG))) {
@@ -418,15 +416,7 @@ public class VHDLExpressionExtension {
           }
           return Standard.BOOLEAN_FALSE;
         case HEX:
-          boolean _or = false;
-          if (asString) {
-            _or = true;
-          } else {
-            int _bitLength = dec.bitLength();
-            boolean _greaterThan = (_bitLength > 32);
-            _or = _greaterThan;
-          }
-          if (_or) {
+          if ((asString || (dec.bitLength() > 32))) {
             return VHDLUtils.toHexLiteral(l, dec);
           }
           StringConcatenation _builder = new StringConcatenation();
@@ -436,15 +426,7 @@ public class VHDLExpressionExtension {
           _builder.append("#");
           return new BasedLiteral(_builder.toString());
         case BIN:
-          boolean _or_1 = false;
-          if (asString) {
-            _or_1 = true;
-          } else {
-            int _bitLength_1 = dec.bitLength();
-            boolean _greaterThan_1 = (_bitLength_1 > 32);
-            _or_1 = _greaterThan_1;
-          }
-          if (_or_1) {
+          if ((asString || (dec.bitLength() > 32))) {
             return VHDLUtils.toBinaryLiteral(l, dec);
           }
           StringConcatenation _builder_1 = new StringConcatenation();
@@ -457,15 +439,7 @@ public class VHDLExpressionExtension {
           break;
       }
     }
-    boolean _or_2 = false;
-    int _bitLength_2 = dec.bitLength();
-    boolean _greaterThan_2 = (_bitLength_2 > 31);
-    if (_greaterThan_2) {
-      _or_2 = true;
-    } else {
-      _or_2 = asString;
-    }
-    if (_or_2) {
+    if (((dec.bitLength() > 31) || asString)) {
       return VHDLUtils.toBinaryLiteral(l, dec);
     }
     return new DecimalLiteral(sVal);
@@ -541,16 +515,14 @@ public class VHDLExpressionExtension {
     HDLBitOp.HDLBitOpType _type = obj.getType();
     final HDLBitOp.HDLBitOpType type = _type;
     boolean _matched = false;
-    if (!_matched) {
-      if (((type == HDLBitOp.HDLBitOpType.AND) || (type == HDLBitOp.HDLBitOpType.LOGI_AND))) {
-        _matched=true;
-        HDLExpression _left = obj.getLeft();
-        Expression _vHDL = this.toVHDL(_left);
-        HDLExpression _right = obj.getRight();
-        Expression _vHDL_1 = this.toVHDL(_right);
-        And _and = new And(_vHDL, _vHDL_1);
-        return new Parentheses(_and);
-      }
+    if (((type == HDLBitOp.HDLBitOpType.AND) || (type == HDLBitOp.HDLBitOpType.LOGI_AND))) {
+      _matched=true;
+      HDLExpression _left = obj.getLeft();
+      Expression _vHDL = this.toVHDL(_left);
+      HDLExpression _right = obj.getRight();
+      Expression _vHDL_1 = this.toVHDL(_right);
+      And _and = new And(_vHDL, _vHDL_1);
+      return new Parentheses(_and);
     }
     if (!_matched) {
       if (((type == HDLBitOp.HDLBitOpType.OR) || (type == HDLBitOp.HDLBitOpType.LOGI_OR))) {
