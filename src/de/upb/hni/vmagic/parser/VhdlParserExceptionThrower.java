@@ -133,8 +133,8 @@ public class VhdlParserExceptionThrower {
 		}
 	}
 
-	public static VhdlFile parseStream(InputStream stream, VhdlParserSettings settings, RootDeclarativeRegion rootScope, LibraryDeclarativeRegion libray) throws IOException,
-			RecognitionException {
+	public static VhdlFile parseStream(InputStream stream, VhdlParserSettings settings, RootDeclarativeRegion rootScope, LibraryDeclarativeRegion libray)
+			throws IOException, RecognitionException {
 		return parse(settings, new CaseInsensitiveInputStream(stream), rootScope, libray);
 	}
 

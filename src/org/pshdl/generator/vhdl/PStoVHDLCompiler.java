@@ -169,7 +169,7 @@ public class PStoVHDLCompiler extends PSAbstractCompiler implements IOutputProvi
 	/**
 	 * Adds a VHDL file to the {@link HDLLibrary} so that interfaces can be
 	 * resolved
-	 * 
+	 *
 	 * @param comp
 	 *            the compiler to which the files should be added
 	 *

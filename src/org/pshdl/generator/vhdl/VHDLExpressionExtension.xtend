@@ -93,6 +93,7 @@ import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.types.builtIn.HDLPrimitives
 import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
+import de.upb.hni.vmagic.object.Variable
 
 class VHDLExpressionExtension {
 
@@ -119,7 +120,16 @@ class VHDLExpressionExtension {
 	}
 
 	def dispatch Expression toVHDL(HDLVariableRef obj) {
-		var result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
+		var Name result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
+		if (obj.frozen) {
+			val optHvar = obj.resolveVar
+			if (optHvar.present) {
+				val memAnno = optHvar.get.getAnnotation(HDLBuiltInAnnotations.memory)
+				if (memAnno !== null) {
+					result = new Variable(VHDLUtils.getVHDLName(memAnno.value), UnresolvedType.NO_NAME)
+				}
+			}
+		}
 		return getRef(result, obj)
 	}
 
@@ -134,7 +144,7 @@ class VHDLExpressionExtension {
 		}
 		if (ref.bits.size > 0) {
 
-			//TODO Make any directional access work (5:0, 0:5)
+			// TODO Make any directional access work (5:0, 0:5)
 			if (ref.bits.size > 1)
 				throw new IllegalArgumentException("Multi bit access not supported")
 			val HDLRange r = ref.bits.get(0)
@@ -150,10 +160,11 @@ class VHDLExpressionExtension {
 	def dispatch Expression toVHDL(HDLArrayInit obj) {
 		toVHDLArray(obj, Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0))))
 	}
-	
+
 	def dispatch Expression toVHDLArray(HDLExpression obj, Expression otherValue) {
 		return obj.toVHDL
 	}
+
 	def dispatch Expression toVHDLArray(HDLArrayInit obj, Expression otherValue) {
 		if (obj.exp.size == 1)
 			return obj.exp.get(0).toVHDL
@@ -166,8 +177,7 @@ class VHDLExpressionExtension {
 	def dispatch Expression toVHDL(HDLInterfaceRef obj) {
 		var Name result = new Signal(obj.VHDLName, UnresolvedType.NO_NAME)
 		if (obj.ifArray.size != 0) {
-			result = new ArrayElement(result,
-				obj.ifArray.fold(new LinkedList<Expression>)[l, e|l.add(e.toVHDL); l])
+			result = new ArrayElement(result, obj.ifArray.fold(new LinkedList<Expression>)[l, e|l.add(e.toVHDL); l])
 		}
 		return getRef(result, obj)
 	}
@@ -177,7 +187,8 @@ class VHDLExpressionExtension {
 	}
 
 	def dispatch Signal toVHDL(HDLEnumRef obj) {
-		return new Signal(obj.varRefName.lastSegment, UnresolvedType.NO_NAME)
+		val hEnum=obj.resolveHEnumForced("VHDL")
+		return new Signal(VHDLUtils.getVHDLName("$"+hEnum.name+"_"+obj.varRefName.lastSegment), UnresolvedType.NO_NAME)
 	}
 
 	def dispatch Expression toVHDL(HDLConcat obj) {
@@ -219,7 +230,7 @@ class VHDLExpressionExtension {
 	}
 
 	def Range toVHDL(HDLRange obj, Range.Direction dir) {
-		val context = new HDLEvaluationContext()=>[ignoreConstantRefs=true;ignoreParameterRefs=true]
+		val context = new HDLEvaluationContext() => [ignoreConstantRefs = true; ignoreParameterRefs = true]
 		val Expression to = HDLPrimitives.simplifyWidth(obj, obj.to, context).toVHDL
 		if (obj.from === null)
 			return new Range(to, dir, to)
@@ -250,7 +261,7 @@ class VHDLExpressionExtension {
 			case HEX: {
 				if (asString || dec.bitLength > 32)
 					return VHDLUtils.toHexLiteral(l, dec)
-				return new BasedLiteral('''16#« sVal.substring(2)»#''')
+				return new BasedLiteral('''16#«sVal.substring(2)»#''')
 			}
 			case BIN: {
 				if (asString || dec.bitLength > 32)

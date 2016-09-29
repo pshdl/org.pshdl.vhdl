@@ -59,8 +59,8 @@ public class VHDLShiftLibrary {
 				}
 				final SubtypeIndication lt = VHDLCastsLibrary.getType(left);
 				if (lt != null) {
-					final FunctionDeclaration fd = new FunctionDeclaration(name, VHDLCastsLibrary.getType(left), new Constant("arg", VHDLCastsLibrary.getType(left)), new Constant(
-							"s", Standard.NATURAL));
+					final FunctionDeclaration fd = new FunctionDeclaration(name, VHDLCastsLibrary.getType(left), new Constant("arg", VHDLCastsLibrary.getType(left)),
+							new Constant("s", Standard.NATURAL));
 					declarations.add(fd);
 				}
 			}

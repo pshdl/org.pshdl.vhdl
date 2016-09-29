@@ -61,8 +61,8 @@ public class VHDLTypesLibrary {
 	}
 
 	private static FunctionDeclaration createTernaryOp(List<PackageDeclarativeItem> declarations, SubtypeIndication type) {
-		final FunctionDeclaration fd = new FunctionDeclaration("ternaryOp", type, new Constant("condition", Standard.BOOLEAN), new Constant("thenValue", type), new Constant(
-				"elseValue", type));
+		final FunctionDeclaration fd = new FunctionDeclaration("ternaryOp", type, new Constant("condition", Standard.BOOLEAN), new Constant("thenValue", type),
+				new Constant("elseValue", type));
 		declarations.add(fd);
 		return fd;
 	}

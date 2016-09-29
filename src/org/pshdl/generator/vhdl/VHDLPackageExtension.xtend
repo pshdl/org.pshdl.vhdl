@@ -89,6 +89,17 @@ import org.pshdl.model.utils.ModificationSet
 import org.pshdl.model.utils.Refactoring
 
 import static org.pshdl.model.extensions.FullNameExtension.*
+import de.upb.hni.vmagic.statement.SequentialStatementVisitor
+import de.upb.hni.vmagic.statement.CaseStatement
+import org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations
+
+class WaitSeacher extends SequentialStatementVisitor {
+	public boolean hasWait = false
+
+	override protected visitWaitStatement(WaitStatement statement) {
+		hasWait = true
+	}
+}
 
 class VHDLPackageExtension {
 
@@ -132,14 +143,14 @@ class VHDLPackageExtension {
 			if (vhdl !== null)
 				unit.merge(vhdl, false)
 			else
-				print("Failed to translate: "+stmnt)
+				print("Failed to translate: " + stmnt)
 		}
 		for (HDLStatement stmnt : obj.statements) {
 			val vhdl = stmnt.toVHDL(VHDLContext.DEFAULT_CTX)
 			if (vhdl !== null)
 				unit.merge(vhdl, false)
 			else
-				print("Failed to translate: "+stmnt)
+				print("Failed to translate: " + stmnt)
 		}
 		addDefaultLibs(res, unit)
 		if (unit.hasPkgDeclarations) {
@@ -175,9 +186,10 @@ class VHDLPackageExtension {
 			val ProcessStatement ps = new ProcessStatement
 			ps.sensitivityList.addAll(createSensitivyList(unit, uc.key))
 			ps.statements.addAll(uc.value)
-			if (ps.sensitivityList.empty && !obj.simulation) {
-				val hasWait = ps.statements.exists[it instanceof WaitStatement]
-				if (!hasWait)
+			if (ps.sensitivityList.empty) {
+				val WaitSeacher ssv = new WaitSeacher
+				ps.statements.forEach[ssv.visit(it)]
+				if (!ssv.hasWait)
 					ps.statements.add(new WaitStatement)
 			}
 			a.statements.add(ps)
@@ -284,18 +296,23 @@ class VHDLPackageExtension {
 		for (HDLStatement stmnt : ctx.sensitiveStatements.get(pid)) {
 			val HDLVariableRef[] refs = stmnt.getAllObjectsOf(typeof(HDLVariableRef), true)
 			for (HDLVariableRef ref : refs) {
-				val hvar = ref.resolveVar
-				val IHDLObject container = hvar.get.container
-				if (container instanceof HDLVariableDeclaration) {
-					val HDLVariableDeclaration hdv = container as HDLVariableDeclaration
-					if (!notSensitive.contains(hdv.direction)) {
-						if (ref.container instanceof HDLAssignment) {
-							val HDLAssignment hAss = ref.container as HDLAssignment
-							if (hAss.left.resolveVar.registerConfig !== null) {
-							} else if (hAss.left != ref)
+				val hvar = ref.resolveVarForced("VHDL")
+				//Memories generate a variable, those don't need to be in the sensitivity list
+				if (hvar.getAnnotation(HDLBuiltInAnnotations.memory) === null) {
+					val IHDLObject container = hvar.container
+					if (container instanceof HDLVariableDeclaration) {
+						val HDLVariableDeclaration hdv = container as HDLVariableDeclaration
+						if (!notSensitive.contains(hdv.direction)) {
+							if (ref.container instanceof HDLAssignment) {
+								val HDLAssignment hAss = ref.container as HDLAssignment
+								if (hAss.left.resolveVar.registerConfig !== null) {
+								} else if (hAss.left != ref) {
+									vars.add(ref.VHDLName)
+								}
+							} else {
 								vars.add(ref.VHDLName)
-						} else
-							vars.add(ref.VHDLName)
+							}
+						}
 					}
 				}
 			}
