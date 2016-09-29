@@ -73,13 +73,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import org.eclipse.xtend2.lib.StringConcatenation;
 import org.eclipse.xtext.xbase.lib.CollectionExtensions;
 import org.eclipse.xtext.xbase.lib.Conversions;
 import org.eclipse.xtext.xbase.lib.Extension;
 import org.eclipse.xtext.xbase.lib.InputOutput;
-import org.eclipse.xtext.xbase.lib.IterableExtensions;
-import org.eclipse.xtext.xbase.lib.Procedures.Procedure1;
 import org.pshdl.generator.vhdl.VHDLContext;
 import org.pshdl.generator.vhdl.VHDLExpressionExtension;
 import org.pshdl.generator.vhdl.VHDLStatementExtension;
@@ -255,13 +254,10 @@ public class VHDLPackageExtension {
         if (_isEmpty) {
           final WaitSeacher ssv = new WaitSeacher();
           List<SequentialStatement> _statements_3 = ps.getStatements();
-          final Procedure1<SequentialStatement> _function = new Procedure1<SequentialStatement>() {
-            @Override
-            public void apply(final SequentialStatement it) {
-              ssv.visit(it);
-            }
+          final Consumer<SequentialStatement> _function = (SequentialStatement it) -> {
+            ssv.visit(it);
           };
-          IterableExtensions.<SequentialStatement>forEach(_statements_3, _function);
+          _statements_3.forEach(_function);
           if ((!ssv.hasWait)) {
             List<SequentialStatement> _statements_4 = ps.getStatements();
             WaitStatement _waitStatement = new WaitStatement();

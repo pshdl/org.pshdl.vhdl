@@ -367,20 +367,14 @@ public class VHDLStatementExtension {
     HDLUnit unit = hii.<HDLUnit>getContainer(HDLUnit.class);
     HDLExport[] exportStmnts = unit.<HDLExport>getAllObjectsOf(HDLExport.class, true);
     final HDLExport[] _converted_exportStmnts = (HDLExport[])exportStmnts;
-    final Function1<HDLExport, Boolean> _function = new Function1<HDLExport, Boolean>() {
-      @Override
-      public Boolean apply(final HDLExport it) {
-        HDLQualifiedName _varRefName = it.getVarRefName();
-        return Boolean.valueOf((_varRefName != null));
-      }
+    final Function1<HDLExport, Boolean> _function = (HDLExport it) -> {
+      HDLQualifiedName _varRefName = it.getVarRefName();
+      return Boolean.valueOf((_varRefName != null));
     };
     Iterable<HDLExport> _filter = IterableExtensions.<HDLExport>filter(((Iterable<HDLExport>)Conversions.doWrapArray(_converted_exportStmnts)), _function);
-    final Function1<HDLExport, String> _function_1 = new Function1<HDLExport, String>() {
-      @Override
-      public String apply(final HDLExport e) {
-        HDLQualifiedName _varRefName = e.getVarRefName();
-        return _varRefName.getLastSegment();
-      }
+    final Function1<HDLExport, String> _function_1 = (HDLExport e) -> {
+      HDLQualifiedName _varRefName = e.getVarRefName();
+      return _varRefName.getLastSegment();
     };
     Iterable<String> _map = IterableExtensions.<HDLExport, String>map(_filter, _function_1);
     Set<String> exportedSignals = IterableExtensions.<String>toSet(_map);
@@ -660,11 +654,8 @@ public class VHDLStatementExtension {
           type = _enumerationType_2;
           int idx = 0;
           HDLEvaluationContext _hDLEvaluationContext = new HDLEvaluationContext();
-          final Procedure1<HDLEvaluationContext> _function = new Procedure1<HDLEvaluationContext>() {
-            @Override
-            public void apply(final HDLEvaluationContext it) {
-              it.enumAsInt = true;
-            }
+          final Procedure1<HDLEvaluationContext> _function = (HDLEvaluationContext it) -> {
+            it.enumAsInt = true;
           };
           HDLEvaluationContext _doubleArrow = ObjectExtensions.<HDLEvaluationContext>operator_doubleArrow(_hDLEvaluationContext, _function);
           final Optional<BigInteger> resVal = ConstantEvaluate.valueOf(resetValue, _doubleArrow);
