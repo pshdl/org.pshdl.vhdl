@@ -235,10 +235,13 @@ public class VHDLExpressionExtension {
     }
     final Aggregate aggr = new Aggregate();
     ArrayList<HDLExpression> _exp_2 = obj.getExp();
-    final Procedure2<HDLExpression, Integer> _function = (HDLExpression e, Integer i) -> {
-      Expression _vHDLArray = this.toVHDLArray(e, otherValue);
-      DecimalLiteral _decimalLiteral = new DecimalLiteral((i).intValue());
-      aggr.createAssociation(_vHDLArray, _decimalLiteral);
+    final Procedure2<HDLExpression, Integer> _function = new Procedure2<HDLExpression, Integer>() {
+      @Override
+      public void apply(final HDLExpression e, final Integer i) {
+        Expression _vHDLArray = VHDLExpressionExtension.this.toVHDLArray(e, otherValue);
+        DecimalLiteral _decimalLiteral = new DecimalLiteral((i).intValue());
+        aggr.createAssociation(_vHDLArray, _decimalLiteral);
+      }
     };
     IterableExtensions.<HDLExpression>forEach(_exp_2, _function);
     aggr.createAssociation(otherValue, Choices.OTHERS);
@@ -254,14 +257,17 @@ public class VHDLExpressionExtension {
     if (_notEquals) {
       ArrayList<HDLExpression> _ifArray_1 = obj.getIfArray();
       LinkedList<Expression> _linkedList = new LinkedList<Expression>();
-      final Function2<LinkedList<Expression>, HDLExpression, LinkedList<Expression>> _function = (LinkedList<Expression> l, HDLExpression e) -> {
-        LinkedList<Expression> _xblockexpression = null;
-        {
-          Expression _vHDL = this.toVHDL(e);
-          l.add(_vHDL);
-          _xblockexpression = l;
+      final Function2<LinkedList<Expression>, HDLExpression, LinkedList<Expression>> _function = new Function2<LinkedList<Expression>, HDLExpression, LinkedList<Expression>>() {
+        @Override
+        public LinkedList<Expression> apply(final LinkedList<Expression> l, final HDLExpression e) {
+          LinkedList<Expression> _xblockexpression = null;
+          {
+            Expression _vHDL = VHDLExpressionExtension.this.toVHDL(e);
+            l.add(_vHDL);
+            _xblockexpression = l;
+          }
+          return _xblockexpression;
         }
-        return _xblockexpression;
       };
       LinkedList<Expression> _fold = IterableExtensions.<HDLExpression, LinkedList<Expression>>fold(_ifArray_1, _linkedList, _function);
       ArrayElement<Name> _arrayElement = new ArrayElement<Name>(result, _fold);
@@ -357,9 +363,12 @@ public class VHDLExpressionExtension {
   
   public Range toVHDL(final HDLRange obj, final Range.Direction dir) {
     HDLEvaluationContext _hDLEvaluationContext = new HDLEvaluationContext();
-    final Procedure1<HDLEvaluationContext> _function = (HDLEvaluationContext it) -> {
-      it.ignoreConstantRefs = true;
-      it.ignoreParameterRefs = true;
+    final Procedure1<HDLEvaluationContext> _function = new Procedure1<HDLEvaluationContext>() {
+      @Override
+      public void apply(final HDLEvaluationContext it) {
+        it.ignoreConstantRefs = true;
+        it.ignoreParameterRefs = true;
+      }
     };
     final HDLEvaluationContext context = ObjectExtensions.<HDLEvaluationContext>operator_doubleArrow(_hDLEvaluationContext, _function);
     HDLExpression _to = obj.getTo();

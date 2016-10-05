@@ -254,8 +254,11 @@ public class VHDLPackageExtension {
         if (_isEmpty) {
           final WaitSeacher ssv = new WaitSeacher();
           List<SequentialStatement> _statements_3 = ps.getStatements();
-          final Consumer<SequentialStatement> _function = (SequentialStatement it) -> {
-            ssv.visit(it);
+          final Consumer<SequentialStatement> _function = new Consumer<SequentialStatement>() {
+            @Override
+            public void accept(final SequentialStatement it) {
+              ssv.visit(it);
+            }
           };
           _statements_3.forEach(_function);
           if ((!ssv.hasWait)) {
