@@ -34,14 +34,10 @@ import de.upb.hni.vmagic.VhdlElement;
 import de.upb.hni.vmagic.VhdlFile;
 import de.upb.hni.vmagic.builtin.NumericStd;
 import de.upb.hni.vmagic.builtin.StdLogic1164;
-import de.upb.hni.vmagic.concurrent.ConcurrentStatement;
 import de.upb.hni.vmagic.concurrent.ProcessStatement;
-import de.upb.hni.vmagic.declaration.BlockDeclarativeItem;
 import de.upb.hni.vmagic.declaration.ConstantDeclaration;
 import de.upb.hni.vmagic.declaration.DeclarativeItem;
 import de.upb.hni.vmagic.declaration.DeclarativeItemMarker;
-import de.upb.hni.vmagic.declaration.EntityDeclarativeItem;
-import de.upb.hni.vmagic.declaration.PackageDeclarativeItem;
 import de.upb.hni.vmagic.expression.Equals;
 import de.upb.hni.vmagic.expression.Expression;
 import de.upb.hni.vmagic.expression.FunctionCall;
@@ -56,7 +52,6 @@ import de.upb.hni.vmagic.object.Constant;
 import de.upb.hni.vmagic.object.ConstantGroup;
 import de.upb.hni.vmagic.object.Signal;
 import de.upb.hni.vmagic.object.SignalGroup;
-import de.upb.hni.vmagic.object.VhdlObjectProvider;
 import de.upb.hni.vmagic.statement.IfStatement;
 import de.upb.hni.vmagic.statement.SequentialStatement;
 import de.upb.hni.vmagic.statement.WaitStatement;
@@ -94,7 +89,6 @@ import org.pshdl.model.HDLDeclaration;
 import org.pshdl.model.HDLEnum;
 import org.pshdl.model.HDLEnumDeclaration;
 import org.pshdl.model.HDLEnumRef;
-import org.pshdl.model.HDLExpression;
 import org.pshdl.model.HDLPackage;
 import org.pshdl.model.HDLReference;
 import org.pshdl.model.HDLRegisterConfig;
@@ -133,18 +127,13 @@ public class VHDLPackageExtension {
     for (final HDLEnumRef hdlEnumRef : hRefs) {
       {
         final Optional<HDLEnum> resolveHEnum = hdlEnumRef.resolveHEnum();
-        HDLEnum _get = resolveHEnum.get();
-        final HDLUnit enumContainer = _get.<HDLUnit>getContainer(HDLUnit.class);
+        final HDLUnit enumContainer = resolveHEnum.get().<HDLUnit>getContainer(HDLUnit.class);
         if (((enumContainer == null) || (!enumContainer.equals(hdlEnumRef.<HDLUnit>getContainer(HDLUnit.class))))) {
-          HDLEnum _get_1 = resolveHEnum.get();
-          final HDLQualifiedName type = FullNameExtension.fullNameOf(_get_1);
-          String _segment = type.getSegment(0);
-          boolean _equals = _segment.equals("pshdl");
+          final HDLQualifiedName type = FullNameExtension.fullNameOf(resolveHEnum.get());
+          boolean _equals = type.getSegment(0).equals("pshdl");
           boolean _not = (!_equals);
           if (_not) {
-            String _packageName = this.getPackageName(type);
-            HDLQualifiedName _create = HDLQualifiedName.create("work", _packageName, "all");
-            unit.addImport(_create);
+            unit.addImport(HDLQualifiedName.create("work", this.getPackageName(type), "all"));
           }
         }
       }
@@ -157,12 +146,9 @@ public class VHDLPackageExtension {
         final HDLVariable variable = variableRef.resolveVarForced("VHDL");
         final HDLUnit enumContainer = variable.<HDLUnit>getContainer(HDLUnit.class);
         if (((enumContainer == null) || (!enumContainer.equals(variableRef.<HDLUnit>getContainer(HDLUnit.class))))) {
-          HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(variable);
-          final HDLQualifiedName type = _fullNameOf.skipLast(1);
+          final HDLQualifiedName type = FullNameExtension.fullNameOf(variable).skipLast(1);
           if (((type.length > 0) && (!type.getSegment(0).equals("pshdl")))) {
-            String _packageName = this.getPackageName(type);
-            HDLQualifiedName _create = HDLQualifiedName.create("work", _packageName, "all");
-            unit.addImport(_create);
+            unit.addImport(HDLQualifiedName.create("work", this.getPackageName(type), "all"));
           }
         }
       }
@@ -194,14 +180,12 @@ public class VHDLPackageExtension {
     if (_hasPkgDeclarations) {
       final String libName = this.getPackageName(entityName);
       final PackageDeclaration pd = new PackageDeclaration(libName);
-      List<PackageDeclarativeItem> _declarations = pd.getDeclarations();
-      _declarations.addAll(((List) unit.externalTypes));
-      List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
-      _declarations_1.addAll(unit.constantsPkg);
+      pd.getDeclarations().addAll(((List) unit.externalTypes));
+      pd.getDeclarations().addAll(unit.constantsPkg);
       res.add(pd);
       StringConcatenation _builder = new StringConcatenation();
       _builder.append("work.");
-      _builder.append(libName, "");
+      _builder.append(libName);
       _builder.append(".all");
       UseClause _useClause = new UseClause(_builder.toString());
       res.add(_useClause);
@@ -212,8 +196,7 @@ public class VHDLPackageExtension {
         final List<String> comments = Comments.getComments(sig);
         final SignalGroup sg = new SignalGroup(sig);
         Comments.setComments(sg, comments);
-        List<VhdlObjectProvider<Signal>> _port = e.getPort();
-        _port.add(sg);
+        e.getPort().add(sg);
       }
     }
     for (final Constant sig_1 : unit.generics) {
@@ -221,67 +204,46 @@ public class VHDLPackageExtension {
         final List<String> comments = Comments.getComments(sig_1);
         final ConstantGroup sg = new ConstantGroup(sig_1);
         Comments.setComments(sg, comments);
-        List<VhdlObjectProvider<Constant>> _generic = e.getGeneric();
-        _generic.add(sg);
+        e.getGeneric().add(sg);
       }
     }
-    List<EntityDeclarativeItem> _declarations_2 = e.getDeclarations();
-    _declarations_2.addAll(((List) unit.internalTypesConstants));
+    e.getDeclarations().addAll(((List) unit.internalTypesConstants));
     res.add(e);
     final Architecture a = new Architecture("pshdlGenerated", e);
     this.attachComments(e, obj, true, false);
     this.attachComments(a, obj, false, true);
-    List<BlockDeclarativeItem> _declarations_3 = a.getDeclarations();
     Collection<DeclarativeItem> _values = unit.components.values();
-    _declarations_3.addAll(((Collection) _values));
-    List<BlockDeclarativeItem> _declarations_4 = a.getDeclarations();
-    _declarations_4.addAll(((List) unit.internals));
-    List<ConcurrentStatement> _statements_1 = a.getStatements();
-    _statements_1.addAll(unit.concurrentStatements);
+    a.getDeclarations().addAll(((Collection) _values));
+    a.getDeclarations().addAll(((List) unit.internals));
+    a.getStatements().addAll(unit.concurrentStatements);
     Set<Map.Entry<Integer, LinkedList<SequentialStatement>>> _entrySet = unit.unclockedStatements.entrySet();
     for (final Map.Entry<Integer, LinkedList<SequentialStatement>> uc : _entrySet) {
       {
         final ProcessStatement ps = new ProcessStatement();
-        List<Signal> _sensitivityList = ps.getSensitivityList();
-        Integer _key = uc.getKey();
-        Collection<? extends Signal> _createSensitivyList = this.createSensitivyList(unit, (_key).intValue());
-        _sensitivityList.addAll(_createSensitivyList);
-        List<SequentialStatement> _statements_2 = ps.getStatements();
-        LinkedList<SequentialStatement> _value = uc.getValue();
-        _statements_2.addAll(_value);
-        List<Signal> _sensitivityList_1 = ps.getSensitivityList();
-        boolean _isEmpty = _sensitivityList_1.isEmpty();
+        ps.getSensitivityList().addAll(this.createSensitivyList(unit, (uc.getKey()).intValue()));
+        ps.getStatements().addAll(uc.getValue());
+        boolean _isEmpty = ps.getSensitivityList().isEmpty();
         if (_isEmpty) {
           final WaitSeacher ssv = new WaitSeacher();
-          List<SequentialStatement> _statements_3 = ps.getStatements();
-          final Consumer<SequentialStatement> _function = new Consumer<SequentialStatement>() {
-            @Override
-            public void accept(final SequentialStatement it) {
-              ssv.visit(it);
-            }
+          final Consumer<SequentialStatement> _function = (SequentialStatement it) -> {
+            ssv.visit(it);
           };
-          _statements_3.forEach(_function);
+          ps.getStatements().forEach(_function);
           if ((!ssv.hasWait)) {
-            List<SequentialStatement> _statements_4 = ps.getStatements();
+            List<SequentialStatement> _statements_1 = ps.getStatements();
             WaitStatement _waitStatement = new WaitStatement();
-            _statements_4.add(_waitStatement);
+            _statements_1.add(_waitStatement);
           }
         }
-        List<ConcurrentStatement> _statements_5 = a.getStatements();
-        _statements_5.add(ps);
+        a.getStatements().add(ps);
       }
     }
     Set<Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>>> _entrySet_1 = unit.clockedStatements.entrySet();
     for (final Map.Entry<HDLRegisterConfig, LinkedList<SequentialStatement>> pc : _entrySet_1) {
       {
         final ProcessStatement ps = new ProcessStatement();
-        List<SequentialStatement> _statements_2 = ps.getStatements();
-        HDLRegisterConfig _key = pc.getKey();
-        LinkedList<SequentialStatement> _value = pc.getValue();
-        SequentialStatement _createIfStatement = this.createIfStatement(obj, ps, _key, _value, unit);
-        _statements_2.add(_createIfStatement);
-        List<ConcurrentStatement> _statements_3 = a.getStatements();
-        _statements_3.add(ps);
+        ps.getStatements().add(this.createIfStatement(obj, ps, pc.getKey(), pc.getValue(), unit));
+        a.getStatements().add(ps);
       }
     }
     res.add(a);
@@ -303,11 +265,9 @@ public class VHDLPackageExtension {
           if (_startsWith_1) {
             boolean _startsWith_2 = newComment.startsWith("/<");
             if (_startsWith_2) {
-              String _substring = newComment.substring(2);
-              docComments.add(_substring);
+              docComments.add(newComment.substring(2));
             } else {
-              String _substring_1 = newComment.substring(1);
-              docComments.add(_substring_1);
+              docComments.add(newComment.substring(1));
             }
           } else {
             newComments.add(newComment);
@@ -320,17 +280,12 @@ public class VHDLPackageExtension {
           if (_startsWith_3) {
             boolean _startsWith_4 = newComment_1.startsWith("*<");
             if (_startsWith_4) {
-              String _substring_2 = newComment_1.substring(2);
-              String[] _split = _substring_2.split("\n");
-              CollectionExtensions.<String>addAll(docComments, _split);
+              CollectionExtensions.<String>addAll(docComments, newComment_1.substring(2).split("\n"));
             } else {
-              String _substring_3 = newComment_1.substring(1);
-              String[] _split_1 = _substring_3.split("\n");
-              CollectionExtensions.<String>addAll(docComments, _split_1);
+              CollectionExtensions.<String>addAll(docComments, newComment_1.substring(1).split("\n"));
             }
           } else {
-            String[] _split_2 = newComment_1.split("\n");
-            CollectionExtensions.<String>addAll(newComments, _split_2);
+            CollectionExtensions.<String>addAll(newComments, newComment_1.split("\n"));
           }
         }
       }
@@ -352,37 +307,33 @@ public class VHDLPackageExtension {
   public String getPackageName(final HDLQualifiedName entityName) {
     StringConcatenation _builder = new StringConcatenation();
     String _dashString = this.dashString(entityName);
-    _builder.append(_dashString, "");
+    _builder.append(_dashString);
     _builder.append("Pkg");
     return _builder.toString();
   }
   
   public String dashString(final HDLQualifiedName name) {
-    char _charAt = "_".charAt(0);
-    return name.toString(_charAt);
+    return name.toString("_".charAt(0));
   }
   
   public HDLQualifiedName getPackageNameRef(final HDLQualifiedName entityName) {
-    String _segment = entityName.getSegment(0);
-    boolean _equals = _segment.equals("VHDL");
+    boolean _equals = entityName.getSegment(0).equals("VHDL");
     if (_equals) {
       return entityName.skipFirst(1);
     }
     StringConcatenation _builder = new StringConcatenation();
     String _dashString = this.dashString(entityName);
-    _builder.append(_dashString, "");
+    _builder.append(_dashString);
     _builder.append("Pkg");
     return HDLQualifiedName.create("work", _builder.toString());
   }
   
   public HDLQualifiedName getNameRef(final HDLQualifiedName entityName) {
-    String _segment = entityName.getSegment(0);
-    boolean _equals = _segment.equals("VHDL");
+    boolean _equals = entityName.getSegment(0).equals("VHDL");
     if (_equals) {
       return entityName.skipFirst(1);
     }
-    String _dashString = this.dashString(entityName);
-    return HDLQualifiedName.create("work", _dashString);
+    return HDLQualifiedName.create("work", this.dashString(entityName));
   }
   
   private static void addDefaultLibs(final List<LibraryUnit> res, final VHDLContext unit) {
@@ -397,8 +348,7 @@ public class VHDLPackageExtension {
           res.add(_libraryClause);
           usedLibs.add(lib);
         }
-        HDLQualifiedName _append = i.append("all");
-        String _string = _append.toString();
+        String _string = i.append("all").toString();
         UseClause _useClause = new UseClause(_string);
         res.add(_useClause);
       }
@@ -442,30 +392,25 @@ public class VHDLPackageExtension {
               final IHDLObject container = hvar.getContainer();
               if ((container instanceof HDLVariableDeclaration)) {
                 final HDLVariableDeclaration hdv = ((HDLVariableDeclaration) container);
-                HDLVariableDeclaration.HDLDirection _direction = hdv.getDirection();
-                boolean _contains = VHDLPackageExtension.notSensitive.contains(_direction);
+                boolean _contains = VHDLPackageExtension.notSensitive.contains(hdv.getDirection());
                 boolean _not = (!_contains);
                 if (_not) {
                   IHDLObject _container = ref.getContainer();
                   if ((_container instanceof HDLAssignment)) {
                     IHDLObject _container_1 = ref.getContainer();
                     final HDLAssignment hAss = ((HDLAssignment) _container_1);
-                    HDLReference _left = hAss.getLeft();
-                    HDLVariable _resolveVar = this.resolveVar(_left);
-                    HDLRegisterConfig _registerConfig = _resolveVar.getRegisterConfig();
+                    HDLRegisterConfig _registerConfig = this.resolveVar(hAss.getLeft()).getRegisterConfig();
                     boolean _tripleNotEquals = (_registerConfig != null);
                     if (_tripleNotEquals) {
                     } else {
-                      HDLReference _left_1 = hAss.getLeft();
-                      boolean _notEquals = (!Objects.equal(_left_1, ref));
+                      HDLReference _left = hAss.getLeft();
+                      boolean _notEquals = (!Objects.equal(_left, ref));
                       if (_notEquals) {
-                        String _vHDLName = this.vee.getVHDLName(ref);
-                        vars.add(_vHDLName);
+                        vars.add(this.vee.getVHDLName(ref));
                       }
                     }
                   } else {
-                    String _vHDLName_1 = this.vee.getVHDLName(ref);
-                    vars.add(_vHDLName_1);
+                    vars.add(this.vee.getVHDLName(ref));
                   }
                 }
               }
@@ -485,20 +430,16 @@ public class VHDLPackageExtension {
     if ((reference instanceof HDLUnresolvedFragment)) {
       throw new RuntimeException("Can not use unresolved fragments");
     }
-    Optional<HDLVariable> _resolveVar = ((HDLResolvedRef) reference).resolveVar();
-    return _resolveVar.get();
+    return ((HDLResolvedRef) reference).resolveVar().get();
   }
   
   private SequentialStatement createIfStatement(final HDLUnit hUnit, final ProcessStatement ps, final HDLRegisterConfig config, final LinkedList<SequentialStatement> value, final VHDLContext unit) {
     final HDLRegisterConfig key = config.normalize();
-    HDLExpression _clk = key.getClk();
-    Expression _vHDL = this.vee.toVHDL(_clk);
+    Expression _vHDL = this.vee.toVHDL(key.getClk());
     Signal clk = ((Signal) _vHDL);
-    HDLExpression _rst = key.getRst();
-    Expression _vHDL_1 = this.vee.toVHDL(_rst);
+    Expression _vHDL_1 = this.vee.toVHDL(key.getRst());
     Signal rst = ((Signal) _vHDL_1);
-    List<Signal> _sensitivityList = ps.getSensitivityList();
-    _sensitivityList.add(clk);
+    ps.getSensitivityList().add(clk);
     EnumerationLiteral activeRst = null;
     HDLRegisterConfig.HDLRegResetActiveType _resetType = key.getResetType();
     boolean _tripleEquals = (_resetType == HDLRegisterConfig.HDLRegResetActiveType.HIGH);
@@ -511,8 +452,7 @@ public class VHDLPackageExtension {
     IfStatement rstIfStmnt = new IfStatement(_equals);
     final LinkedList<SequentialStatement> resets = unit.resetStatements.get(key);
     if ((resets != null)) {
-      List<SequentialStatement> _statements = rstIfStmnt.getStatements();
-      _statements.addAll(resets);
+      rstIfStmnt.getStatements().addAll(resets);
     }
     FunctionCall edge = null;
     HDLRegisterConfig.HDLRegClockType _clockType = key.getClockType();
@@ -530,18 +470,14 @@ public class VHDLPackageExtension {
     HDLRegisterConfig.HDLRegSyncType _syncType = key.getSyncType();
     boolean _tripleEquals_2 = (_syncType == HDLRegisterConfig.HDLRegSyncType.ASYNC);
     if (_tripleEquals_2) {
-      List<Signal> _sensitivityList_1 = ps.getSensitivityList();
-      _sensitivityList_1.add(rst);
+      ps.getSensitivityList().add(rst);
       final IfStatement.ElsifPart elsifPart = rstIfStmnt.createElsifPart(edge);
-      List<SequentialStatement> _statements_1 = elsifPart.getStatements();
-      _statements_1.addAll(value);
+      elsifPart.getStatements().addAll(value);
       return rstIfStmnt;
     }
     final IfStatement clkIf = new IfStatement(edge);
-    List<SequentialStatement> _statements_2 = clkIf.getStatements();
-    _statements_2.add(rstIfStmnt);
-    List<SequentialStatement> _elseStatements = rstIfStmnt.getElseStatements();
-    _elseStatements.addAll(value);
+    clkIf.getStatements().add(rstIfStmnt);
+    rstIfStmnt.getElseStatements().addAll(value);
     return clkIf;
   }
   
@@ -556,15 +492,13 @@ public class VHDLPackageExtension {
         if (_equals) {
           final HDLVariableDeclaration hvd = ((HDLVariableDeclaration) decl);
           if ((pd == null)) {
-            List<LibraryUnit> _elements = res.getElements();
-            VHDLPackageExtension.staticImports(_elements);
+            VHDLPackageExtension.staticImports(res.getElements());
             String _pkg = obj.getPkg();
             HDLQualifiedName _hDLQualifiedName = new HDLQualifiedName(_pkg);
             String _packageName = this.getPackageName(_hDLQualifiedName);
             PackageDeclaration _packageDeclaration = new PackageDeclaration(_packageName);
             pd = _packageDeclaration;
-            List<LibraryUnit> _elements_1 = res.getElements();
-            _elements_1.add(pd);
+            res.getElements().add(pd);
           }
           final VHDLContext vhdl = this.vse.toVHDL(hvd, VHDLContext.DEFAULT_CTX);
           ConstantDeclaration _xifexpression = null;
@@ -576,33 +510,27 @@ public class VHDLPackageExtension {
           }
           ConstantDeclaration first = _xifexpression;
           if ((first == null)) {
-            ConstantDeclaration _first = vhdl.constantsPkg.getFirst();
-            first = _first;
+            first = vhdl.constantsPkg.getFirst();
             if ((first == null)) {
               throw new IllegalArgumentException("Expected constant declaration but found none!");
             }
           }
-          List<PackageDeclarativeItem> _declarations_1 = pd.getDeclarations();
-          _declarations_1.add(first);
+          pd.getDeclarations().add(first);
         }
         HDLClass _classType_1 = decl.getClassType();
         boolean _equals_1 = Objects.equal(_classType_1, HDLClass.HDLEnumDeclaration);
         if (_equals_1) {
           final HDLEnumDeclaration hvd_1 = ((HDLEnumDeclaration) decl);
-          HDLEnum _hEnum = hvd_1.getHEnum();
-          HDLQualifiedName _fullNameOf = FullNameExtension.fullNameOf(_hEnum);
-          String _packageName_1 = this.getPackageName(_fullNameOf);
+          String _packageName_1 = this.getPackageName(FullNameExtension.fullNameOf(hvd_1.getHEnum()));
           final PackageDeclaration enumPd = new PackageDeclaration(_packageName_1);
-          List<LibraryUnit> _elements_2 = res.getElements();
-          _elements_2.add(enumPd);
+          res.getElements().add(enumPd);
           final VHDLContext vhdl_1 = this.vse.toVHDL(hvd_1, VHDLContext.DEFAULT_CTX);
-          DeclarativeItemMarker _first_1 = vhdl_1.internalTypes.getFirst();
-          final Type first_1 = ((Type) _first_1);
+          DeclarativeItemMarker _first = vhdl_1.internalTypes.getFirst();
+          final Type first_1 = ((Type) _first);
           if ((first_1 == null)) {
             throw new IllegalArgumentException("Expected enum type declaration but found none!");
           }
-          List<PackageDeclarativeItem> _declarations_2 = enumPd.getDeclarations();
-          _declarations_2.add(first_1);
+          enumPd.getDeclarations().add(first_1);
         }
       }
     }
@@ -621,8 +549,7 @@ public class VHDLPackageExtension {
                   final Optional<HDLVariable> resolvedRef = ref.resolveVar();
                   boolean _isPresent = resolvedRef.isPresent();
                   if (_isPresent) {
-                    HDLVariable _get = resolvedRef.get();
-                    _get.setMeta(VHDLStatementExtension.EXPORT);
+                    resolvedRef.get().setMeta(VHDLStatementExtension.EXPORT);
                   }
                 }
               }
@@ -630,18 +557,13 @@ public class VHDLPackageExtension {
               final String name = VHDLUtils.getVHDLName(origName);
               boolean _notEquals = (!Objects.equal(name, origName));
               if (_notEquals) {
-                HDLQualifiedName _asRef = hvar.asRef();
-                HDLQualifiedName _skipLast = _asRef.skipLast(1);
-                HDLQualifiedName _append = _skipLast.append(name);
-                Refactoring.<HDLUnit>renameVariable(hvar, _append, unit, ms);
+                Refactoring.<HDLUnit>renameVariable(hvar, hvar.asRef().skipLast(1).append(name), unit, ms);
               }
             }
           }
         }
         final HDLUnit newUnit = ms.<HDLUnit>apply(unit);
-        List<LibraryUnit> _elements = res.getElements();
-        List<LibraryUnit> _vHDL = this.toVHDL(newUnit);
-        _elements.addAll(_vHDL);
+        res.getElements().addAll(this.toVHDL(newUnit));
       }
     }
     return res;
