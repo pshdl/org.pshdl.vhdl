@@ -223,6 +223,10 @@ class VHDLExpressionExtension {
 					exp = resized.resized
 					actualType = resized.newType
 				}
+				val meta=obj.getMeta(HDLManip.WRONG_TYPE) as HDLPrimitive
+				if (meta!==null){
+					actualType=meta.type
+				}
 				return VHDLCastsLibrary.cast(exp, actualType, targetType.getType)
 			}
 		}

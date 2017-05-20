@@ -321,6 +321,11 @@ public class VHDLExpressionExtension {
           exp = resized.resized;
           actualType = resized.newType;
         }
+        HDLType _meta = obj.<HDLType>getMeta(HDLManip.WRONG_TYPE);
+        final HDLPrimitive meta = ((HDLPrimitive) _meta);
+        if ((meta != null)) {
+          actualType = meta.getType();
+        }
         return VHDLCastsLibrary.cast(exp, actualType, targetType.getType());
       }
     }
