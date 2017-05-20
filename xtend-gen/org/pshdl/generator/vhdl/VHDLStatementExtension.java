@@ -509,7 +509,7 @@ public class VHDLStatementExtension {
     }
     char _charAt = "0".charAt(0);
     CharacterLiteral _characterLiteral = new CharacterLiteral(_charAt);
-    Expression otherValue = Aggregate.OTHERS(_characterLiteral);
+    Expression<?> otherValue = Aggregate.OTHERS(_characterLiteral);
     if ((typeAnno != null)) {
       final String typeValue = typeAnno.getValue();
       boolean _endsWith = typeValue.endsWith("<>");
@@ -524,8 +524,7 @@ public class VHDLStatementExtension {
         type = _enumerationType;
         HDLRange range = null;
         final HDLExpression width = primitive.getWidth();
-        boolean _notEquals = (!Objects.equal(width, null));
-        if (_notEquals) {
+        if ((width != null)) {
           range = new HDLRange().setFrom(HDLArithOp.subtract(width, 1)).setTo(HDLLiteral.get(0));
           range = range.copyDeepFrozen(obj);
           Range _vHDL = this.vee.toVHDL(range, Range.Direction.DOWNTO);
@@ -580,13 +579,13 @@ public class VHDLStatementExtension {
     return this.attachComment(res, obj);
   }
   
-  public void handleVariable(final HDLVariable hvar, final SubtypeIndication type, final HDLVariableDeclaration obj, final VHDLContext res, final HDLExpression resetValue, final Expression otherValue, final int pid) {
+  public void handleVariable(final HDLVariable hvar, final SubtypeIndication type, final HDLVariableDeclaration obj, final VHDLContext res, final HDLExpression resetValue, final Expression<?> otherValue, final int pid) {
     final boolean noExplicitResetVar = ((hvar.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.VHDLNoExplicitReset) != null) || (hvar.getAnnotation(HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.memory) != null));
     SubtypeIndication varType = type;
     int _size = hvar.getDimensions().size();
     boolean _notEquals = (_size != 0);
     if (_notEquals) {
-      final LinkedList<DiscreteRange> ranges = new LinkedList<DiscreteRange>();
+      final LinkedList<DiscreteRange<?>> ranges = new LinkedList<DiscreteRange<?>>();
       ArrayList<HDLExpression> _dimensions = hvar.getDimensions();
       for (final HDLExpression arrayWidth : _dimensions) {
         {
@@ -597,14 +596,14 @@ public class VHDLStatementExtension {
       }
       final boolean external = obj.isExternal();
       String _arrayRefName = VHDLStatementExtension.getArrayRefName(hvar, external);
-      final ConstrainedArray arrType = new ConstrainedArray(_arrayRefName, type, ranges);
+      final ConstrainedArray arrType = new ConstrainedArray(_arrayRefName, type, ((DiscreteRange[])Conversions.unwrapArray(ranges, DiscreteRange.class)));
       res.addTypeDeclaration(arrType, external);
       varType = arrType;
     }
     String name = hvar.getName();
     String _meta = hvar.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
-    boolean _notEquals_1 = (!Objects.equal(_meta, null));
-    if (_notEquals_1) {
+    boolean _tripleNotEquals = (_meta != null);
+    if (_tripleNotEquals) {
       name = hvar.<String>getMeta(HDLInterfaceInstantiation.ORIG_NAME);
     }
     String _name = hvar.getName();
@@ -614,8 +613,8 @@ public class VHDLStatementExtension {
       if ((resetValue instanceof HDLVariableRef)) {
         final HDLVariableRef ref = ((HDLVariableRef) resetValue);
         int _size_1 = ref.resolveVar().get().getDimensions().size();
-        boolean _notEquals_2 = (_size_1 != 0);
-        synchedArray = _notEquals_2;
+        boolean _notEquals_1 = (_size_1 != 0);
+        synchedArray = _notEquals_1;
       }
       final HDLVariableRef target = new HDLVariableRef().setVar(hvar.asRef());
       if ((resetValue instanceof HDLArrayInit)) {
@@ -628,18 +627,12 @@ public class VHDLStatementExtension {
         res.addResetValue(obj.getRegister(), vhdl.getStatement());
       }
     }
-    final Constant constant = new Constant(name, varType);
-    HDLExpression _defaultValue = hvar.getDefaultValue();
-    boolean _tripleNotEquals = (_defaultValue != null);
-    if (_tripleNotEquals) {
-      constant.setDefaultValue(this.vee.toVHDLArray(hvar.getDefaultValue(), otherValue));
-    }
     if (noExplicitResetVar) {
       if ((resetValue instanceof HDLArrayInit)) {
         s.setDefaultValue(this.vee.toVHDLArray(resetValue, otherValue));
       } else {
         if ((resetValue != null)) {
-          Expression assign = this.vee.toVHDL(resetValue);
+          Expression<?> assign = this.vee.toVHDL(resetValue);
           ArrayList<HDLExpression> _dimensions_1 = hvar.getDimensions();
           for (final HDLExpression exp : _dimensions_1) {
             assign = Aggregate.OTHERS(assign);
@@ -676,8 +669,13 @@ public class VHDLStatementExtension {
         boolean _tripleNotEquals_1 = (_annotation != null);
         if (_tripleNotEquals_1) {
           String _name_1 = hvar.getName();
-          Expression _defaultValue_1 = s.getDefaultValue();
-          final Variable sharedVar = new Variable(_name_1, varType, _defaultValue_1);
+          Expression _defaultValue = s.getDefaultValue();
+          final Variable sharedVar = new Variable(_name_1, varType, _defaultValue);
+          HDLExpression _defaultValue_1 = hvar.getDefaultValue();
+          boolean _tripleNotEquals_2 = (_defaultValue_1 != null);
+          if (_tripleNotEquals_2) {
+            sharedVar.setDefaultValue(this.vee.toVHDLArray(hvar.getDefaultValue(), otherValue));
+          }
           sharedVar.setShared(true);
           final VariableDeclaration vd = new VariableDeclaration(sharedVar);
           res.addInternalSignalDeclaration(vd);
@@ -690,6 +688,12 @@ public class VHDLStatementExtension {
     if (!_matched) {
       if ((Objects.equal(obj.getDirection(), HDLVariableDeclaration.HDLDirection.HIDDEN) || Objects.equal(obj.getDirection(), HDLVariableDeclaration.HDLDirection.CONSTANT))) {
         _matched=true;
+        final Constant constant = new Constant(name, varType);
+        HDLExpression _defaultValue_2 = hvar.getDefaultValue();
+        boolean _tripleNotEquals_3 = (_defaultValue_2 != null);
+        if (_tripleNotEquals_3) {
+          constant.setDefaultValue(this.vee.toVHDLArray(hvar.getDefaultValue(), otherValue));
+        }
         final ConstantDeclaration cd = new ConstantDeclaration(constant);
         boolean _hasMeta = hvar.hasMeta(VHDLStatementExtension.EXPORT);
         if (_hasMeta) {
@@ -702,7 +706,13 @@ public class VHDLStatementExtension {
     if (!_matched) {
       if (Objects.equal(_direction, HDLVariableDeclaration.HDLDirection.PARAMETER)) {
         _matched=true;
-        res.addGenericDeclaration(constant);
+        final Constant constant_1 = new Constant(name, varType);
+        HDLExpression _defaultValue_3 = hvar.getDefaultValue();
+        boolean _tripleNotEquals_4 = (_defaultValue_3 != null);
+        if (_tripleNotEquals_4) {
+          constant_1.setDefaultValue(this.vee.toVHDLArray(hvar.getDefaultValue(), otherValue));
+        }
+        res.addGenericDeclaration(constant_1);
       }
     }
   }
@@ -722,7 +732,7 @@ public class VHDLStatementExtension {
         throw new HDLCodeGenerationException(_get_1, "Switch cases need a constant width", "VHDL");
       }
     }
-    final Expression caseExp = this.vee.toVHDL(hCaseExp);
+    final Expression<?> caseExp = this.vee.toVHDL(hCaseExp);
     final Map<HDLSwitchCaseStatement, VHDLContext> ctxs = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>();
     final Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>();
     boolean hasUnclocked = false;
@@ -811,7 +821,7 @@ public class VHDLStatementExtension {
     final HDLVariable hvar = ((HDLResolvedRef) ref).resolveVarForced("VHDL");
     final ArrayList<HDLExpression> dim = hvar.getDimensions();
     final Expression assTarget = this.vee.toVHDL(ref);
-    Expression value = this.vee.toVHDL(obj.getRight());
+    Expression<?> value = this.vee.toVHDL(obj.getRight());
     if (((dim.size() != 0) && Objects.equal(ref.getClassType(), HDLClass.HDLVariableRef))) {
       final HDLVariableRef varRef = ((HDLVariableRef) ref);
       ArrayList<HDLExpression> _array = varRef.getArray();
@@ -901,7 +911,7 @@ public class VHDLStatementExtension {
     final VHDLContext res = new VHDLContext();
     res.merge(thenCtx, true);
     res.merge(elseCtx, true);
-    final Expression ifExp = this.vee.toVHDL(obj.getIfExp());
+    final Expression<?> ifExp = this.vee.toVHDL(obj.getIfExp());
     for (final HDLRegisterConfig config : configs) {
       {
         final IfStatement ifs = new IfStatement(ifExp);

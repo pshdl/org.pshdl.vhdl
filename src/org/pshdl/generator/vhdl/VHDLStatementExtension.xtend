@@ -31,6 +31,7 @@ import de.upb.hni.vmagic.AssociationElement
 import de.upb.hni.vmagic.Choices
 import de.upb.hni.vmagic.DiscreteRange
 import de.upb.hni.vmagic.Range
+import de.upb.hni.vmagic.Range.Direction
 import de.upb.hni.vmagic.concurrent.ComponentInstantiation
 import de.upb.hni.vmagic.concurrent.ConcurrentStatement
 import de.upb.hni.vmagic.concurrent.EntityInstantiation
@@ -38,6 +39,7 @@ import de.upb.hni.vmagic.concurrent.ForGenerateStatement
 import de.upb.hni.vmagic.declaration.Component
 import de.upb.hni.vmagic.declaration.ConstantDeclaration
 import de.upb.hni.vmagic.declaration.SignalDeclaration
+import de.upb.hni.vmagic.declaration.VariableDeclaration
 import de.upb.hni.vmagic.expression.Aggregate
 import de.upb.hni.vmagic.expression.Expression
 import de.upb.hni.vmagic.expression.TypeConversion
@@ -46,6 +48,8 @@ import de.upb.hni.vmagic.literal.CharacterLiteral
 import de.upb.hni.vmagic.object.Constant
 import de.upb.hni.vmagic.object.Signal
 import de.upb.hni.vmagic.object.SignalAssignmentTarget
+import de.upb.hni.vmagic.object.Variable
+import de.upb.hni.vmagic.object.VariableAssignmentTarget
 import de.upb.hni.vmagic.object.VhdlObject
 import de.upb.hni.vmagic.statement.CaseStatement
 import de.upb.hni.vmagic.statement.CaseStatement.Alternative
@@ -53,8 +57,10 @@ import de.upb.hni.vmagic.statement.ForStatement
 import de.upb.hni.vmagic.statement.IfStatement
 import de.upb.hni.vmagic.statement.SequentialStatement
 import de.upb.hni.vmagic.statement.SignalAssignment
+import de.upb.hni.vmagic.statement.VariableAssignment
 import de.upb.hni.vmagic.type.ConstrainedArray
 import de.upb.hni.vmagic.type.EnumerationType
+import de.upb.hni.vmagic.type.IndexSubtypeIndication
 import de.upb.hni.vmagic.type.SubtypeIndication
 import de.upb.hni.vmagic.type.UnresolvedType
 import java.math.BigInteger
@@ -99,14 +105,13 @@ import org.pshdl.model.HDLResolvedRef
 import org.pshdl.model.HDLStatement
 import org.pshdl.model.HDLSwitchCaseStatement
 import org.pshdl.model.HDLSwitchStatement
-import org.pshdl.model.HDLUnresolvedFragment
+import org.pshdl.model.HDLUnit
 import org.pshdl.model.HDLVariable
 import org.pshdl.model.HDLVariableDeclaration
 import org.pshdl.model.HDLVariableDeclaration.HDLDirection
 import org.pshdl.model.HDLVariableRef
 import org.pshdl.model.IHDLObject
 import org.pshdl.model.evaluation.ConstantEvaluate
-import org.pshdl.model.evaluation.HDLEvaluationContext
 import org.pshdl.model.extensions.FullNameExtension
 import org.pshdl.model.extensions.TypeExtension
 import org.pshdl.model.parser.SourceInfo
@@ -117,16 +122,7 @@ import org.pshdl.model.utils.HDLQuery
 import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
-import org.pshdl.model.HDLUnit
-import de.upb.hni.vmagic.type.RangeSubtypeIndication
-import org.pshdl.model.HDLArithOp.HDLArithOpType
-import de.upb.hni.vmagic.Range.Direction
-import de.upb.hni.vmagic.type.UnconstrainedArray
-import de.upb.hni.vmagic.type.IndexSubtypeIndication
-import de.upb.hni.vmagic.declaration.VariableDeclaration
-import de.upb.hni.vmagic.object.Variable
-import de.upb.hni.vmagic.statement.VariableAssignment
-import de.upb.hni.vmagic.object.VariableAssignmentTarget
+import org.pshdl.model.evaluation.HDLEvaluationContext
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -217,10 +213,10 @@ class VHDLStatementExtension {
 		val HDLEnum hEnum = obj.HEnum
 		val List<String> enums = new LinkedList<String>
 		for (HDLVariable hVar : hEnum.enums) {
-			enums.add(VHDLUtils.getVHDLName("$"+hEnum.name+"_"+hVar.name))
+			enums.add(VHDLUtils.getVHDLName("$" + hEnum.name + "_" + hVar.name))
 		}
 		val String[] enumArr = enums
-		res.addTypeDeclaration(new EnumerationType(VHDLUtils.getVHDLName("$enum_"+hEnum.name), enumArr), false)
+		res.addTypeDeclaration(new EnumerationType(VHDLUtils.getVHDLName("$enum_" + hEnum.name), enumArr), false)
 		return res.attachComment(obj)
 	}
 
@@ -404,7 +400,7 @@ class VHDLStatementExtension {
 			if (obj.register !== null) {
 				resetValue = obj.register.resetValue
 			}
-			var Expression otherValue = Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
+			var Expression<?> otherValue = Aggregate.OTHERS(new CharacterLiteral('0'.charAt(0)))
 			if (typeAnno !== null) {
 				val typeValue = typeAnno.value
 				if (typeValue.endsWith("<>")) {
@@ -413,7 +409,7 @@ class VHDLStatementExtension {
 					type = new EnumerationType(value.lastSegment)
 					var HDLRange range = null;
 					val width = primitive.width
-					if (width != null) {
+					if (width !== null) {
 						range = new HDLRange().setFrom(HDLArithOp.subtract(width, 1)).setTo(HDLLiteral.get(0));
 						range = range.copyDeepFrozen(obj);
 						type = new IndexSubtypeIndication(type, range.toVHDL(Direction.DOWNTO))
@@ -430,7 +426,7 @@ class VHDLStatementExtension {
 					val resolved = obj.resolveTypeForced("VHDL")
 					if (resolved instanceof HDLEnum) {
 						val HDLEnum hEnum = resolved as HDLEnum
-						type = new EnumerationType(VHDLUtils.getVHDLName("$enum_"+hEnum.name))
+						type = new EnumerationType(VHDLUtils.getVHDLName("$enum_" + hEnum.name))
 						var idx = 0;
 						val resVal = ConstantEvaluate.valueOf(resetValue,
 							new HDLEvaluationContext => [enumAsInt = true])
@@ -453,12 +449,12 @@ class VHDLStatementExtension {
 		}
 
 		def handleVariable(HDLVariable hvar, SubtypeIndication type, HDLVariableDeclaration obj, VHDLContext res,
-			HDLExpression resetValue, Expression otherValue, int pid) {
+			HDLExpression resetValue, Expression<?> otherValue, int pid) {
 			val boolean noExplicitResetVar = (hvar.getAnnotation(VHDLNoExplicitReset) !== null) ||
 				(hvar.getAnnotation(memory) !== null)
 			var SubtypeIndication varType = type
 			if (hvar.dimensions.size != 0) {
-				val ranges = new LinkedList<DiscreteRange>
+				val ranges = new LinkedList<DiscreteRange<?>>
 				for (HDLExpression arrayWidth : hvar.dimensions) {
 					val HDLExpression newWidth = HDLArithOp.subtract(arrayWidth, 1)
 					val Range range = new HDLRange().setFrom(HDLLiteral.get(0)).setTo(newWidth).copyDeepFrozen(obj).
@@ -471,7 +467,7 @@ class VHDLStatementExtension {
 				varType = arrType
 			}
 			var name = hvar.name
-			if (hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME) != null) {
+			if (hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME) !== null) {
 				name = hvar.getMeta(HDLInterfaceInstantiation.ORIG_NAME)
 			}
 			val Signal s = new Signal(hvar.name, varType)
@@ -492,15 +488,12 @@ class VHDLStatementExtension {
 					res.addResetValue(obj.register, vhdl.statement)
 				}
 			}
-			val Constant constant = new Constant(name, varType)
-			if (hvar.defaultValue !== null)
-				constant.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
 			if (noExplicitResetVar) {
 				if (resetValue instanceof HDLArrayInit) {
 					s.setDefaultValue(resetValue.toVHDLArray(otherValue))
 				} else {
 					if (resetValue !== null) {
-						var Expression assign = resetValue.toVHDL
+						var Expression<?> assign = resetValue.toVHDL
 						for (HDLExpression exp : hvar.dimensions)
 							assign = Aggregate.OTHERS(assign)
 						s.setDefaultValue(assign)
@@ -523,6 +516,8 @@ class VHDLStatementExtension {
 				case INTERNAL: {
 					if (hvar.getAnnotation(HDLBuiltInAnnotations.sharedVar) !== null) {
 						val sharedVar = new Variable(hvar.name, varType, s.defaultValue)
+						if (hvar.defaultValue !== null)
+							sharedVar.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
 						sharedVar.shared = true
 						val vd = new VariableDeclaration(sharedVar)
 						res.addInternalSignalDeclaration(vd)
@@ -532,14 +527,22 @@ class VHDLStatementExtension {
 					}
 				}
 				case obj.direction == HIDDEN || obj.direction == CONSTANT: {
+					val Constant constant = new Constant(name, varType)
+					if (hvar.defaultValue !== null)
+						constant.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
+
 					val ConstantDeclaration cd = new ConstantDeclaration(constant)
 					if (hvar.hasMeta(EXPORT))
 						res.addConstantDeclarationPkg(cd)
 					else
 						res.addConstantDeclaration(cd)
 				}
-				case PARAMETER:
+				case PARAMETER: {
+					val Constant constant = new Constant(name, varType)
+					if (hvar.defaultValue !== null)
+						constant.setDefaultValue(hvar.defaultValue.toVHDLArray(otherValue))
 					res.addGenericDeclaration(constant)
+				}
 			}
 		}
 
@@ -553,7 +556,7 @@ class VHDLStatementExtension {
 				if (!width.present)
 					throw new HDLCodeGenerationException(type.get, "Switch cases need a constant width", "VHDL")
 			}
-			val Expression caseExp = hCaseExp.toVHDL
+			val Expression<?> caseExp = hCaseExp.toVHDL
 			val Map<HDLSwitchCaseStatement, VHDLContext> ctxs = new LinkedHashMap<HDLSwitchCaseStatement, VHDLContext>
 			val Set<HDLRegisterConfig> configs = new LinkedHashSet<HDLRegisterConfig>
 			var boolean hasUnclocked = false
@@ -620,7 +623,7 @@ class VHDLStatementExtension {
 			val hvar = (ref as HDLResolvedRef).resolveVarForced("VHDL")
 			val ArrayList<HDLExpression> dim = hvar.dimensions
 			val assTarget = ref.toVHDL
-			var Expression value = obj.right.toVHDL
+			var Expression<?> value = obj.right.toVHDL
 			if (dim.size != 0 && ref.classType == HDLClass.HDLVariableRef) {
 				val HDLVariableRef varRef = ref as HDLVariableRef
 				for (HDLExpression exp : varRef.array) {
@@ -687,7 +690,7 @@ class VHDLStatementExtension {
 			val VHDLContext res = new VHDLContext
 			res.merge(thenCtx, true)
 			res.merge(elseCtx, true)
-			val Expression ifExp = obj.ifExp.toVHDL
+			val Expression<?> ifExp = obj.ifExp.toVHDL
 			for (HDLRegisterConfig config : configs) {
 				val IfStatement ifs = new IfStatement(ifExp)
 				if (thenCtx.clockedStatements.get(config) !== null)
