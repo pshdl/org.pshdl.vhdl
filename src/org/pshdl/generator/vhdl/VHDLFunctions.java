@@ -87,8 +87,9 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				addArguments(function, res);
 				return res;
 			case highZ:
-				if (function.getParams().size() == 0)
+				if (function.getParams().size() == 0) {
 					return new CharacterLiteral('Z');
+				}
 
 				final Aggregate aggregate = new Aggregate();
 				final HDLRange range = new HDLRange().setFrom(HDLLiteral.get(1)).setTo(function.getParams().get(0));
@@ -106,6 +107,19 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 				addArguments(function, fc);
 				return fc;
 			}
+			case msbOf: {
+				final FunctionCall fc = new FunctionCall(VHDLTypesLibrary.MSB_OF);
+				addArguments(function, fc);
+				return fc;
+			}
+			case widthOf: {
+				final FunctionCall fc = new FunctionCall(VHDLTypesLibrary.WIDTH_OF);
+				addArguments(function, fc);
+				return fc;
+			}
+			case ordinal:
+			case printf:
+				break;
 			}
 
 		}
@@ -218,8 +232,9 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	public static VHDLContext toOutputStatement(HDLFunctionCall call, int pid, HDLEvaluationContext context) {
 		for (final IVHDLCodeFunctionProvider provider : getCodeProvider()) {
 			final VHDLContext vhdlContext = provider.toVHDLStatement(call, pid, context);
-			if (vhdlContext != null)
+			if (vhdlContext != null) {
 				return vhdlContext;
+			}
 		}
 		return null;
 	}
@@ -234,8 +249,9 @@ public class VHDLFunctions implements IVHDLCodeFunctionProvider {
 	public static Expression toOutputExpression(HDLFunctionCall call) {
 		for (final IVHDLCodeFunctionProvider provider : getCodeProvider()) {
 			final Expression vhdlContext = provider.toVHDLExpression(call);
-			if (vhdlContext != null)
+			if (vhdlContext != null) {
 				return vhdlContext;
+			}
 		}
 		return null;
 	}

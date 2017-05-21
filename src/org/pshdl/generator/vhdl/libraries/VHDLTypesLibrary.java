@@ -48,6 +48,8 @@ public class VHDLTypesLibrary {
 	public static final FunctionDeclaration TERNARY_SIGNED;
 	public static final FunctionDeclaration LOG2CEIL;
 	public static final FunctionDeclaration LOG2FLOOR;
+	public static final FunctionDeclaration MSB_OF;
+	public static final FunctionDeclaration WIDTH_OF;
 	static {
 		PACKAGE = new PackageDeclaration("pshdl.Types");
 		final List<PackageDeclarativeItem> declarations = PACKAGE.getDeclarations();
@@ -58,6 +60,8 @@ public class VHDLTypesLibrary {
 		TERNARY_SIGNED = createTernaryOp(declarations, NumericStd.SIGNED);
 		LOG2CEIL = new FunctionDeclaration("log2ceil", Standard.INTEGER, new Constant("num", Standard.INTEGER));
 		LOG2FLOOR = new FunctionDeclaration("log2floor", Standard.INTEGER, new Constant("num", Standard.INTEGER));
+		MSB_OF = new FunctionDeclaration("msbOf", Standard.INTEGER, new Constant("num", StdLogic1164.STD_LOGIC_VECTOR));
+		WIDTH_OF = new FunctionDeclaration("widthOf", Standard.INTEGER, new Constant("num", StdLogic1164.STD_LOGIC_VECTOR));
 	}
 
 	private static FunctionDeclaration createTernaryOp(List<PackageDeclarativeItem> declarations, SubtypeIndication type) {
