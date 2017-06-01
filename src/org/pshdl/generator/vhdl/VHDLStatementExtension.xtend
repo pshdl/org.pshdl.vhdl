@@ -123,6 +123,7 @@ import org.pshdl.model.utils.Insulin
 
 import static org.pshdl.model.types.builtIn.HDLBuiltInAnnotationProvider.HDLBuiltInAnnotations.*
 import org.pshdl.model.evaluation.HDLEvaluationContext
+import org.pshdl.model.HDLManip
 
 class VHDLStatementExtension {
 	public static VHDLStatementExtension INST = new VHDLStatementExtension
@@ -493,7 +494,12 @@ class VHDLStatementExtension {
 					s.setDefaultValue(resetValue.toVHDLArray(otherValue))
 				} else {
 					if (resetValue !== null) {
-						var Expression<?> assign = resetValue.toVHDL
+						var Expression<?> assign
+						if (resetValue instanceof HDLLiteral && obj.primitive!==null){
+							assign = HDLManip.getCast(obj.primitive, resetValue).toVHDL
+						} else{
+							assign = resetValue.toVHDL
+						}
 						for (HDLExpression exp : hvar.dimensions)
 							assign = Aggregate.OTHERS(assign)
 						s.setDefaultValue(assign)
